@@ -43,6 +43,8 @@ pub struct ProcessCpuSampler {
     system: System,
     #[cfg(target_os = "macos")]
     macos: super::process_snapshot_macos::ProcessSnapshotReader,
+    #[cfg(target_os = "macos")]
+    macos_cpu_fallback: super::process_cpu_macos::CpuFallback,
     #[cfg(windows)]
     windows: super::process_snapshot_windows::ProcessSnapshotReader,
 }
@@ -56,6 +58,8 @@ impl Default for ProcessCpuSampler {
             windows: Default::default(),
             #[cfg(target_os = "macos")]
             macos: Default::default(),
+            #[cfg(target_os = "macos")]
+            macos_cpu_fallback: Default::default(),
         }
     }
 }
@@ -80,6 +84,7 @@ impl ProcessCpuSource for ProcessCpuSampler {
                     .map(|row| row.counter)
                     .collect(),
             },
+            &mut self.macos_cpu_fallback,
         ));
         #[cfg(not(target_os = "macos"))]
         self.sample_other(logical_cpu_count)

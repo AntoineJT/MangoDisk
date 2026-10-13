@@ -1,19 +1,28 @@
 //! Native counters with a bounded system-tool fallback for other users' processes.
 use super::process_cpu::{ProcessCpuCounter, ProcessCpuSnapshot};
 use crate::{
-    run_controlled_command_with_log_policy, ControlledCommandLimits, ControlledCommandLogPolicy,
-    ControlledEnvironmentPolicy, ControlledExecutable,
+    run_controlled_command_with_log_policy, ControlledCommandError, ControlledCommandLimits,
+    ControlledCommandLogPolicy, ControlledEnvironmentPolicy, ControlledExecutable,
 };
 use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
     path::{Path, PathBuf},
-    time::Duration,
+    time::{Duration, Instant},
 };
 
-pub(super) fn fill_unreadable(mut snapshot: ProcessCpuSnapshot) -> ProcessCpuSnapshot {
+#[derive(Default)]
+pub(super) struct CpuFallback {
+    retry_at: Option<Instant>,
+    failures: u8,
+}
+
+pub(super) fn fill_unreadable(
+    mut snapshot: ProcessCpuSnapshot,
+    fallback: &mut CpuFallback,
+) -> ProcessCpuSnapshot {
     if snapshot.processes.iter().any(|p| p.cpu_time_ms.is_none()) {
-        recover_unreadable(&mut snapshot.processes);
+        fallback.recover(&mut snapshot.processes, Instant::now(), query_counters);
     }
     // ps omits the kernel task. Keep its absence explicit rather than fabricate a CPU value.
     if !snapshot.processes.iter().any(|p| p.pid == 0) {
@@ -38,43 +47,55 @@ pub(super) fn fill_unreadable(mut snapshot: ProcessCpuSnapshot) -> ProcessCpuSna
     snapshot
 }
 
-fn recover_unreadable(processes: &mut [ProcessCpuCounter]) {
-    // Apple's setuid ps reads task counters for other users without a new helper or prompt.
-    // Read cumulative time rather than ps %cpu, which is a lifetime average, not an interval.
-    let pids = processes
-        .iter()
-        .filter(|p| p.cpu_time_ms.is_none() && p.pid != 0)
-        .map(|p| p.pid.to_string())
-        .collect::<Vec<_>>()
-        .join(",");
-    if pids.is_empty() {
-        return;
-    }
-    let output = ControlledExecutable::capture(Path::new("/bin/ps")).and_then(|executable| {
-        run_controlled_command_with_log_policy(
-            "macos_process_cpu_fallback",
-            &executable,
-            &["-p", &pids, "-o", "pid=,lstart=,time=,comm="],
-            ControlledEnvironmentPolicy::Isolated,
-            ControlledCommandLimits {
-                timeout: Duration::from_millis(500),
-                stdout_bytes: 1024 * 1024,
-                stderr_bytes: 4096,
-            },
-            ControlledCommandLogPolicy::ExceptionalOnly,
-            &|| false,
-        )
-    });
-    if let Ok(output) = output {
-        if !output.status.success() {
+impl CpuFallback {
+    fn recover(
+        &mut self,
+        processes: &mut [ProcessCpuCounter],
+        now: Instant,
+        query: impl FnOnce(&str) -> Result<HashMap<u32, PsCounter>, ControlledCommandError>,
+    ) {
+        if self.retry_at.is_some_and(|retry| now < retry) {
             return;
         }
-        let times = String::from_utf8_lossy(&output.stdout)
-            .lines()
-            .filter_map(parse_row)
-            .collect::<HashMap<_, _>>();
+        let pids = processes
+            .iter()
+            .filter(|p| {
+                p.cpu_time_ms.is_none()
+                    && p.pid != 0
+                    && p.location_status != super::process_cpu::ProcessLocationStatus::Exited
+            })
+            .map(|p| p.pid.to_string())
+            .collect::<Vec<_>>()
+            .join(",");
+        if pids.is_empty() {
+            return;
+        }
+        let times = match query(&pids) {
+            Ok(times) if !times.is_empty() => times,
+            result => {
+                self.failures = self.failures.saturating_add(1);
+                let delay_secs = [4, 8, 16, 30][usize::from(self.failures.min(4) - 1)];
+                self.retry_at = Some(now + Duration::from_secs(delay_secs));
+                log::warn!(
+                    "macos_process_cpu_fallback_backoff reason={} failures={} retry_secs={} outcome=native_counters_only",
+                    result.err().map_or("no_readable_counters", ControlledCommandError::as_str),
+                    self.failures, delay_secs
+                );
+                return;
+            }
+        };
+        if self.failures > 0 {
+            log::info!(
+                "macos_process_cpu_fallback_recovered failures={}",
+                self.failures
+            );
+        }
+        self.failures = 0;
+        self.retry_at = None;
         for p in processes {
-            if p.cpu_time_ms.is_some() {
+            if p.cpu_time_ms.is_some()
+                || p.location_status == super::process_cpu::ProcessLocationStatus::Exited
+            {
                 continue;
             }
             if let Some(row) = times.get(&p.pid) {
@@ -94,6 +115,27 @@ fn recover_unreadable(processes: &mut [ProcessCpuCounter]) {
             }
         }
     }
+}
+
+fn query_counters(pids: &str) -> Result<HashMap<u32, PsCounter>, ControlledCommandError> {
+    let executable = ControlledExecutable::capture(Path::new("/bin/ps"))?;
+    let output = run_controlled_command_with_log_policy(
+        "macos_process_cpu_fallback",
+        &executable,
+        &["-p", pids, "-o", "pid=,lstart=,time=,comm="],
+        ControlledEnvironmentPolicy::Isolated,
+        ControlledCommandLimits {
+            timeout: Duration::from_millis(500),
+            stdout_bytes: 1024 * 1024,
+            stderr_bytes: 4096,
+        },
+        ControlledCommandLogPolicy::ExceptionalOnly,
+        &|| false,
+    )?;
+    Ok(String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .filter_map(parse_row)
+        .collect())
 }
 
 struct PsCounter {
@@ -196,6 +238,101 @@ pub(super) fn cpu_time_ms(usage: &libc::rusage_info_v2) -> Option<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn counters_fixture() -> Vec<ProcessCpuCounter> {
+        vec![
+            ProcessCpuCounter {
+                pid: 1,
+                started_at: 0,
+                name: "launchd".into(),
+                executable: None,
+                location_status: super::super::process_cpu::ProcessLocationStatus::Unavailable,
+                cpu_time_ms: None,
+            },
+            ProcessCpuCounter {
+                pid: 42,
+                started_at: 7,
+                name: "native".into(),
+                executable: None,
+                location_status: super::super::process_cpu::ProcessLocationStatus::Available,
+                cpu_time_ms: Some(100),
+            },
+        ]
+    }
+
+    #[test]
+    fn repeated_timeouts_back_off_without_delaying_readable_native_counters() {
+        let origin = Instant::now();
+        let mut fallback = CpuFallback::default();
+        let mut calls = 0;
+        for second in 0..60 {
+            let mut processes = counters_fixture();
+            fallback.recover(
+                &mut processes,
+                origin + Duration::from_secs(second),
+                |pids| {
+                    assert_eq!(pids, "1");
+                    calls += 1;
+                    Err(ControlledCommandError::TimedOut)
+                },
+            );
+            assert_eq!(processes[0].cpu_time_ms, None);
+            assert_eq!(processes[1].cpu_time_ms, Some(100));
+        }
+        assert_eq!(calls, 5);
+    }
+
+    #[test]
+    fn successful_retry_resets_backoff_and_reads_new_counters_without_caching_old_values() {
+        let origin = Instant::now();
+        let mut fallback = CpuFallback::default();
+        let mut processes = counters_fixture();
+        fallback.recover(&mut processes, origin, |_| {
+            Err(ControlledCommandError::TimedOut)
+        });
+        fallback.recover(&mut processes, origin + Duration::from_secs(3), |_| {
+            panic!("cooldown must skip ps")
+        });
+        fallback.recover(&mut processes, origin + Duration::from_secs(4), |_| {
+            Ok(HashMap::from([(
+                1,
+                PsCounter {
+                    started_at: 9,
+                    cpu_time_ms: 200,
+                    executable: None,
+                },
+            )]))
+        });
+        assert_eq!(processes[0].cpu_time_ms, Some(200));
+        assert_eq!(processes[0].started_at, 9);
+        assert_eq!(fallback.failures, 0);
+        assert!(fallback.retry_at.is_none());
+        let mut fresh = counters_fixture();
+        fallback.recover(&mut fresh, origin + Duration::from_secs(5), |_| {
+            Err(ControlledCommandError::TimedOut)
+        });
+        assert_eq!(fresh[0].cpu_time_ms, None);
+        assert_eq!(fallback.retry_at, Some(origin + Duration::from_secs(9)));
+    }
+
+    #[test]
+    fn empty_output_backs_off_and_exited_or_kernel_processes_are_not_queried() {
+        let origin = Instant::now();
+        let mut fallback = CpuFallback::default();
+        let mut processes = counters_fixture();
+        fallback.recover(&mut processes, origin, |_| Ok(HashMap::new()));
+        assert_eq!(fallback.failures, 1);
+        let mut fallback = CpuFallback::default();
+        processes[0].location_status = super::super::process_cpu::ProcessLocationStatus::Exited;
+        let mut kernel = processes[0].clone();
+        kernel.pid = 0;
+        processes.push(kernel);
+        fallback.recover(&mut processes, origin, |_| {
+            panic!("no missing live counters")
+        });
+        assert_eq!(fallback.failures, 0);
+        assert_eq!(processes[0].cpu_time_ms, None);
+    }
+
     #[test]
     fn ps_time_uses_cumulative_centiseconds_and_preserves_large_totals() {
         assert_eq!(parse_cpu_time("1418:21.60"), Some(85_101_600));

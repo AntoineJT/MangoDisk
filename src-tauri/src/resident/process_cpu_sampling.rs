@@ -10,7 +10,7 @@ use mangodisk_core::{
     CoreResult,
 };
 use std::{
-    sync::mpsc::{self, SyncSender},
+    sync::mpsc::{self, SyncSender, TrySendError},
     time::Instant,
 };
 
@@ -92,17 +92,24 @@ impl ProcessCpuSampling {
             self.slot.retry_after(now_ms, VISIBLE_INTERVAL_MS);
         }
         if let Some(generation) = self.slot.begin(now_ms, interval_ms(visible)) {
-            if self.requests.send(Request::Sample { generation }).is_err() {
-                self.slot.complete(generation);
-                self.slot.update(Demand::default());
-                self.status = MetricStatus::Failed;
-                self.worker_closed = true;
-                cache.cpu_processes(MetricReading {
-                    status: MetricStatus::Failed,
-                    ..Default::default()
-                });
-                log::error!("resident_process_cpu_worker_closed generation={generation}");
-                return true;
+            match self.requests.try_send(Request::Sample { generation }) {
+                Ok(()) => {}
+                Err(TrySendError::Full(_)) => {
+                    self.slot.complete(generation);
+                    self.slot.retry_after(now_ms, 250);
+                }
+                Err(TrySendError::Disconnected(_)) => {
+                    self.slot.complete(generation);
+                    self.slot.update(Demand::default());
+                    self.status = MetricStatus::Failed;
+                    self.worker_closed = true;
+                    cache.cpu_processes(MetricReading {
+                        status: MetricStatus::Failed,
+                        ..Default::default()
+                    });
+                    log::error!("resident_process_cpu_worker_closed generation={generation}");
+                    return true;
+                }
             }
         }
         changed
@@ -325,6 +332,33 @@ mod tests {
         cache.cpu_processes(MetricReading::ready(summary(), 0));
         (sampling, jobs, cache)
     }
+    #[test]
+    fn a_queued_reset_does_not_block_the_resident_sampling_loop() {
+        let (mut sampling, _, mut cache) = fixture();
+        let (requests, jobs) = mpsc::sync_channel(1);
+        requests.send(Request::Reset).unwrap();
+        sampling.requests = requests;
+        let (completed, results) = mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            sampling.poll(true, false, false, 0, &mut cache);
+            completed.send((sampling, cache)).unwrap();
+        });
+        let result = results.recv_timeout(std::time::Duration::from_secs(1));
+        if result.is_err() {
+            drop(jobs);
+            worker.join().unwrap();
+            panic!("a queued reset blocked the overview sampling loop");
+        }
+        worker.join().unwrap();
+        let (mut sampling, mut cache) = result.unwrap();
+        assert!(!sampling.worker_closed);
+        assert!(matches!(jobs.try_recv(), Ok(Request::Reset)));
+        sampling.poll(true, false, false, 249, &mut cache);
+        assert!(jobs.try_recv().is_err());
+        sampling.poll(true, false, false, 250, &mut cache);
+        assert!(matches!(jobs.try_recv(), Ok(Request::Sample { .. })));
+    }
+
     #[test]
     fn background_waits_four_seconds_and_opening_requests_a_sample_immediately() {
         let (mut sampling, jobs, mut cache) = fixture();
