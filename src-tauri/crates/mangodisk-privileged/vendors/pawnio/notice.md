@@ -1,9 +1,10 @@
 # Bundled PawnIO components
 
-These are unmodified official vendor binaries. They are embedded only in the
-Windows `MangoDiskPrivileged` executable, not in the desktop executable or
-macOS/Linux builds. Bundling does not install or enable them: installation is
-an explicit user action requiring administrator approval.
+These are unmodified official vendor binaries embedded in the Windows
+`MangoDiskPrivileged` helper. The Windows desktop executable embeds that signed
+helper, so installed and single-file portable builds also carry these binaries.
+macOS/Linux builds do not include them. Bundling does not install or enable them:
+installation is an explicit user action requiring administrator approval.
 
 | Component | Version | File | Bytes | SHA-256 |
 | --- | --- | --- | --- | --- |

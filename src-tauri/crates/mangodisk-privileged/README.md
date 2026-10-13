@@ -61,8 +61,8 @@ replacement restores its previous files and running state.
 
 ## Packaging and vendor artifacts
 
-`scripts/build-privileged.mjs` builds the Windows helper before Tauri packages
-its fixed resource path. Production helpers require Authenticode signing.
+`scripts/build-privileged.mjs` builds the Windows helper before the desktop
+executable embeds its exact bytes. Production helpers require Authenticode signing.
 Sign the helper before embedding it and include it in release signature checks;
 signing only the main application does not satisfy installation verification.
 Release tooling may set `MANGODISK_PRIVILEGED_SIGN_COMMAND` to a JSON argv
@@ -74,16 +74,28 @@ Unsigned debug helpers are restricted to development builds.
 `vendors/pawnio/` holds versioned, unmodified official binaries and licensing
 notices. `src/artifacts.rs` records pinned SHA-256 digests and size limits;
 `src/vendor_payloads.rs` uses `include_bytes!` only in the Windows helper binary.
-The desktop executable and non-Windows builds carry no vendor payloads.
+The Windows desktop embeds that signed helper as an opaque image; non-Windows
+builds carry neither the helper nor vendor payloads.
 The Windows package also includes the vendor notice and LGPL license resources.
 No runtime vendor download or user-writable vendor staging directory is needed.
 
-Installing executes the bundled helper with the fixed
+Installed and single-file portable builds share the same bootstrap path:
+`%LOCALAPPDATA%\MangoDisk\privileged\MangoDiskPrivileged.exe`, resolved for the
+interactive user through Windows Known Folders. The desktop stages the embedded
+image only when installation, repair, or removal is requested. Installer scripts,
+the working directory, and the desktop executable's directory do not supply it.
+Identical bytes are reused; outdated or corrupt bytes are replaced atomically.
+Staging rejects reparse points and serializes operations across app instances.
+Pinned directory and image handles prevent replacement during verification and
+elevation. Release builds verify Authenticode before UAC; the elevated helper
+also retains its existing self-verification and protected service installation.
+
+Installing executes the staged helper with the fixed
 `--install-cpu-temperature` action and no client-supplied path. It validates
 embedded bytes, reuses compatible installed PawnIO, and releases the official
 installer into its protected directory only when the driver is required.
 Removal uses the fixed `--uninstall` action, or `--uninstall-with-pawnio` only
-after explicit consent to remove the shared driver. Both run from the bundled
+after explicit consent to remove the shared driver. Both run from the staged
 helper; callers cannot supply a vendor path or native command.
 The installed service image rejects self-removal before modifying SCM state.
 Keep the original vendor files unchanged and update digests, notices and integrity
@@ -118,8 +130,8 @@ Successful cached requests are not logged individually.
 ## Validation
 
 `pnpm check` includes protocol, cache, replacement, and Core regression tests.
-The Rust check and Clippy scripts prepare the Windows helper resource before
-Tauri validates bundle paths. For direct Cargo application checks on Windows,
+The Rust check and Clippy scripts prepare the Windows helper before the desktop
+embeds it. For direct Cargo application checks on Windows,
 run `node scripts/build-privileged.mjs` first.
 Windows validation additionally covers standard-user IPC, protected installation
 permissions, failed repair recovery, malformed and stalled clients, idle cost,

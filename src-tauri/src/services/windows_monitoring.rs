@@ -1,7 +1,5 @@
 //! Elevation adapters for the optional Windows sensor capability.
 use serde::{Deserialize, Serialize};
-#[cfg(windows)]
-use tauri::Manager;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -81,10 +79,12 @@ mod native {
     use super::*;
     use mangodisk_privileged::windows::{client, deployment};
     use mangodisk_privileged_protocol::{CapabilityStatus, Operation, Reply};
-    use std::{
-        path::PathBuf,
-        sync::atomic::{AtomicBool, Ordering},
-    };
+    use std::sync::atomic::{AtomicBool, Ordering};
+
+    static BOOTSTRAP: &[u8] = include_bytes!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/resources/privileged/MangoDiskPrivileged.exe"
+    ));
 
     static BUSY: AtomicBool = AtomicBool::new(false);
     struct OperationGuard;
@@ -156,13 +156,6 @@ mod native {
             .as_millis() as u64;
         matches!(response.reply, Reply::CpuTemperature { status: CapabilityStatus::Ready, reading: Some(reading) } if reading.validate(now).is_ok())
     }
-    fn bootstrap(app: &tauri::AppHandle) -> Option<PathBuf> {
-        app.path()
-            .resource_dir()
-            .ok()
-            .map(|path| path.join("privileged").join(deployment::EXECUTABLE_NAME))
-            .filter(|path| path.is_file())
-    }
     async fn observe_async() -> Observation {
         tauri::async_runtime::spawn_blocking(observe)
             .await
@@ -172,7 +165,7 @@ mod native {
                 service_installed: false,
             })
     }
-    pub(super) async fn install(app: tauri::AppHandle) -> SetupResult {
+    pub(super) async fn install(_app: tauri::AppHandle) -> SetupResult {
         let Some(guard) = OperationGuard::acquire() else {
             return SetupResult {
                 outcome: SetupOutcome::Busy,
@@ -186,13 +179,10 @@ mod native {
                 observation: initial,
             };
         }
-        let bootstrap = bootstrap(&app);
         let result = tauri::async_runtime::spawn_blocking(move || {
             // The worker owns the gate even if its async caller is dropped.
             let _guard = guard;
-            bootstrap
-                .ok_or_else(|| std::io::Error::other("bundled bootstrap unavailable"))
-                .and_then(|path| client::elevate(&path, client::SetupAction::InstallCpuTemperature))
+            client::elevate_embedded(BOOTSTRAP, client::SetupAction::InstallCpuTemperature)
         })
         .await;
         let outcome = match result {
@@ -200,7 +190,23 @@ mod native {
             Ok(Ok(deployment::REBOOT_EXIT_CODE)) => SetupOutcome::RestartRequired,
             Ok(Ok(deployment::BUSY_EXIT_CODE)) => SetupOutcome::Busy,
             Ok(Ok(deployment::VERIFICATION_EXIT_CODE)) => SetupOutcome::VerificationFailed,
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::InvalidData => {
+                log::warn!(
+                    "windows_monitoring_bootstrap_verification_failed error={}",
+                    mangodisk_platform::diagnostics::text(&error)
+                );
+                SetupOutcome::VerificationFailed
+            }
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::WouldBlock => SetupOutcome::Busy,
             Ok(Err(error)) if error.raw_os_error() == Some(1223) => SetupOutcome::UserCancelled,
+            Ok(Err(error)) => {
+                log::warn!(
+                    "windows_monitoring_install_failed native_code={:?} error={}",
+                    error.raw_os_error(),
+                    mangodisk_platform::diagnostics::text(&error)
+                );
+                SetupOutcome::InstallationFailed
+            }
             other => {
                 log::warn!("windows_monitoring_install_failed result={other:?}");
                 SetupOutcome::InstallationFailed
@@ -218,26 +224,29 @@ mod native {
             observation,
         }
     }
-    pub(super) async fn uninstall(app: tauri::AppHandle, remove_driver: bool) -> SetupResult {
+    pub(super) async fn uninstall(_app: tauri::AppHandle, remove_driver: bool) -> SetupResult {
         let Some(guard) = OperationGuard::acquire() else {
             return SetupResult {
                 outcome: SetupOutcome::Busy,
                 observation: observe_async().await,
             };
         };
-        let bootstrap = bootstrap(&app);
         let result = tauri::async_runtime::spawn_blocking(move || {
             let _guard = guard;
-            bootstrap
-                .ok_or_else(|| std::io::Error::other("bundled bootstrap unavailable"))
-                .and_then(|path| {
-                    client::elevate(&path, client::SetupAction::Uninstall { remove_driver })
-                })
+            client::elevate_embedded(BOOTSTRAP, client::SetupAction::Uninstall { remove_driver })
         })
         .await;
         let observation = observe_async().await;
         let outcome = match result {
             Ok(Ok(deployment::BUSY_EXIT_CODE)) => SetupOutcome::Busy,
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::WouldBlock => SetupOutcome::Busy,
+            Ok(Err(error)) if error.kind() == std::io::ErrorKind::InvalidData => {
+                log::warn!(
+                    "windows_monitoring_bootstrap_verification_failed error={}",
+                    mangodisk_platform::diagnostics::text(&error)
+                );
+                SetupOutcome::VerificationFailed
+            }
             Ok(Ok(0))
                 if !observation.service_installed
                     && (!remove_driver || !observation.driver_available) =>
@@ -247,6 +256,14 @@ mod native {
             Ok(Ok(deployment::REBOOT_EXIT_CODE)) => SetupOutcome::RestartRequired,
             Ok(Ok(deployment::DRIVER_REMOVAL_EXIT_CODE)) => SetupOutcome::DriverRemovalFailed,
             Ok(Err(error)) if error.raw_os_error() == Some(1223) => SetupOutcome::UserCancelled,
+            Ok(Err(error)) => {
+                log::warn!(
+                    "windows_monitoring_uninstall_failed remove_driver={remove_driver} native_code={:?} error={}",
+                    error.raw_os_error(),
+                    mangodisk_platform::diagnostics::text(&error)
+                );
+                SetupOutcome::RemovalFailed
+            }
             other => {
                 log::warn!("windows_monitoring_uninstall_failed remove_driver={remove_driver} result={other:?}");
                 SetupOutcome::RemovalFailed

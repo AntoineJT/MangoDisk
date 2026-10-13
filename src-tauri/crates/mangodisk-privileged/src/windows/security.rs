@@ -16,7 +16,7 @@ use windows_sys::Win32::{
         GetFileAttributesW, FILE_ATTRIBUTE_REPARSE_POINT, INVALID_FILE_ATTRIBUTES,
     },
     System::{Com::CoTaskMemFree, Threading::GetCurrentProcess},
-    UI::Shell::{FOLDERID_ProgramFiles, SHGetKnownFolderPath},
+    UI::Shell::{FOLDERID_LocalAppData, FOLDERID_ProgramFiles, SHGetKnownFolderPath},
 };
 
 pub(crate) fn wide(value: impl AsRef<std::ffi::OsStr>) -> Vec<u16> {
@@ -39,11 +39,17 @@ pub(crate) fn allow_process_identity_query() -> io::Result<()> {
     Ok(())
 }
 pub(crate) fn program_files() -> io::Result<PathBuf> {
+    known_folder(&FOLDERID_ProgramFiles, "Program Files")
+}
+pub(crate) fn local_app_data() -> io::Result<PathBuf> {
+    known_folder(&FOLDERID_LocalAppData, "LocalAppData")
+}
+fn known_folder(id: &windows_sys::core::GUID, name: &str) -> io::Result<PathBuf> {
     let mut raw = ptr::null_mut();
-    let hr = unsafe { SHGetKnownFolderPath(&FOLDERID_ProgramFiles, 0, ptr::null_mut(), &mut raw) };
+    let hr = unsafe { SHGetKnownFolderPath(id, 0, ptr::null_mut(), &mut raw) };
     if hr < 0 {
         return Err(io::Error::other(format!(
-            "Program Files lookup failed HRESULT=0x{hr:08x}"
+            "{name} lookup failed HRESULT=0x{hr:08x}"
         )));
     }
     let mut length = 0;

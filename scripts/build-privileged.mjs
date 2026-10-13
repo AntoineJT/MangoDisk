@@ -42,6 +42,10 @@ if (process.platform === 'win32') {
       );
       if (signed.status !== 0) process.exit(signed.status ?? 1);
     }
+    // Windows PowerShell must load its own inbox security module even when the
+    // build inherits PowerShell 7's incompatible module search path.
+    const verificationEnvironment = { ...process.env, MANGODISK_PRIVILEGED_VERIFY_PATH: helper };
+    delete verificationEnvironment.PSModulePath;
     const verified = spawnSync(
       'powershell.exe',
       [
@@ -50,7 +54,7 @@ if (process.platform === 'win32') {
         '-Command',
         '$signature = Get-AuthenticodeSignature -LiteralPath $env:MANGODISK_PRIVILEGED_VERIFY_PATH; if ($signature.Status -ne "Valid") { Write-Error "The release privileged helper requires valid Authenticode signing before packaging"; exit 1 }',
       ],
-      { stdio: 'inherit', env: { ...process.env, MANGODISK_PRIVILEGED_VERIFY_PATH: helper } }
+      { stdio: 'inherit', env: verificationEnvironment }
     );
     if (verified.status !== 0) process.exit(verified.status ?? 1);
   }

@@ -127,7 +127,7 @@ pub(crate) fn verify_signature(path: &Path) -> io::Result<()> {
     let file = OpenOptions::new().read(true).share_mode(1).open(path)?;
     verify_signature_open(path, &file)
 }
-fn verify_signature_open(path: &Path, file: &File) -> io::Result<()> {
+pub(super) fn verify_signature_open(path: &Path, file: &File) -> io::Result<()> {
     let path = security::wide(path);
     let mut file = WINTRUST_FILE_INFO {
         cbStruct: std::mem::size_of::<WINTRUST_FILE_INFO>() as u32,

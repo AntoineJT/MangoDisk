@@ -249,8 +249,13 @@ pub enum SetupAction {
     Uninstall { remove_driver: bool },
 }
 
-/// Run the bundled bootstrap, never a path or command provided by a WebView.
-pub fn elevate(bootstrap: &Path, action: SetupAction) -> io::Result<u32> {
+/// Stage only the desktop's embedded image and keep it immutable through elevation.
+pub fn elevate_embedded(bytes: &[u8], action: SetupAction) -> io::Result<u32> {
+    let bootstrap = super::bootstrap::prepare(bytes)?;
+    elevate(bootstrap.path(), action)
+}
+
+fn elevate(bootstrap: &Path, action: SetupAction) -> io::Result<u32> {
     let file = security::wide(bootstrap);
     let parameters = match action {
         SetupAction::InstallCpuTemperature => "--install-cpu-temperature",

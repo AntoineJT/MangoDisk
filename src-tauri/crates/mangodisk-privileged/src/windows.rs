@@ -1,3 +1,4 @@
+mod bootstrap;
 pub mod client;
 mod cpu;
 pub mod deployment;
