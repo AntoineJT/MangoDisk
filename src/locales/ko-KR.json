@@ -4271,5 +4271,26 @@
     "linkFailed": "브라우저를 열 수 없습니다. 나중에 다시 시도하세요",
     "removeDriver": "PawnIO 드라이버도 제거",
     "removeDriverHint": "다른 모니터링 앱도 이 드라이버를 사용할 수 있으며, 제거하면 센서를 읽지 못할 수 있습니다"
+  },
+  "thirdPartyLicenses": {
+    "title": "타사 라이선스",
+    "description": "포함된 타사 구성 요소의 저작권 고지와 라이선스를 오프라인으로 확인할 수 있습니다",
+    "readLicense": "라이선스 보기",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "버전 {version} · {license}",
+    "back": "구성 요소 목록으로 돌아가기",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "Windows CPU 온도 측정에 사용하는 Intel MSR 및 AMD Zen 모듈"
+      },
+      "pawnioInstaller": {
+        "name": "PawnIO 설치 프로그램",
+        "license": "독점 소프트웨어",
+        "description": "온도 측정에 필요한 PawnIO 드라이버를 설치합니다"
+      }
+    },
+    "author": "작성자: {author}"
   }
 }

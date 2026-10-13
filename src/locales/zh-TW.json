@@ -4271,5 +4271,26 @@
     "linkFailed": "無法開啟瀏覽器，請稍後重試",
     "removeDriver": "同時移除 PawnIO 驅動程式",
     "removeDriverHint": "其他監控軟體可能也在使用此驅動程式，移除後可能無法讀取感測器"
+  },
+  "thirdPartyLicenses": {
+    "title": "第三方授權條款",
+    "description": "隨附第三方元件的著作權說明與授權條款，可離線查看",
+    "readLicense": "查看授權條款",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "版本 {version} · {license}",
+    "back": "返回元件清單",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "提供 Intel MSR 與 AMD Zen 模組，用於 Windows CPU 溫度擷取"
+      },
+      "pawnioInstaller": {
+        "name": "PawnIO 安裝程式",
+        "license": "專有軟體",
+        "description": "安裝溫度擷取所需的 PawnIO 驅動程式"
+      }
+    },
+    "author": "作者：{author}"
   }
 }

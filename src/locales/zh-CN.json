@@ -4271,5 +4271,26 @@
     "linkFailed": "无法打开浏览器，请稍后重试",
     "removeDriver": "同时移除 PawnIO 驱动",
     "removeDriverHint": "其他监控软件可能也在使用此驱动，移除后可能无法读取传感器"
+  },
+  "thirdPartyLicenses": {
+    "title": "第三方许可证",
+    "description": "随附第三方组件的版权说明与许可证，可离线查看",
+    "readLicense": "查看许可证",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "版本 {version} · {license}",
+    "back": "返回组件列表",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "提供 Intel MSR 和 AMD Zen 模块，用于 Windows CPU 温度采集"
+      },
+      "pawnioInstaller": {
+        "name": "PawnIO 安装程序",
+        "license": "专有软件",
+        "description": "安装温度采集所需的 PawnIO 驱动"
+      }
+    },
+    "author": "作者：{author}"
   }
 }

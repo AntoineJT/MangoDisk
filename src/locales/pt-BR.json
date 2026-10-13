@@ -4271,5 +4271,26 @@
     "linkFailed": "Não foi possível abrir o navegador. Tente novamente mais tarde",
     "removeDriver": "Remover também o driver PawnIO",
     "removeDriverHint": "Outros aplicativos de monitoramento podem usar este driver e perder o acesso aos sensores se ele for removido"
+  },
+  "thirdPartyLicenses": {
+    "title": "Licenças de terceiros",
+    "description": "Avisos de direitos autorais e licenças dos componentes de terceiros incluídos, disponíveis offline",
+    "readLicense": "Ler licença",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "Versão {version} · {license}",
+    "back": "Voltar aos componentes",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "Módulos Intel MSR e AMD Zen usados na leitura da temperatura da CPU no Windows"
+      },
+      "pawnioInstaller": {
+        "name": "Instalador do PawnIO",
+        "license": "Software proprietário",
+        "description": "Instala o driver PawnIO necessário para a leitura da temperatura"
+      }
+    },
+    "author": "Autor: {author}"
   }
 }

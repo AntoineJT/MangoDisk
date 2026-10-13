@@ -76,7 +76,11 @@ notices. `src/artifacts.rs` records pinned SHA-256 digests and size limits;
 `src/vendor_payloads.rs` uses `include_bytes!` only in the Windows helper binary.
 The Windows desktop embeds that signed helper as an opaque image; non-Windows
 builds carry neither the helper nor vendor payloads.
-The Windows package also includes the vendor notice and LGPL license resources.
+The frontend displays component attribution and embeds the unchanged LGPL license
+text in a lazy About > Third-party licenses dialog, shared by installed and
+single-file portable builds. Viewing and copying work offline; packaging does not
+deploy external files under a `licenses` directory. The engineering provenance
+notice remains in the source repository.
 No runtime vendor download or user-writable vendor staging directory is needed.
 
 Installed and single-file portable builds share the same bootstrap path:

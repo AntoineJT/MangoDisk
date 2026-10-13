@@ -4271,5 +4271,26 @@
     "linkFailed": "ブラウザーを開けません。再試行してください",
     "removeDriver": "PawnIO ドライバーも削除",
     "removeDriverHint": "他の監視アプリのセンサー取得に影響する場合があります"
+  },
+  "thirdPartyLicenses": {
+    "title": "サードパーティのライセンス",
+    "description": "同梱のサードパーティコンポーネントの著作権表示とライセンスをオフラインで確認できます",
+    "readLicense": "ライセンスを読む",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "バージョン {version} · {license}",
+    "back": "コンポーネント一覧に戻る",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "Windows の CPU 温度取得に使用する Intel MSR と AMD Zen のモジュール"
+      },
+      "pawnioInstaller": {
+        "name": "PawnIO インストーラー",
+        "license": "プロプライエタリソフトウェア",
+        "description": "温度取得に必要な PawnIO ドライバーをインストールします"
+      }
+    },
+    "author": "作者：{author}"
   }
 }

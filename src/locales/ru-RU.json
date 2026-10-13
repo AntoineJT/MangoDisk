@@ -4271,5 +4271,26 @@
     "linkFailed": "Не удалось открыть браузер. Повторите попытку позже",
     "removeDriver": "Также удалить драйвер PawnIO",
     "removeDriverHint": "Другие приложения мониторинга могут использовать этот драйвер и потерять доступ к датчикам после его удаления"
+  },
+  "thirdPartyLicenses": {
+    "title": "Лицензии сторонних компонентов",
+    "description": "Уведомления и лицензии включённых сторонних компонентов доступны без сети",
+    "readLicense": "Читать лицензию",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "Версия {version} · {license}",
+    "back": "Назад к компонентам",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "Модули Intel MSR и AMD Zen для измерения температуры процессора в Windows"
+      },
+      "pawnioInstaller": {
+        "name": "Установщик PawnIO",
+        "license": "Проприетарное ПО",
+        "description": "Устанавливает драйвер PawnIO для измерения температуры"
+      }
+    },
+    "author": "Автор: {author}"
   }
 }

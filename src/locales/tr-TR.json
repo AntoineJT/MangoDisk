@@ -4271,5 +4271,26 @@
     "linkFailed": "Tarayıcı açılamadı. Lütfen daha sonra tekrar deneyin",
     "removeDriver": "PawnIO sürücüsünü de kaldır",
     "removeDriverHint": "Diğer izleme uygulamaları bu sürücüyü kullanıyor olabilir ve kaldırıldığında sensörlere erişemeyebilir"
+  },
+  "thirdPartyLicenses": {
+    "title": "Üçüncü taraf lisansları",
+    "description": "Dahil edilen üçüncü taraf bileşenlerin telif hakkı bildirimleri ve lisansları çevrimdışı görüntülenebilir",
+    "readLicense": "Lisansı oku",
+    "documentTitle": "{component} {version} · {document}",
+    "documentDetails": "Sürüm {version} · {license}",
+    "back": "Bileşenlere dön",
+    "components": {
+      "pawnioModules": {
+        "name": "PawnIO Modules",
+        "license": "LGPL 2.1",
+        "description": "Windows CPU sıcaklık ölçümlerinde kullanılan Intel MSR ve AMD Zen modülleri"
+      },
+      "pawnioInstaller": {
+        "name": "PawnIO yükleyicisi",
+        "license": "Özel mülk yazılım",
+        "description": "Sıcaklık ölçümü için gereken PawnIO sürücüsünü yükler"
+      }
+    },
+    "author": "Yazar: {author}"
   }
 }

@@ -26,8 +26,10 @@ preserved. This does not relicense it under MangoDisk's license.
 
 The modules are distributed under GNU LGPL 2.1. Their unmodified upstream license
 is in `modules/0.2.11/COPYING`; the exact corresponding source is available at
-the versioned module source link above. The Windows application package includes
-this notice and the license under its `licenses` resource directory.
+the versioned module source link above. MangoDisk embeds the license text in both
+installed and single-file portable builds. About > Third-party licenses displays
+component attribution and the unchanged license offline, without external license
+files. This engineering provenance record remains in the source repository.
 
 When updating a vendor release, replace the original binary, its pinned digest
 in `src/artifacts.rs`, size assertions in `src/vendor_payloads.rs`, provenance
