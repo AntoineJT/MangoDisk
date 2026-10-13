@@ -280,6 +280,16 @@ channel keeps only weak references and runs no timer. Its content-addressed DLL
 may remain mapped until Explorer exits; the per-user cache avoids locking update
 or uninstall files. A build-specific channel identity prevents reuse of old code.
 Old cache files are removed on a later startup when Explorer has released them.
+Centered task buttons receive a maximum width only when they would overlap the
+monitor reservation. While limited, retain the last unconstrained layout width:
+`DesiredSize` and a temporary unconstrained measure still reflect Explorer's
+smaller overflow model and can cause repeated expansion and collapse. Poll a
+Z-order-independent signature of visible application windows once per second,
+excluding Explorer and tool windows. A changed signature permits one full layout
+probe so closing apps can release the limit. Failed enumeration retains the safe
+limit. Native regression checks include a stable overflow threshold, opening and
+closing applications, natural centering when space is available, changed monitor
+reservations, and restoration on disable or exit.
 When the app and Explorer have different process architectures (for example, an
 x64 build running on ARM64 Windows), child hosting still works but the XAML DLL
 cannot load into Explorer. Detect this before launching the companion and use
