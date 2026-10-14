@@ -228,27 +228,28 @@ Windows can show the same readings in either retained tray icons or one native
 layered Win32 child of Explorer's taskbar: the Windows 10 rebar, or the
 Windows 11 taskbar itself. Only the native monitor surface is parented; main
 and detail WebViews remain independent. On Windows 10, an unelevated companion
-process reserves space by moving/shrinking `MSTaskListWClass` inside
-`MSTaskSwWClass`, leaving the outer container unchanged;
-Explorer still owns application-button layout and overflow. Closing the private
+process reserves space by moving/shrinking `MSTaskSwWClass` under the rebar.
+Explorer then lays out its inner `MSTaskListWClass` and pagination controls within
+the allocated container. Shrinking only the inner list clips application buttons
+without activating pagination. Closing the private
 stdin pipe releases this lease on disable, normal exit, or abrupt GUI-process exit.
 A session-local mutex serializes companion lifetimes, including restoration, so
 rapid disable/re-enable cannot overlap allocations. Restoration only touches the
 same shell process/control and our last applied axis; a newer Explorer layout wins.
 Cross-axis DPI changes preserve the current thickness while restoring our axis.
-TrafficMonitor reserves the outer `MSTaskSwWClass` container. MangoDisk only
-resizes the inner task list, so TrafficMonitor never sees MangoDisk's contraction
-as a new outer baseline. Manual left placement remains before application buttons
-rather than following their growing UIA bounds. Both the GUI and companion check
-for foreign rebar surfaces; unknown integrations use fresh UIA gaps instead of
-assuming which window they mutate. The companion also rejects a reserved slot
-that overlaps a peer's native bounds, including owner-drawn controls.
+TrafficMonitor also reserves `MSTaskSwWClass`; its width watcher can mistake another
+program's contraction for a new baseline. Both the GUI and companion therefore
+reject reservations whenever a foreign rebar surface is present, including a
+hidden initializing panel. Shared hosts use fresh UIA gaps and peer bounds without
+resizing Explorer's controls, or fall back to tray icons if no safe gap exists.
+Manual left placement remains before application buttons rather than following
+their growing UIA bounds.
 TrafficMonitor's named top-level fallbacks are enumerated across displays:
 they still resize task buttons when embedding fails. Only fallbacks on the host's
 monitor participate; offscreen and secondary-display windows do not affect it.
 Popup children use their actual ancestor parent because `GetParent` can return
 the dialog owner. Hidden peers remain detected during initialization, but do not
-contribute occupied pixels. An unavailable inner task list uses read-only gaps.
+contribute occupied pixels. An unavailable button hierarchy uses read-only gaps.
 Windows 11 performs the same native peer discovery under `Shell_TrayWnd`.
 Any foreign panel, including TrafficMonitor, disables XAML reservation because
 there is no independent inner/outer reservation boundary. Both the GUI and the
