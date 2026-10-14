@@ -2,7 +2,7 @@
 use mangodisk_core::system_resources::metrics::MetricId;
 use serde::{Deserialize, Serialize};
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 21;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 22;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,6 +23,7 @@ pub enum DisplayMetricId {
     GpuTemperature,
     Memory,
     Disk,
+    DiskTemperature,
     Network,
     BatteryTemperature,
     ChargingPower,
@@ -34,7 +35,8 @@ impl DisplayMetricId {
     pub fn metric(self) -> Option<MetricId> {
         match self {
             Self::Cpu => Some(MetricId::Cpu),
-            Self::CpuTemperature
+            Self::DiskTemperature
+            | Self::CpuTemperature
             | Self::GpuTemperature
             | Self::BatteryTemperature
             | Self::ChargingPower
@@ -75,13 +77,14 @@ pub struct ResidentPreferences {
     pub gpu_adapter: Option<String>,
 }
 
-const DISPLAY_ORDER: [DisplayMetricId; 11] = [
+const DISPLAY_ORDER: [DisplayMetricId; 12] = [
     DisplayMetricId::Cpu,
     DisplayMetricId::CpuTemperature,
     DisplayMetricId::Gpu,
     DisplayMetricId::GpuTemperature,
     DisplayMetricId::Memory,
     DisplayMetricId::Disk,
+    DisplayMetricId::DiskTemperature,
     DisplayMetricId::BatteryTemperature,
     DisplayMetricId::ChargingPower,
     DisplayMetricId::BatteryPower,
@@ -144,7 +147,9 @@ impl ResidentPreferences {
                 metric.enabled
                     && match metric.id {
                         DisplayMetricId::CpuTemperature => self.temperature_display_supported(),
-                        DisplayMetricId::GpuTemperature => cfg!(any(target_os = "macos", windows)),
+                        DisplayMetricId::DiskTemperature | DisplayMetricId::GpuTemperature => {
+                            cfg!(any(target_os = "macos", windows))
+                        }
                         DisplayMetricId::BatteryTemperature
                         | DisplayMetricId::ChargingPower
                         | DisplayMetricId::BatteryPower
@@ -165,6 +170,14 @@ impl ResidentPreferences {
                 .metrics
                 .iter()
                 .any(|metric| metric.id == DisplayMetricId::CpuTemperature && metric.enabled)
+    }
+
+    pub fn shows_disk_temperature(&self) -> bool {
+        cfg!(any(target_os = "macos", windows))
+            && self
+                .metrics
+                .iter()
+                .any(|metric| metric.id == DisplayMetricId::DiskTemperature && metric.enabled)
     }
 
     pub fn shows_gpu_temperature(&self) -> bool {
@@ -230,7 +243,8 @@ impl ResidentPreferences {
             .filter(|id| {
                 !matches!(
                     id,
-                    DisplayMetricId::CpuTemperature
+                    DisplayMetricId::DiskTemperature
+                        | DisplayMetricId::CpuTemperature
                         | DisplayMetricId::GpuTemperature
                         | DisplayMetricId::BatteryTemperature
                         | DisplayMetricId::ChargingPower
@@ -261,12 +275,58 @@ impl ResidentPreferences {
                     .insert(index, DisplayMetric { id, enabled: false });
             }
         }
+        if !seen.contains(&DisplayMetricId::DiskTemperature) {
+            let index = self
+                .metrics
+                .iter()
+                .position(|metric| metric.id == DisplayMetricId::Disk)
+                .map_or(self.metrics.len(), |index| index + 1);
+            self.metrics.insert(
+                index,
+                DisplayMetric {
+                    id: DisplayMetricId::DiskTemperature,
+                    enabled: false,
+                },
+            );
+        }
         Ok(self)
     }
 }
 
 pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
     let version = value.get("schemaVersion").and_then(|v| v.as_u64());
+    if matches!(version, Some(2..=21)) {
+        if value
+            .get("metrics")
+            .and_then(|value| value.as_array())
+            .is_some_and(|metrics| {
+                metrics.iter().any(|metric| {
+                    metric.get("id").and_then(|id| id.as_str()) == Some("diskTemperature")
+                })
+            })
+        {
+            return Err("preferences_invalid");
+        }
+        if let Some(rules) = value
+            .get_mut("colorRules")
+            .and_then(|value| value.as_array_mut())
+        {
+            if rules
+                .iter()
+                .any(|rule| rule.get("id").and_then(|id| id.as_str()) == Some("diskTemperature"))
+            {
+                return Err("preferences_invalid");
+            }
+            if version.is_some_and(|version| version >= 16) {
+                rules.push(
+                    serde_json::to_value(super::color_rules::MetricColorRule::defaults(
+                        DisplayMetricId::DiskTemperature,
+                    ))
+                    .map_err(|_| "preferences_invalid")?,
+                );
+            }
+        }
+    }
     if matches!(version, Some(2..=12))
         && value
             .get("metrics")
@@ -456,27 +516,33 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
             preferences.normalize()
         }
-        Some(20) => {
+        Some(20 | 21) => {
             let mut preferences = serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?;
             preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
             preferences.normalize()
         }
-        Some(21) => serde_json::from_value::<ResidentPreferences>(value)
+        Some(22) => serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?
             .normalize(),
         _ => Err("preferences_version"),
     }?;
     // Upgrade the exact former default once. Version-21 custom orders, including
     // ones that resemble the old default, must remain stable across reloads.
-    if version != Some(u64::from(PREFERENCE_SCHEMA_VERSION))
+    if version.is_some_and(|version| version < 21)
         && preferences
             .metrics
             .iter()
             .map(|metric| metric.id)
+            .filter(|id| *id != DisplayMetricId::DiskTemperature)
             .eq(PREVIOUS_DEFAULT_ORDER)
     {
-        let network = preferences.metrics.remove(6);
+        let index = preferences
+            .metrics
+            .iter()
+            .position(|metric| metric.id == DisplayMetricId::Network)
+            .unwrap();
+        let network = preferences.metrics.remove(index);
         preferences.metrics.push(network);
     }
     Ok(preferences)
@@ -584,6 +650,111 @@ fn migrate_display_destination(
 mod tests {
     use super::*;
     #[test]
+    fn disk_temperature_migrates_after_disk_disabled_without_changing_saved_settings() {
+        let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
+        old["schemaVersion"] = 21.into();
+        old["networkInterface"] = "saved-vpn".into();
+        old["diskVolume"] = "saved-volume".into();
+        for field in ["metrics", "colorRules"] {
+            old[field]
+                .as_array_mut()
+                .unwrap()
+                .retain(|row| row["id"] != "diskTemperature");
+        }
+        old["metrics"].as_array_mut().unwrap().reverse();
+        let before = old.clone();
+        let migrated = super::decode(old).unwrap();
+        let disk = migrated
+            .metrics
+            .iter()
+            .position(|row| row.id == DisplayMetricId::Disk)
+            .unwrap();
+        assert_eq!(
+            migrated.metrics[disk + 1],
+            DisplayMetric {
+                id: DisplayMetricId::DiskTemperature,
+                enabled: false
+            }
+        );
+        let current = serde_json::to_value(&migrated).unwrap();
+        assert_eq!(previous_rows(&current["metrics"]), before["metrics"]);
+        assert_eq!(previous_rows(&current["colorRules"]), before["colorRules"]);
+        assert_eq!(migrated.network_interface.as_deref(), Some("saved-vpn"));
+        assert_eq!(migrated.disk_volume.as_deref(), Some("saved-volume"));
+        assert_eq!(
+            migrated
+                .color_rules
+                .iter()
+                .find(|rule| rule.id == DisplayMetricId::DiskTemperature),
+            Some(&super::super::color_rules::MetricColorRule::defaults(
+                DisplayMetricId::DiskTemperature
+            ))
+        );
+        assert_eq!(super::decode(current).unwrap(), migrated);
+        let mut invalid = before;
+        invalid["metrics"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!({"id":"diskTemperature", "enabled":true}));
+        assert_eq!(super::decode(invalid).unwrap_err(), "preferences_invalid");
+    }
+
+    #[test]
+    fn saved_disk_temperature_colors_remain_explicit_including_disabled_empty_rules() {
+        use super::super::color_rules::{ColorRule, DisplayColor};
+        for enabled in [false, true] {
+            for custom in [false, true] {
+                let mut preferences = ResidentPreferences::default();
+                let rule = preferences
+                    .color_rules
+                    .iter_mut()
+                    .find(|rule| rule.id == DisplayMetricId::DiskTemperature)
+                    .unwrap();
+                rule.enabled = enabled;
+                rule.rules = if custom {
+                    vec![ColorRule::AtLeast {
+                        value: 80,
+                        color: DisplayColor::Blue,
+                    }]
+                } else {
+                    vec![]
+                };
+                assert_eq!(
+                    super::decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+                    preferences
+                );
+            }
+        }
+    }
+
+    fn previous_rows(value: &serde_json::Value) -> serde_json::Value {
+        serde_json::Value::Array(
+            value
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["id"] != "diskTemperature")
+                .cloned()
+                .collect(),
+        )
+    }
+    fn decode_fixture(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
+        if value
+            .get("schemaVersion")
+            .and_then(|value| value.as_u64())
+            .is_some_and(|version| version < 22)
+        {
+            for field in ["metrics", "colorRules"] {
+                if let Some(rows) = value.get_mut(field).and_then(|value| value.as_array_mut()) {
+                    rows.retain(|row| {
+                        row.get("id").and_then(|id| id.as_str()) != Some("diskTemperature")
+                    });
+                }
+            }
+        }
+        super::decode(value)
+    }
+    #[test]
     fn version_twenty_upgrades_only_the_complete_previous_default_order() {
         for custom in [false, true] {
             let mut previous = ResidentPreferences {
@@ -603,15 +774,23 @@ mod tests {
                 previous.metrics.swap(0, 1);
             }
             let mut expected = previous.clone();
-            expected.schema_version = 21;
+            expected.schema_version = 22;
             if !custom {
                 let network = expected.metrics.remove(6);
                 expected.metrics.push(network);
             }
-            let migrated = decode(serde_json::to_value(previous).unwrap()).unwrap();
-            assert_eq!(migrated, expected);
+            let migrated = decode_fixture(serde_json::to_value(previous).unwrap()).unwrap();
+            expected
+                .color_rules
+                .retain(|rule| rule.id != DisplayMetricId::DiskTemperature);
+            expected
+                .color_rules
+                .push(super::super::color_rules::MetricColorRule::defaults(
+                    DisplayMetricId::DiskTemperature,
+                ));
+            assert_eq!(migrated, expected.normalize().unwrap());
             assert_eq!(
-                decode(serde_json::to_value(&migrated).unwrap()).unwrap(),
+                decode_fixture(serde_json::to_value(&migrated).unwrap()).unwrap(),
                 migrated
             );
         }
@@ -623,10 +802,10 @@ mod tests {
             PREVIOUS_DEFAULT_ORDER
                 .iter()
                 .position(|id| *id == metric.id)
-                .unwrap()
+                .unwrap_or(PREVIOUS_DEFAULT_ORDER.len())
         });
         assert_eq!(
-            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&preferences).unwrap()).unwrap(),
             preferences
         );
     }
@@ -672,7 +851,7 @@ mod tests {
                 vec![]
             };
             let before = preferences.clone();
-            let migrated = decode(serde_json::to_value(preferences).unwrap()).unwrap();
+            let migrated = decode_fixture(serde_json::to_value(preferences).unwrap()).unwrap();
             let current = migrated
                 .color_rules
                 .iter()
@@ -704,7 +883,7 @@ mod tests {
             current.enabled = false;
             current.rules.clear();
             assert_eq!(
-                decode(serde_json::to_value(&cleared).unwrap()).unwrap(),
+                decode_fixture(serde_json::to_value(&cleared).unwrap()).unwrap(),
                 cleared
             );
         }
@@ -722,7 +901,7 @@ mod tests {
             .as_array_mut()
             .unwrap()
             .retain(|row| row["id"] != "systemPower" && row["id"] != "batteryPower");
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
     }
     #[test]
     fn version_eighteen_preserves_settings_and_appends_system_power_disabled() {
@@ -737,11 +916,13 @@ mod tests {
             old[key].as_array_mut().unwrap().reverse();
         }
         let before = old.clone();
-        let migrated = serde_json::to_value(decode(old).unwrap()).unwrap();
+        let migrated = serde_json::to_value(decode_fixture(old).unwrap()).unwrap();
         assert_eq!(migrated["revision"], before["revision"]);
         for key in ["metrics", "colorRules"] {
-            let previous = before[key].as_array().unwrap();
-            let current = migrated[key].as_array().unwrap();
+            let previous = previous_rows(&before[key]);
+            let previous = previous.as_array().unwrap();
+            let current = previous_rows(&migrated[key]);
+            let current = current.as_array().unwrap();
             assert_eq!(&current[..previous.len()], previous);
             assert_eq!(current.last().unwrap()["id"], "systemPower");
             assert_eq!(current.last().unwrap()["enabled"], false);
@@ -757,7 +938,7 @@ mod tests {
                 "id": id, "enabled": true,
                 "bands": [{"from":0,"color":"default"},{"from":70,"color":"orange"},{"from":90,"color":"red"}]
             })).collect();
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         let power = migrated
             .color_rules
             .iter()
@@ -781,14 +962,15 @@ mod tests {
         let mut old = serde_json::to_value(preferences).unwrap();
         old["schemaVersion"] = 17.into();
         for key in ["metrics", "colorRules"] {
-            old[key]
-                .as_array_mut()
-                .unwrap()
-                .retain(|row| row["id"] != "batteryPower" && row["id"] != "systemPower");
+            old[key].as_array_mut().unwrap().retain(|row| {
+                row["id"] != "batteryPower"
+                    && row["id"] != "systemPower"
+                    && row["id"] != "diskTemperature"
+            });
         }
         let old_metrics = old["metrics"].clone();
         let old_colors = old["colorRules"].clone();
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert!(
             migrated.shows_battery_item(DisplayMetricId::ChargingPower)
                 || !cfg!(target_os = "macos")
@@ -799,13 +981,22 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .filter(|row| { row["id"] != "batteryPower" && row["id"] != "systemPower" })
+                .filter(|row| {
+                    row["id"] != "batteryPower"
+                        && row["id"] != "systemPower"
+                        && row["id"] != "diskTemperature"
+                })
                 .collect::<Vec<_>>(),
-            old_metrics.as_array().unwrap().iter().collect::<Vec<_>>()
+            old_metrics
+                .as_array()
+                .unwrap()
+                .iter()
+                .filter(|row| row["id"] != "diskTemperature")
+                .collect::<Vec<_>>()
         );
         assert_eq!(
             &current["colorRules"].as_array().unwrap()[..8],
-            old_colors.as_array().unwrap()
+            previous_rows(&old_colors).as_array().unwrap()
         );
         for id in ["batteryPower", "systemPower"] {
             let row = current["metrics"]
@@ -833,7 +1024,7 @@ mod tests {
         old["metrics"].as_array_mut().unwrap().reverse();
         let old_metrics = old["metrics"].clone();
         let old_colors = old["colorRules"].clone();
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert_eq!(migrated.revision, 123);
         assert!(migrated
             .metrics
@@ -847,14 +1038,14 @@ mod tests {
             .all(|row| !row.enabled));
         let current = serde_json::to_value(&migrated).unwrap();
         assert_eq!(
-            &current["metrics"].as_array().unwrap()[..7],
-            old_metrics.as_array().unwrap()
+            &previous_rows(&current["metrics"]).as_array().unwrap()[..7],
+            previous_rows(&old_metrics).as_array().unwrap()
         );
         assert_eq!(
             &current["colorRules"].as_array().unwrap()[..6],
-            old_colors.as_array().unwrap()
+            previous_rows(&old_colors).as_array().unwrap()
         );
-        assert_eq!(decode(current).unwrap(), migrated);
+        assert_eq!(decode_fixture(current).unwrap(), migrated);
     }
 
     #[test]
@@ -864,13 +1055,17 @@ mod tests {
         old["colorRules"] = serde_json::Value::Array(super::super::color_rules::COLOR_METRICS.iter().map(|id| serde_json::json!({
             "id": id, "enabled": false, "bands": [{"from": 0, "color": "blue"}, {"from": 55, "color": "yellow"}, {"from": 95, "color": "red"}]
         })).collect());
-        let migrated = decode(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 21);
+        let migrated = decode_fixture(old.clone()).unwrap();
+        assert_eq!(migrated.schema_version, 22);
         assert_eq!(
-            serde_json::to_value(&migrated.metrics).unwrap(),
-            old["metrics"]
+            previous_rows(&serde_json::to_value(&migrated.metrics).unwrap()),
+            previous_rows(&old["metrics"])
         );
-        for rule in &migrated.color_rules {
+        for rule in migrated
+            .color_rules
+            .iter()
+            .filter(|rule| rule.id != DisplayMetricId::DiskTemperature)
+        {
             assert!(!rule.enabled);
             assert_eq!(rule.rules[0].bounds(), (0, Some(55)));
             assert_eq!(rule.rules[1].bounds(), (55, Some(95)));
@@ -881,7 +1076,7 @@ mod tests {
             );
         }
         old["colorRules"][0]["bands"][1]["from"] = 0.into();
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
     }
 
     #[test]
@@ -891,32 +1086,32 @@ mod tests {
         preferences.color_rules[1].rules.truncate(1);
         preferences.color_rules[2].rules.remove(1);
         assert_eq!(
-            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&preferences).unwrap()).unwrap(),
             preferences
         );
         let mut malformed = serde_json::to_value(&preferences).unwrap();
         malformed["colorRules"][1]["rules"][0]["from"] = 1.into();
-        assert!(decode(malformed).is_err());
+        assert!(decode_fixture(malformed).is_err());
     }
 
     #[test]
     fn current_rules_reject_unknown_colors_missing_metrics_and_legacy_fields() {
         let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
-        assert_eq!(decode(current.clone()).unwrap().schema_version, 21);
+        assert_eq!(decode_fixture(current.clone()).unwrap().schema_version, 22);
         let mut value = current.clone();
         value["colorRules"][0]["rules"][0]["color"] = "purple".into();
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
         let mut value = current.clone();
         value["colorRules"].as_array_mut().unwrap().pop();
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
         let mut value = current.clone();
         value["usageWarningPercent"] = 70.into();
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
         let mut value = current;
         value["schemaVersion"] = 14.into();
         value["usageWarningPercent"] = 70.into();
         value["usageCriticalPercent"] = 90.into();
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
     }
 
     #[test]
@@ -928,18 +1123,18 @@ mod tests {
             old["gpuAdapter"] = "selected-adapter".into();
             old["enabled"] = false.into();
             old["revision"] = 47.into();
-            let migrated = decode(old).unwrap();
-            assert_eq!(migrated.schema_version, 21);
+            let migrated = decode_fixture(old).unwrap();
+            assert_eq!(migrated.schema_version, 22);
             assert_eq!(migrated.revision, 47);
             assert!(!migrated.enabled);
             assert_eq!(migrated.gpu_adapter.as_deref(), Some("selected-adapter"));
             let serialized = serde_json::to_value(&migrated).unwrap();
             assert!(serialized.get("windowsDisplayMode").is_none());
-            assert_eq!(decode(serialized).unwrap(), migrated);
+            assert_eq!(decode_fixture(serialized).unwrap(), migrated);
         }
         let mut current = serde_json::to_value(ResidentPreferences::default()).unwrap();
         current["windowsDisplayMode"] = "tray".into();
-        assert!(decode(current).is_err());
+        assert!(decode_fixture(current).is_err());
     }
 
     #[test]
@@ -953,19 +1148,19 @@ mod tests {
         metrics.reverse();
         let mut expected = metrics.clone();
         expected.push(serde_json::json!({"id":"gpuTemperature", "enabled":false}));
-        let migrated = decode(value.clone()).unwrap();
+        let migrated = decode_fixture(value.clone()).unwrap();
         assert_eq!(migrated.revision, 84);
         assert_eq!(migrated.gpu_adapter.as_deref(), Some("fixed-gpu"));
         assert!(!migrated.shows_gpu_temperature());
         assert_eq!(
-            serde_json::to_value(&migrated).unwrap()["metrics"],
-            serde_json::json!(expected)
+            previous_rows(&serde_json::to_value(&migrated).unwrap()["metrics"]),
+            previous_rows(&serde_json::json!(expected))
         );
         value["metrics"]
             .as_array_mut()
             .unwrap()
             .push(serde_json::json!({"id":"gpuTemperature", "enabled":true}));
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
     }
 
     #[test]
@@ -982,7 +1177,7 @@ mod tests {
         old.as_object_mut()
             .unwrap()
             .remove("windowsCpuTemperatureEnabled");
-        let migrated = decode(old.clone()).unwrap();
+        let migrated = decode_fixture(old.clone()).unwrap();
         let mut expected = old["metrics"].clone();
         expected
             .as_array_mut()
@@ -990,9 +1185,12 @@ mod tests {
             .push(serde_json::json!({"id":"gpuTemperature","enabled":false}));
         assert!(!migrated.windows_cpu_temperature_enabled);
         assert_eq!(migrated.revision, 43);
-        assert_eq!(serde_json::to_value(migrated).unwrap()["metrics"], expected);
+        assert_eq!(
+            previous_rows(&serde_json::to_value(migrated).unwrap()["metrics"]),
+            previous_rows(&expected)
+        );
         old["windowsCpuTemperatureEnabled"] = true.into();
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
     }
 
     #[test]
@@ -1004,8 +1202,8 @@ mod tests {
             .remove("windowsCpuTemperatureEnabled");
         old["revision"] = 42.into();
         old["metrics"].as_array_mut().unwrap().reverse();
-        let migrated = decode(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 21);
+        let migrated = decode_fixture(old.clone()).unwrap();
+        assert_eq!(migrated.schema_version, 22);
         assert_eq!(migrated.revision, 42);
         let mut expected = old["metrics"].clone();
         expected
@@ -1017,15 +1215,15 @@ mod tests {
             .unwrap()
             .push(serde_json::json!({"id":"gpuTemperature","enabled":false}));
         assert_eq!(
-            serde_json::to_value(&migrated).unwrap()["metrics"],
-            expected
+            previous_rows(&serde_json::to_value(&migrated).unwrap()["metrics"]),
+            previous_rows(&expected)
         );
         assert!(!migrated.shows_cpu_temperature());
         old["metrics"]
             .as_array_mut()
             .unwrap()
             .push(serde_json::json!({"id":"cpuTemperature","enabled":true}));
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
         let mut selected = migrated;
         let last = selected.metrics.pop().unwrap();
         selected.metrics.insert(
@@ -1036,12 +1234,12 @@ mod tests {
             },
         );
         assert_eq!(
-            decode(serde_json::to_value(&selected).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&selected).unwrap()).unwrap(),
             selected
         );
         let mut invalid = serde_json::to_value(selected).unwrap();
         invalid["metrics"][1]["enabled"] = "true".into();
-        assert!(decode(invalid).is_err());
+        assert!(decode_fixture(invalid).is_err());
     }
 
     #[test]
@@ -1102,18 +1300,18 @@ mod tests {
             .remove("windowsCpuTemperatureEnabled");
         old["networkInterface"] = "wifi".into();
         old.as_object_mut().unwrap().remove("gpuAdapter");
-        let migrated = decode(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 21);
+        let migrated = decode_fixture(old.clone()).unwrap();
+        assert_eq!(migrated.schema_version, 22);
         assert_eq!(migrated.network_interface.as_deref(), Some("wifi"));
         assert!(migrated.gpu_adapter.is_none());
         old["gpuAdapter"] = "unexpected".into();
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
         let fixed = ResidentPreferences {
             gpu_adapter: Some("pci:10de:2684:1:0:0:0".into()),
             ..migrated
         };
         assert_eq!(
-            decode(serde_json::to_value(&fixed).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&fixed).unwrap()).unwrap(),
             fixed
         );
         assert!(ResidentPreferences {
@@ -1136,14 +1334,15 @@ mod tests {
             {"id":"memory", "enabled":true}, {"id":"cpu", "enabled":false},
             {"id":"network", "enabled":true}, {"id":"disk", "enabled":false}
         ]);
-        let migrated = decode(old).unwrap();
-        assert_eq!(migrated.schema_version, 21);
+        let migrated = decode_fixture(old).unwrap();
+        assert_eq!(migrated.schema_version, 22);
         assert_eq!(migrated.revision, 42);
         assert_eq!(
             migrated
                 .metrics
                 .iter()
                 .map(|metric| metric.id)
+                .filter(|id| *id != DisplayMetricId::DiskTemperature)
                 .collect::<Vec<_>>(),
             vec![
                 DisplayMetricId::Memory,
@@ -1169,12 +1368,12 @@ mod tests {
             .unwrap()
             .enabled = true;
         assert_eq!(
-            decode(serde_json::to_value(&selected).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&selected).unwrap()).unwrap(),
             selected
         );
         let mut future = serde_json::to_value(selected).unwrap();
         future["schemaVersion"] = (PREFERENCE_SCHEMA_VERSION + 1).into();
-        assert!(decode(future).is_err());
+        assert!(decode_fixture(future).is_err());
     }
 
     #[test]
@@ -1183,7 +1382,7 @@ mod tests {
         saved["usageColors"] = false.into();
         saved["usageWarningPercent"] = 55.into();
         saved["usageCriticalPercent"] = 80.into();
-        let restored = decode(saved).unwrap();
+        let restored = decode_fixture(saved).unwrap();
         assert!(!restored.usage_colors);
         assert_eq!(restored.color_rules[0].rules[1].bounds().0, 55);
         assert_eq!(restored.color_rules[0].rules[2].bounds().0, 80);
@@ -1194,7 +1393,7 @@ mod tests {
         assert!(!restored.color_rules[1].enabled);
         let serialized = serde_json::to_value(&restored).unwrap();
         assert!(serialized.get("usageWarningPercent").is_none());
-        assert_eq!(decode(serialized).unwrap(), restored);
+        assert_eq!(decode_fixture(serialized).unwrap(), restored);
     }
 
     fn version_fourteen_preferences() -> serde_json::Value {
@@ -1223,11 +1422,14 @@ mod tests {
             .as_array_mut()
             .unwrap()
             .push(serde_json::json!({"id":"gpuTemperature","enabled":false}));
-        let migrated = decode(old).unwrap();
-        assert_eq!(migrated.schema_version, 21);
+        let migrated = decode_fixture(old).unwrap();
+        assert_eq!(migrated.schema_version, 22);
         assert!(!migrated.menu_bar_compact);
         assert!(migrated.usage_colors);
-        assert_eq!(serde_json::to_value(migrated).unwrap()["metrics"], order);
+        assert_eq!(
+            previous_rows(&serde_json::to_value(migrated).unwrap()["metrics"]),
+            previous_rows(&order)
+        );
         assert_eq!(
             ResidentPreferences::default()
                 .metrics
@@ -1245,9 +1447,14 @@ mod tests {
             {"id":"cpu", "enabled":false}, {"id":"memory", "enabled":true},
             {"id":"network", "enabled":true}, {"id":"disk", "enabled":false}
         ]);
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert_eq!(
-            migrated.metrics.iter().map(|m| m.id).collect::<Vec<_>>(),
+            migrated
+                .metrics
+                .iter()
+                .map(|m| m.id)
+                .filter(|id| *id != DisplayMetricId::DiskTemperature)
+                .collect::<Vec<_>>(),
             [
                 DisplayMetricId::Cpu,
                 DisplayMetricId::Memory,
@@ -1272,11 +1479,11 @@ mod tests {
             let mut value = version_fourteen_preferences();
             value["usageWarningPercent"] = warning.into();
             value["usageCriticalPercent"] = critical.into();
-            assert!(decode(value).is_err());
+            assert!(decode_fixture(value).is_err());
         }
         let mut malformed = legacy_preferences();
         malformed["usageColors"] = true.into();
-        assert!(decode(malformed).is_err());
+        assert!(decode_fixture(malformed).is_err());
     }
 
     #[test]
@@ -1290,8 +1497,8 @@ mod tests {
             old.as_object_mut().unwrap().remove("gpuAdapter");
             old.as_object_mut().unwrap().remove("taskbarCompact");
             old["taskbarPosition"] = position.into();
-            let migrated = decode(old).unwrap();
-            assert_eq!(migrated.schema_version, 21);
+            let migrated = decode_fixture(old).unwrap();
+            assert_eq!(migrated.schema_version, 22);
             assert_eq!(
                 serde_json::to_value(migrated).unwrap()["taskbarPosition"],
                 position
@@ -1299,7 +1506,7 @@ mod tests {
         }
         let current = ResidentPreferences::default();
         assert_eq!(
-            decode(serde_json::to_value(&current).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&current).unwrap()).unwrap(),
             current
         );
     }
@@ -1313,13 +1520,13 @@ mod tests {
             .remove("windowsCpuTemperatureEnabled");
         old.as_object_mut().unwrap().remove("gpuAdapter");
         old.as_object_mut().unwrap().remove("taskbarCompact");
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert_eq!(migrated.taskbar_position, TaskbarPosition::Auto);
         assert!(!migrated.taskbar_compact);
         let mut compact = migrated;
         compact.taskbar_compact = true;
         assert_eq!(
-            decode(serde_json::to_value(&compact).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&compact).unwrap()).unwrap(),
             compact
         );
     }
@@ -1335,6 +1542,7 @@ mod tests {
                 .iter()
                 .filter(|metric| metric.enabled)
                 .map(|metric| metric.id)
+                .filter(|id| *id != DisplayMetricId::DiskTemperature)
                 .collect::<Vec<_>>(),
             vec![DisplayMetricId::Cpu, DisplayMetricId::Memory]
         );
@@ -1354,7 +1562,7 @@ mod tests {
             metric.enabled = matches!(metric.id, DisplayMetricId::Network | DisplayMetricId::Disk);
         }
         assert_eq!(
-            decode(serde_json::to_value(&saved).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&saved).unwrap()).unwrap(),
             saved
         );
     }
@@ -1363,7 +1571,7 @@ mod tests {
     fn migration_preserves_old_background_and_memory_choices() {
         for enabled in [false, true] {
             for memory in [false, true] {
-                let migrated = decode(
+                let migrated = decode_fixture(
                     serde_json::json!({"schemaVersion":1,"enabled":enabled,"showMemory":memory}),
                 )
                 .unwrap();
@@ -1372,7 +1580,7 @@ mod tests {
                 assert_eq!(migrated.shows(MetricId::Memory), memory);
                 assert!(migrated.show_icon);
                 assert!(!migrated.shows(MetricId::Cpu));
-                assert_eq!(migrated.schema_version, 21);
+                assert_eq!(migrated.schema_version, 22);
             }
         }
     }
@@ -1391,11 +1599,11 @@ mod tests {
         old["showIcon"] = false.into();
         old.as_object_mut().unwrap().remove("windowsDisplayMode");
         old.as_object_mut().unwrap().remove("taskbarPosition");
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert_eq!(migrated.revision, 17);
         assert!(!migrated.show_icon);
         assert_eq!(
-            decode(serde_json::to_value(&migrated).unwrap()).unwrap(),
+            decode_fixture(serde_json::to_value(&migrated).unwrap()).unwrap(),
             migrated
         );
     }
@@ -1413,17 +1621,17 @@ mod tests {
         old["windowsDisplayMode"] = "taskbar".into();
         old["revision"] = 42.into();
         old.as_object_mut().unwrap().remove("taskbarPosition");
-        let migrated = decode(old).unwrap();
+        let migrated = decode_fixture(old).unwrap();
         assert_eq!(migrated.taskbar_position, TaskbarPosition::Right);
         assert_eq!(migrated.revision, 42);
         let mut current = serde_json::to_value(migrated).unwrap();
         current["taskbarPosition"] = "left".into();
         assert_eq!(
-            decode(current.clone()).unwrap().taskbar_position,
+            decode_fixture(current.clone()).unwrap().taskbar_position,
             TaskbarPosition::Left
         );
         current["taskbarPosition"] = "middle".into();
-        assert!(decode(current).is_err());
+        assert!(decode_fixture(current).is_err());
     }
 
     #[test]
@@ -1438,16 +1646,16 @@ mod tests {
         old["taskbarPosition"] = "left".into();
         old["windowsDisplayMode"] = "taskbar".into();
         old.as_object_mut().unwrap().remove("taskbarBackground");
-        let migrated = decode(old.clone()).unwrap();
+        let migrated = decode_fixture(old.clone()).unwrap();
         assert!(migrated.taskbar_background);
         assert_eq!(migrated.taskbar_position, TaskbarPosition::Left);
         let mut current = serde_json::to_value(migrated).unwrap();
         current["taskbarBackground"] = false.into();
-        assert!(!decode(current.clone()).unwrap().taskbar_background);
+        assert!(!decode_fixture(current.clone()).unwrap().taskbar_background);
         current["taskbarBackground"] = "false".into();
-        assert!(decode(current).is_err());
+        assert!(decode_fixture(current).is_err());
         old["taskbarBackground"] = false.into();
-        assert!(decode(old).is_err());
+        assert!(decode_fixture(old).is_err());
     }
 
     #[test]
@@ -1467,7 +1675,7 @@ mod tests {
         }
         .normalize()
         .unwrap();
-        assert_eq!(preferences.metrics.len(), 11);
+        assert_eq!(preferences.metrics.len(), 12);
         assert_eq!(
             preferences.metrics.last().unwrap().id,
             DisplayMetricId::Network
@@ -1483,12 +1691,12 @@ mod tests {
             serde_json::json!({"schemaVersion":1,"enabled":"true","showMemory":false}),
             serde_json::json!({"schemaVersion":1,"enabled":true}),
         ] {
-            assert!(decode(value).is_err());
+            assert!(decode_fixture(value).is_err());
         }
         let mut value = version_fourteen_preferences();
         value.as_object_mut().unwrap().remove("gpuAdapter");
         value["metrics"][0]["id"] = "npu".into();
-        assert!(decode(value).is_err());
+        assert!(decode_fixture(value).is_err());
     }
 
     #[test]
@@ -1510,7 +1718,11 @@ mod tests {
                                 && (cfg!(target_os = "macos")
                                     || !matches!(m.id, DisplayMetricId::CpuTemperature))
                                 && (cfg!(any(target_os = "macos", windows))
-                                    || !matches!(m.id, DisplayMetricId::GpuTemperature))
+                                    || !matches!(
+                                        m.id,
+                                        DisplayMetricId::GpuTemperature
+                                            | DisplayMetricId::DiskTemperature
+                                    ))
                                 && (cfg!(target_os = "macos")
                                     || !matches!(
                                         m.id,

@@ -4017,6 +4017,7 @@
     }
   },
   "systemStatus": {
+    "diskTemperature": "磁碟溫度",
     "cpuUsage": "CPU 使用率",
     "gpuUsage": "GPU 使用率",
     "appearanceTitle": "顯示樣式",

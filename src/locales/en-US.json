@@ -4017,6 +4017,7 @@
     }
   },
   "systemStatus": {
+    "diskTemperature": "Disk temperature",
     "cpuUsage": "CPU utilization",
     "gpuUsage": "GPU utilization",
     "appearanceTitle": "Appearance",

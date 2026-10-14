@@ -8,13 +8,14 @@ export type ResidentDisplayMetricId =
   | MetricId
   | 'cpuTemperature'
   | 'gpuTemperature'
+  | 'diskTemperature'
   | 'batteryTemperature'
   | 'chargingPower'
   | 'batteryPower'
   | 'systemPower';
 
 export interface ResidentPreferences {
-  schemaVersion: 21;
+  schemaVersion: 22;
   windowsCpuTemperatureEnabled: boolean;
   revision: number;
   enabled: boolean;

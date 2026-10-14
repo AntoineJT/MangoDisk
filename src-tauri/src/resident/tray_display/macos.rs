@@ -289,12 +289,13 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let width = macos_presentation::columns(
                 &[DisplayEntry {
-                    id: super::super::format::DisplayId::CpuTemperature,
+                    id: super::super::format::DisplayId::DiskTemperature,
                     ..entry.clone()
                 }],
                 compact,
             )[0]
             .width as f64;
+            assert!(measured("DISK", if compact { 9.0 } else { 10.0 }, 0.3) <= width);
             for value in 1..=150 {
                 assert!(
                     measured(&format!("{value}°C"), size, 0.3) <= width,

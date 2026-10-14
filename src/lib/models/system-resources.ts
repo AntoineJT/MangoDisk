@@ -158,8 +158,15 @@ export interface BatteryPower {
 export interface SystemPower {
   watts: number;
 }
+export interface DiskTemperature {
+  volumeId: string;
+  volumeName: string;
+  celsius: number;
+  source: 'nvmeSmart' | 'ataSmart' | 'windowsStorage';
+}
+
 export interface ResourceReadings {
-  schemaVersion: 21;
+  schemaVersion: 22;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;
@@ -184,6 +191,7 @@ export interface ResourceReadings {
   memory: MetricReading<SystemResourceSnapshot>;
   network: MetricReading<NetworkRate>;
   disk: MetricReading<DiskUsage>;
+  diskTemperature: MetricReading<DiskTemperature>;
   diskIo: MetricReading<DiskIoRate>;
   interfaces: NetworkInterface[];
   volumes: ResourceVolume[];

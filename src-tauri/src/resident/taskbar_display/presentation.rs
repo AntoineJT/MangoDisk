@@ -88,7 +88,9 @@ pub fn columns(
                             ""
                         } else if matches!(
                             entry.id,
-                            DisplayId::CpuTemperature | DisplayId::GpuTemperature
+                            DisplayId::CpuTemperature
+                                | DisplayId::GpuTemperature
+                                | DisplayId::DiskTemperature
                         ) {
                             "°C"
                         } else {
@@ -100,7 +102,9 @@ pub fn columns(
                 // Four numeric characters cover 99.9 and a rounded 1000.
                 width: ((if matches!(
                     entry.id,
-                    DisplayId::CpuTemperature | DisplayId::GpuTemperature
+                    DisplayId::CpuTemperature
+                        | DisplayId::GpuTemperature
+                        | DisplayId::DiskTemperature
                 ) {
                     // Three digits plus Celsius fit at every supported DPI.
                     if compact {
@@ -200,6 +204,24 @@ mod tests {
             digits: digits.into(),
             text: text.into(),
             tooltip: String::new(),
+        }
+    }
+    #[test]
+    fn disk_temperature_columns_keep_celsius_and_unavailable_width() {
+        for compact in [false, true] {
+            for dpi in [96, 120, 144, 192, 240] {
+                let ready = columns(
+                    &[entry(DisplayId::DiskTemperature, "", "150")],
+                    dpi,
+                    compact,
+                );
+                let unavailable =
+                    columns(&[entry(DisplayId::DiskTemperature, "", "—")], dpi, compact);
+                assert_eq!(ready[0].first, "DISK");
+                assert_eq!(ready[0].second, "150°C");
+                assert_eq!(unavailable[0].second, "—");
+                assert_eq!(ready[0].width, unavailable[0].width);
+            }
         }
     }
     #[test]

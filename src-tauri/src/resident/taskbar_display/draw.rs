@@ -194,6 +194,8 @@ mod tests {
                     (DisplayId::Cpu, "CPU 100%", "100"),
                     (DisplayId::CpuTemperature, "CPU 150°C", "150"),
                     (DisplayId::GpuTemperature, "GPU 150°C", "150"),
+                    (DisplayId::DiskTemperature, "DISK 150°C", "150"),
+                    (DisplayId::DiskTemperature, "DISK —", "—"),
                     (DisplayId::CpuTemperature, "CPU —", "—"),
                     (DisplayId::Memory, "MEM 0%", "0"),
                     (DisplayId::Disk, "DISK —", "—"),

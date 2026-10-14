@@ -86,6 +86,7 @@ const displayLabelKeys = {
   ...METRIC_LABEL_KEYS,
   cpuTemperature: 'cpuTemperature.label',
   gpuTemperature: 'gpuTemperature.label',
+  diskTemperature: 'systemStatus.diskTemperature',
   batteryTemperature: 'systemStatus.batteryTemperature',
   chargingPower: 'systemStatus.chargingPower',
   batteryPower: 'systemStatus.batteryPower',
@@ -98,6 +99,7 @@ const visibleRows = computed(() =>
         (batteryPresent.value !== false || !isBatteryMetric(row.id)) &&
         (!props.isLinux || row.id !== 'gpuTemperature') &&
         (!props.isLinux || row.id !== 'cpuTemperature') &&
+        (!props.isLinux || row.id !== 'diskTemperature') &&
         (!props.isLinux || row.id !== 'gpu') &&
         (props.isMacOs || (!isBatteryMetric(row.id) && row.id !== 'systemPower'))
     )
@@ -137,7 +139,7 @@ async function saveColor(rule: MetricColorRule) {
   await settings.change({ colorRules: settings.draft.colorRules.map(saved => (saved.id === rule.id ? rule : saved)) });
   if (!settings.error) activeColor.value = null;
 }
-const expandedSelection = ref<'network' | 'disk' | 'gpu' | 'gpuTemperature' | null>(null);
+const expandedSelection = ref<'network' | 'disk' | 'gpu' | 'gpuTemperature' | 'diskTemperature' | null>(null);
 // Keep the native switch and collapsed content on the committed state. Failed
 // writes must not hide the user's controls or leave a misleading enabled state.
 const displayEnabled = computed(() => settings.preferences?.enabled ?? false);
@@ -180,7 +182,7 @@ function restoreConfigurationFocus(event: Event) {
   document.getElementById(displayEnabled.value ? 'resident-configure' : 'resident-enabled')?.focus();
 }
 function setSelectionOpen(id: ResidentDisplayMetricId, open: boolean) {
-  if (id !== 'network' && id !== 'disk' && id !== 'gpu' && id !== 'gpuTemperature') return;
+  if (id !== 'network' && id !== 'disk' && id !== 'gpu' && id !== 'gpuTemperature' && id !== 'diskTemperature') return;
   if (open) {
     expandedSelection.value = id;
   } else if (expandedSelection.value === id) expandedSelection.value = null;
@@ -222,7 +224,7 @@ let disposed = false;
 let unlisten: (() => void) | null = null;
 let revision = -1;
 function accept(value: ResidentReading) {
-  if (disposed || value.schemaVersion !== 21 || value.revision < revision) return;
+  if (disposed || value.schemaVersion !== 22 || value.revision < revision) return;
   revision = value.revision;
   interfaces.value = value.interfaces;
   volumes.value = value.volumes;
@@ -663,7 +665,11 @@ onBeforeUnmount(() => {
                       >
                       <Select
                         v-if="
-                          row.id === 'network' || row.id === 'disk' || row.id === 'gpu' || row.id === 'gpuTemperature'
+                          row.id === 'network' ||
+                          row.id === 'disk' ||
+                          row.id === 'diskTemperature' ||
+                          row.id === 'gpu' ||
+                          row.id === 'gpuTemperature'
                         "
                         :disabled="row.id === 'gpuTemperature' ? !settings.draft || settings.saving : !row.enabled"
                         :open="expandedSelection === row.id"

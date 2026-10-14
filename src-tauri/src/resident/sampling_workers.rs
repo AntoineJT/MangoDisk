@@ -53,7 +53,16 @@ pub enum Observation {
     Network(Vec<InterfaceSample>),
     Disk {
         volumes: Vec<ResourceVolume>,
-        selected: Option<(ResourceVolume, VolumeCapacity)>,
+        selected: Option<(
+            ResourceVolume,
+            mangodisk_platform::PlatformResult<VolumeCapacity>,
+        )>,
+        temperature: Option<(
+            u64,
+            mangodisk_platform::PlatformResult<
+                mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
+            >,
+        )>,
     },
 }
 
@@ -158,7 +167,10 @@ enum Sensor {
     Gpu(Box<GpuReader>),
     Memory(Box<SystemResourceService>),
     Network(NetworkReader),
-    Disk,
+    Disk {
+        temperature_state: Option<String>,
+        capacity_state: Option<String>,
+    },
     #[cfg(test)]
     Probe(tests::Probe),
 }
@@ -184,7 +196,10 @@ impl Sensor {
             MetricId::Gpu => Self::Gpu(Box::default()),
             MetricId::Memory => Self::Memory(Box::default()),
             MetricId::Network => Self::Network(NetworkReader::default()),
-            MetricId::Disk => Self::Disk,
+            MetricId::Disk => Self::Disk {
+                temperature_state: None,
+                capacity_state: None,
+            },
         }
     }
     fn reset_baselines(&mut self) {
@@ -256,15 +271,67 @@ impl Sensor {
                 Observation::Memory(reader.sample(demand.detailed, timestamp_ms)?)
             }
             Self::Network(reader) => Observation::Network(reader.read()?),
-            Self::Disk => {
+            Self::Disk {
+                temperature_state,
+                capacity_state,
+            } => {
                 let volumes = disk::list()?;
                 let selected = mangodisk_core::system_resources::disk::select(
                     &volumes,
                     demand.selection.as_deref(),
-                )
-                .map(|volume| disk::capacity(volume).map(|capacity| (volume.clone(), capacity)))
-                .transpose()?;
-                Observation::Disk { volumes, selected }
+                );
+                let temperature = if demand.temperature {
+                    selected.map(|volume| {
+                        let result = mangodisk_platform::system_resources::disk_temperature::read(volume);
+                        let outcome = match &result {
+                            Ok(value) => format!("{:?}", value.source),
+                            Err(error) => format!("{:?}:{}", error.code(), error.diagnostic()),
+                        };
+                        let identity = format!("{}:{outcome}", volume.id);
+                        if temperature_state.as_ref() != Some(&identity) {
+                            match &result {
+                                Ok(value) => log::info!("disk_temperature_state volume={} outcome=ready source={:?} celsius={:.1}", mangodisk_platform::diagnostics::text(&volume.name), value.source, value.celsius),
+                                Err(error) => log::info!("disk_temperature_state volume={} outcome=unavailable code={:?} error={}", mangodisk_platform::diagnostics::text(&volume.name), error.code(), mangodisk_platform::diagnostics::text(&error)),
+                            }
+                            *temperature_state = Some(identity);
+                        }
+                        (self::timestamp_ms(), result)
+                    })
+                } else {
+                    *temperature_state = None;
+                    None
+                };
+                let selected = selected.map(|volume| {
+                    let capacity = disk::capacity(volume);
+                    let identity = match &capacity {
+                        Ok(_) => format!("{}:ready", volume.id),
+                        Err(error) => {
+                            format!("{}:{:?}:{}", volume.id, error.code(), error.diagnostic())
+                        }
+                    };
+                    if capacity_state.as_ref() != Some(&identity) {
+                        if let Err(error) = &capacity {
+                            log::info!(
+                                "resident_disk_capacity_unavailable volume={} code={:?} error={}",
+                                mangodisk_platform::diagnostics::text(&volume.name),
+                                error.code(),
+                                mangodisk_platform::diagnostics::text(&error)
+                            );
+                        } else if capacity_state.is_some() {
+                            log::info!(
+                                "resident_disk_capacity_recovered volume={}",
+                                mangodisk_platform::diagnostics::text(&volume.name)
+                            );
+                        }
+                        *capacity_state = Some(identity);
+                    }
+                    (volume.clone(), capacity)
+                });
+                Observation::Disk {
+                    volumes,
+                    selected,
+                    temperature,
+                }
             }
             #[cfg(test)]
             Self::Probe(probe) => {

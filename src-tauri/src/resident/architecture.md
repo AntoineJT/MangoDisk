@@ -995,7 +995,38 @@ Current-version users can still disable or remove every rule. Charging, battery
 and whole-system power defaults remain disabled and empty. Battery help actions
 sit immediately after their labels, separate from color controls.
 
-### Network selection
+
+### Disk temperature and network selection
+
+Preference and resource version 22 add `diskTemperature` without temperature
+history. Migration inserts this default-off item immediately after disk usage,
+preserving existing relative order, enabled flags, device selections and colors.
+Disk temperature colors default to green below 50°C, orange from 50°C to below
+60°C, and red at 60°C or above. These editable display presets do not represent
+universal drive health limits. Saved color rules, including disabled or empty
+ones, remain unchanged until the user restores defaults and saves. Disk capacity
+and temperature share `diskVolume` but retain
+independent results, freshness and color state. The existing disk worker collects
+temperature every 30 seconds only while its display item and resident monitoring
+are enabled. Switching volumes or disabling collection clears the old temperature.
+Values expire after 90 seconds and unavailable observations display an em dash.
+
+macOS resolves the selected mounted volume through the IORegistry to one physical
+block device and revalidates the volume after reading. Multi-device volumes are
+unsupported rather than assigning an arbitrary disk's temperature. Read-only
+NVMeSMARTLib and ATA SMART interfaces are destroyed after each query. ATA reads
+never enable SMART, alter autosave or run self-tests. Other monitoring tools can
+hold exclusive SMART resources; native stage and error codes remain diagnostic
+failures rather than triggering a different sensor.
+
+Windows resolves volume extents to one physical disk, preferring native storage
+temperature descriptors. If unavailable, an identified NVMe bus uses the SMART
+health log; an ATA/SATA bus uses the fixed SMART READ DATA operation. SATA access
+can require administrator permissions. No additional driver is installed and
+collection does not automatically elevate. Unsupported virtual, RAID and bridged
+devices remain unavailable. Queries are bounded, run on the disk worker and do
+not block CPU/network sampling or the UI. Logs record source or failure transitions
+with the volume name and native stage/code, avoiding per-sample repetition.
 
 The network catalogue exposes connected physical Wi-Fi/Ethernet links, ordered
 by default-route preference and stable name/identity. It does not filter by

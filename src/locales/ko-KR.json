@@ -4017,6 +4017,7 @@
     }
   },
   "systemStatus": {
+    "diskTemperature": "디스크 온도",
     "cpuUsage": "CPU 사용률",
     "gpuUsage": "GPU 사용률",
     "appearanceTitle": "표시 스타일",

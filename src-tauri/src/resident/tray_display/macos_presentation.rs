@@ -92,8 +92,11 @@ pub fn columns(entries: &[DisplayEntry], compact: bool) -> Vec<Column> {
                 DisplayId::Download | DisplayId::App => return None,
                 DisplayId::CpuTemperature
                 | DisplayId::GpuTemperature
+                | DisplayId::DiskTemperature
                 | DisplayId::BatteryTemperature => (
-                    if entry.id == DisplayId::GpuTemperature {
+                    if entry.id == DisplayId::DiskTemperature {
+                        "DISK"
+                    } else if entry.id == DisplayId::GpuTemperature {
                         "GPU"
                     } else if entry.id == DisplayId::BatteryTemperature {
                         "BAT"
@@ -204,6 +207,17 @@ pub fn width(columns: &[Column], icon: bool, compact: bool) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn disk_temperature_columns_keep_celsius_and_unavailable_width() {
+        for compact in [false, true] {
+            let ready = columns(&[entry(DisplayId::DiskTemperature, "150", "°C")], compact);
+            let unavailable = columns(&[entry(DisplayId::DiskTemperature, "—", "°C")], compact);
+            assert_eq!(ready[0].top, "DISK");
+            assert_eq!(ready[0].bottom, "150°C");
+            assert_eq!(unavailable[0].bottom, "—");
+            assert_eq!(ready[0].width, unavailable[0].width);
+        }
+    }
     #[test]
     fn temperature_columns_keep_celsius_and_fixed_width() {
         for compact in [false, true] {

@@ -113,7 +113,10 @@ impl ResidentState {
                 && preferences.enabled
                 && preferences.shows_system_power(),
             battery: metric == MetricId::Cpu && preferences.enabled && preferences.shows_battery(),
-            temperature: (temperature_sampling && metric == MetricId::Cpu)
+            temperature: (preferences.enabled
+                && metric == MetricId::Disk
+                && preferences.shows_disk_temperature())
+                || (temperature_sampling && metric == MetricId::Cpu)
                 || (gpu_sampling
                     && cfg!(any(target_os = "macos", windows))
                     && metric == MetricId::Gpu),
@@ -246,6 +249,9 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
             for (index, metric) in MetricId::ALL.into_iter().enumerate() {
                 let selection_changed = slots[index].demand.selection != demands[index].selection;
                 if slots[index].update(demands[index].clone()) {
+                    if metric == MetricId::Disk && !demands[index].temperature {
+                        cache.clear_disk_temperature();
+                    }
                     if selection_changed {
                         cache.reset(metric);
                     } else if !demands[index].active {
@@ -551,12 +557,33 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                 );
                                 worker.catalogue.fetch_and(!1, Ordering::Relaxed);
                             }
-                            Ok(Observation::Disk { volumes, selected }) => {
+                            Ok(Observation::Disk {
+                                volumes,
+                                selected,
+                                temperature,
+                            }) => {
                                 cache.volumes(volumes);
                                 if let Some((volume, capacity)) = selected {
-                                    cache.disk(volume, capacity, completion.timestamp_ms);
+                                    match capacity {
+                                        Ok(capacity) => {
+                                            cache.disk(volume, capacity, completion.timestamp_ms)
+                                        }
+                                        Err(_) => cache.fail(MetricId::Disk, MetricStatus::Failed),
+                                    }
                                 } else {
                                     cache.fail(MetricId::Disk, MetricStatus::Disconnected);
+                                }
+                                if let Some((sampled_at_ms, temperature)) = temperature {
+                                    cache.disk_temperature(temperature, sampled_at_ms);
+                                } else if slots[index].demand.temperature {
+                                    cache.disk_temperature(
+                                        Err(mangodisk_platform::PlatformError::item_changed(
+                                            "disk_temperature selected volume unavailable",
+                                        )),
+                                        completion.timestamp_ms,
+                                    );
+                                } else {
+                                    cache.clear_disk_temperature();
                                 }
                                 worker.catalogue.fetch_and(!2, Ordering::Relaxed);
                             }
@@ -679,6 +706,33 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
 #[cfg(test)]
 mod overview_tests {
     use super::*;
+    #[test]
+    fn disk_temperature_only_collects_when_selected_and_resident_enabled() {
+        let state = test_state();
+        assert!(!state.demands(false)[4].temperature);
+        {
+            let mut preferences = state.preferences.lock().unwrap();
+            preferences.disk_volume = Some("chosen-volume".into());
+            preferences
+                .metrics
+                .iter_mut()
+                .find(|metric| {
+                    metric.id
+                        == crate::resident::preference_schema::DisplayMetricId::DiskTemperature
+                })
+                .unwrap()
+                .enabled = true;
+        }
+        let demand = state.demands(false)[4].clone();
+        assert_eq!(demand.temperature, cfg!(any(target_os = "macos", windows)));
+        assert_eq!(demand.selection.as_deref(), Some("chosen-volume"));
+        assert_eq!(MetricId::Disk.interval_ms(), 30_000);
+        state.preferences.lock().unwrap().enabled = false;
+        state.catalogue.store(2, Ordering::Relaxed);
+        let catalogue = state.demands(false)[4].clone();
+        assert!(catalogue.active);
+        assert!(!catalogue.temperature);
+    }
 
     #[test]
     fn temperature_history_demand_survives_hiding_and_switching_panels() {

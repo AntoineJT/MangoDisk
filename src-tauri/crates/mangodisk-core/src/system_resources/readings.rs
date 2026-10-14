@@ -54,6 +54,8 @@ pub struct ResourceReadings {
     pub memory: MetricReading<SystemResourceSnapshot>,
     pub network: MetricReading<NetworkRate>,
     pub disk: MetricReading<DiskUsage>,
+    pub disk_temperature:
+        MetricReading<mangodisk_platform::system_resources::disk_temperature::DiskTemperature>,
     pub disk_io: MetricReading<DiskIoRate>,
     pub interfaces: Vec<NetworkInterface>,
     pub volumes: Vec<ResourceVolume>,
@@ -68,7 +70,7 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 21,
+            schema_version: 22,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
             cpu_identity: None,
@@ -93,6 +95,7 @@ impl Default for ResourceReadings {
             memory: MetricReading::default(),
             network: MetricReading::default(),
             disk: MetricReading::default(),
+            disk_temperature: MetricReading::default(),
             disk_io: MetricReading::default(),
             interfaces: Vec::new(),
             volumes: Vec::new(),
@@ -599,6 +602,37 @@ impl ResourceCache {
         }
     }
 
+    pub fn clear_disk_temperature(&mut self) {
+        self.readings.disk_temperature = MetricReading::default();
+    }
+
+    pub fn disk_temperature(
+        &mut self,
+        result: mangodisk_platform::PlatformResult<
+            mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
+        >,
+        timestamp_ms: u64,
+    ) {
+        let unavailable = |status| MetricReading {
+            status,
+            sampled_at_ms: None,
+            value: None,
+        };
+        self.readings.disk_temperature = match result {
+            Ok(value) if value.valid() => MetricReading::ready(value, timestamp_ms),
+            Ok(_) => unavailable(MetricStatus::Failed),
+            Err(error) => unavailable(
+                if error.code() == mangodisk_platform::PlatformErrorCode::Unsupported {
+                    MetricStatus::Unsupported
+                } else if error.code() == mangodisk_platform::PlatformErrorCode::ItemChanged {
+                    MetricStatus::Disconnected
+                } else {
+                    MetricStatus::Failed
+                },
+            ),
+        };
+    }
+
     pub fn fail(&mut self, metric: MetricId, status: MetricStatus) {
         match metric {
             MetricId::Cpu => {
@@ -617,7 +651,14 @@ impl ResourceCache {
                 self.readings.gpu.status = status;
                 self.readings.gpu_details.status = status;
             }
-            MetricId::Disk => self.readings.disk.status = status,
+            MetricId::Disk => {
+                self.readings.disk.status = status;
+                self.readings.disk_temperature = MetricReading {
+                    status,
+                    sampled_at_ms: None,
+                    value: None,
+                };
+            }
         }
     }
 
@@ -662,7 +703,10 @@ impl ResourceCache {
                 self.readings.gpu_details = MetricReading::default();
                 self.readings.gpu = MetricReading::default();
             }
-            MetricId::Disk => self.readings.disk = MetricReading::default(),
+            MetricId::Disk => {
+                self.readings.disk = MetricReading::default();
+                self.clear_disk_temperature();
+            }
         }
     }
 
@@ -701,6 +745,10 @@ impl ResourceCache {
             mangodisk_platform::system_resources::power::SYSTEM_POWER_FRESHNESS_MS,
         );
         self.readings.disk_io.expire(now_ms, 5000);
+        self.readings.disk_temperature.expire(
+            now_ms,
+            mangodisk_platform::system_resources::disk_temperature::DISK_TEMPERATURE_FRESHNESS_MS,
+        );
         self.readings
             .cpu_frequency
             .expire(now_ms, MetricId::Cpu.freshness_ms());
@@ -719,7 +767,7 @@ impl ResourceCache {
         before != self.statuses()
     }
 
-    fn statuses(&self) -> [MetricStatus; 16] {
+    fn statuses(&self) -> [MetricStatus; 17] {
         [
             self.readings.system_power.status,
             self.readings.battery_temperature.status,
@@ -734,6 +782,7 @@ impl ResourceCache {
             self.readings.memory.status,
             self.readings.network.status,
             self.readings.disk.status,
+            self.readings.disk_temperature.status,
             self.readings.disk_io.status,
             self.readings.cpu_processes.status,
             self.readings.memory_processes.status,
@@ -761,6 +810,57 @@ impl ResourceCache {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn disk_temperature_has_independent_freshness_and_clears_failed_or_changed_sources() {
+        use super::*;
+        use mangodisk_platform::system_resources::disk_temperature::{
+            DiskTemperature, DiskTemperatureSource,
+        };
+        let mut cache = ResourceCache::default();
+        let sample = || DiskTemperature {
+            volume_id: "system".into(),
+            volume_name: "Disk".into(),
+            celsius: 34.85,
+            source: DiskTemperatureSource::NvmeSmart,
+        };
+        cache.disk_temperature(Ok(sample()), 1000);
+        assert_eq!(
+            cache.snapshot(91_000).disk_temperature.status,
+            MetricStatus::Ready
+        );
+        assert_eq!(
+            cache.snapshot(91_001).disk_temperature.status,
+            MetricStatus::Stale
+        );
+        cache.disk_temperature(
+            Err(mangodisk_platform::PlatformError::new(
+                mangodisk_platform::PlatformErrorCode::Unsupported,
+                "no sensor",
+            )),
+            92_000,
+        );
+        assert_eq!(
+            cache.snapshot(92_000).disk_temperature.status,
+            MetricStatus::Unsupported
+        );
+        assert!(cache.snapshot(92_000).disk_temperature.value.is_none());
+        let mut invalid = sample();
+        invalid.celsius = f64::NAN;
+        cache.disk_temperature(Ok(invalid), 93_000);
+        assert_eq!(
+            cache.snapshot(93_000).disk_temperature.status,
+            MetricStatus::Failed
+        );
+        cache.disk_temperature(Ok(sample()), 94_000);
+        cache.reset(MetricId::Disk);
+        assert!(cache.snapshot(94_000).disk_temperature.value.is_none());
+        cache.disk_temperature(Ok(sample()), 95_000);
+        cache.clear_disk_temperature();
+        assert_eq!(
+            cache.snapshot(95_000).disk_temperature.status,
+            MetricStatus::Loading
+        );
+    }
     #[test]
     fn absent_battery_clears_only_battery_values_and_unknown_preserves_presence() {
         use super::*;
@@ -1276,7 +1376,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 21);
+        assert_eq!(wire["schemaVersion"], 22);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -1398,7 +1498,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 21);
+        assert_eq!(cache.snapshot(1000).schema_version, 22);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

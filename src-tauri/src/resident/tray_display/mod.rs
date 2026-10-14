@@ -39,6 +39,7 @@ pub struct DisplayState {
     failed: bool,
     color_rules: Option<(bool, Vec<super::color_rules::MetricColorRule>)>,
     color_disk_volume: Option<String>,
+    color_disk_temperature_volume: Option<String>,
     color_gpu_adapter: Option<String>,
     color_gpu_temperature_adapter: Option<String>,
     color_matches: HashMap<DisplayId, Option<usize>>,
@@ -52,6 +53,7 @@ impl DisplayState {
         entries: &mut [DisplayEntry],
         preferences: &ResidentPreferences,
         disk_volume: Option<&str>,
+        disk_temperature_volume: Option<&str>,
         gpu_adapter: Option<&str>,
         gpu_temperature_adapter: Option<&str>,
     ) {
@@ -79,6 +81,9 @@ impl DisplayState {
                 DisplayId::BatteryPower => super::preference_schema::DisplayMetricId::BatteryPower,
                 DisplayId::Memory => super::preference_schema::DisplayMetricId::Memory,
                 DisplayId::Disk => super::preference_schema::DisplayMetricId::Disk,
+                DisplayId::DiskTemperature => {
+                    super::preference_schema::DisplayMetricId::DiskTemperature
+                }
                 _ => {
                     entry.tone = Default::default();
                     continue;
@@ -86,6 +91,9 @@ impl DisplayState {
             };
             let same_source = match entry.id {
                 DisplayId::Disk => self.color_disk_volume.as_deref() == disk_volume,
+                DisplayId::DiskTemperature => {
+                    self.color_disk_temperature_volume.as_deref() == disk_temperature_volume
+                }
                 DisplayId::Gpu => self.color_gpu_adapter.as_deref() == gpu_adapter,
                 DisplayId::GpuTemperature => {
                     self.color_gpu_temperature_adapter.as_deref() == gpu_temperature_adapter
@@ -111,6 +119,7 @@ impl DisplayState {
             .retain(|id, _| entries.iter().any(|entry| entry.id == *id));
         self.color_rules = Some(color_rules);
         self.color_disk_volume = disk_volume.map(str::to_owned);
+        self.color_disk_temperature_volume = disk_temperature_volume.map(str::to_owned);
         self.color_gpu_adapter = gpu_adapter.map(str::to_owned);
         self.color_gpu_temperature_adapter = gpu_temperature_adapter.map(str::to_owned);
     }
@@ -370,6 +379,7 @@ struct DisplayRequest {
     labels: labels::Labels,
     entries: Vec<DisplayEntry>,
     disk_volume: Option<String>,
+    disk_temperature_volume: Option<String>,
     gpu_adapter: Option<String>,
     gpu_temperature_adapter: Option<String>,
 }
@@ -403,6 +413,12 @@ impl DisplayRequest {
                 .value
                 .as_ref()
                 .map(|gpu| gpu.adapter_id.clone()),
+            disk_temperature_volume: reading
+                .resources
+                .disk_temperature
+                .value
+                .as_ref()
+                .map(|disk| disk.volume_id.clone()),
             disk_volume: reading
                 .resources
                 .disk
@@ -425,6 +441,7 @@ fn render(
         labels,
         mut entries,
         disk_volume,
+        disk_temperature_volume,
         gpu_adapter,
         gpu_temperature_adapter,
     } = request;
@@ -435,6 +452,7 @@ fn render(
         &mut entries,
         preferences,
         disk_volume.as_deref(),
+        disk_temperature_volume.as_deref(),
         gpu_adapter.as_deref(),
         gpu_temperature_adapter.as_deref(),
     );
@@ -591,7 +609,7 @@ mod tests {
             text: String::new(),
             tooltip: String::new(),
         }];
-        DisplayState::default().apply_colors(&mut entries, &preferences, None, None, None);
+        DisplayState::default().apply_colors(&mut entries, &preferences, None, None, None, None);
         assert_eq!(entries[0].tone, UsageTone::Blue);
     }
 
@@ -616,20 +634,20 @@ mod tests {
             tooltip: String::new(),
         })
         .collect();
-        state.apply_colors(&mut entries, &preferences, None, Some("a"), Some("a"));
+        state.apply_colors(&mut entries, &preferences, None, None, Some("a"), Some("a"));
         assert_eq!(entries[0].tone, UsageTone::Green);
         assert_eq!(entries[1].tone, UsageTone::Warning);
         assert_eq!(entries[2].tone, UsageTone::Warning);
         entries[2].color_value = Some(80);
-        state.apply_colors(&mut entries, &preferences, None, Some("a"), Some("a"));
+        state.apply_colors(&mut entries, &preferences, None, None, Some("a"), Some("a"));
         assert_eq!(entries[2].tone, UsageTone::Critical);
         entries[2].color_value = Some(79);
-        state.apply_colors(&mut entries, &preferences, None, Some("a"), Some("a"));
+        state.apply_colors(&mut entries, &preferences, None, None, Some("a"), Some("a"));
         assert_eq!(entries[2].tone, UsageTone::Critical);
-        state.apply_colors(&mut entries, &preferences, None, Some("b"), Some("b"));
+        state.apply_colors(&mut entries, &preferences, None, None, Some("b"), Some("b"));
         assert_eq!(entries[2].tone, UsageTone::Warning);
         entries[1].color_value = None;
-        state.apply_colors(&mut entries, &preferences, None, Some("b"), Some("b"));
+        state.apply_colors(&mut entries, &preferences, None, None, Some("b"), Some("b"));
         assert_eq!(entries[1].tone, UsageTone::Normal);
     }
 
@@ -650,7 +668,7 @@ mod tests {
                 tooltip: String::new(),
             })
             .collect();
-        state.apply_colors(&mut entries, &preferences, Some("disk-a"), None, None);
+        state.apply_colors(&mut entries, &preferences, Some("disk-a"), None, None, None);
         assert!(entries
             .iter()
             .all(|entry| entry.tone == UsageTone::Critical));
@@ -662,15 +680,15 @@ mod tests {
         for entry in &mut entries {
             entry.color_value = Some(89);
         }
-        state.apply_colors(&mut entries, &preferences, Some("disk-a"), None, None);
+        state.apply_colors(&mut entries, &preferences, Some("disk-a"), None, None, None);
         assert!(entries
             .iter()
             .all(|entry| entry.tone == UsageTone::Critical));
-        state.apply_colors(&mut entries, &preferences, Some("disk-b"), None, None);
+        state.apply_colors(&mut entries, &preferences, Some("disk-b"), None, None, None);
         assert_eq!(entries[0].tone, UsageTone::Critical);
         assert_eq!(entries[1].tone, UsageTone::Warning);
         // Simulate a failed native frame by leaving the paint cache unchanged.
-        state.apply_colors(&mut entries, &preferences, Some("disk-b"), None, None);
+        state.apply_colors(&mut entries, &preferences, Some("disk-b"), None, None, None);
         assert_eq!(entries[1].tone, UsageTone::Warning);
         let mut higher_threshold = preferences;
         for rule in &mut higher_threshold.color_rules {
@@ -680,8 +698,22 @@ mod tests {
                 .unwrap()
                 .rules;
         }
-        state.apply_colors(&mut entries, &higher_threshold, Some("disk-b"), None, None);
-        state.apply_colors(&mut entries, &higher_threshold, Some("disk-b"), None, None);
+        state.apply_colors(
+            &mut entries,
+            &higher_threshold,
+            Some("disk-b"),
+            None,
+            None,
+            None,
+        );
+        state.apply_colors(
+            &mut entries,
+            &higher_threshold,
+            Some("disk-b"),
+            None,
+            None,
+            None,
+        );
         assert!(entries.iter().all(|entry| entry.tone == UsageTone::Warning));
     }
 }

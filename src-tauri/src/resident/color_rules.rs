@@ -69,13 +69,14 @@ pub struct MetricColorRule {
 }
 
 pub const MAX_COLOR_RULES: usize = 16;
-pub const COLOR_METRICS: [DisplayMetricId; 10] = [
+pub const COLOR_METRICS: [DisplayMetricId; 11] = [
     DisplayMetricId::Cpu,
     DisplayMetricId::CpuTemperature,
     DisplayMetricId::Gpu,
     DisplayMetricId::GpuTemperature,
     DisplayMetricId::Memory,
     DisplayMetricId::Disk,
+    DisplayMetricId::DiskTemperature,
     DisplayMetricId::BatteryTemperature,
     DisplayMetricId::ChargingPower,
     DisplayMetricId::BatteryPower,
@@ -85,7 +86,8 @@ pub const COLOR_METRICS: [DisplayMetricId; 10] = [
 pub fn temperature(id: DisplayMetricId) -> bool {
     matches!(
         id,
-        DisplayMetricId::CpuTemperature
+        DisplayMetricId::DiskTemperature
+            | DisplayMetricId::CpuTemperature
             | DisplayMetricId::GpuTemperature
             | DisplayMetricId::BatteryTemperature
     )
@@ -115,7 +117,9 @@ impl MetricColorRule {
                 rules: Vec::new(),
             };
         }
-        let (middle, high) = if id == DisplayMetricId::BatteryTemperature {
+        let (middle, high) = if id == DisplayMetricId::DiskTemperature {
+            (50, 60)
+        } else if id == DisplayMetricId::BatteryTemperature {
             (40, 45)
         } else if temperature(id) {
             (60, 80)
@@ -173,14 +177,15 @@ pub fn valid(rules: &[MetricColorRule]) -> bool {
         && rules.iter().all(MetricColorRule::valid)
 }
 
-/// Preserve the former normal color and keep previously uncolored temperatures off.
+/// Preserve the former normal color and keep previously uncolored CPU/GPU temperatures off.
 pub fn legacy(warning: u16, critical: u16) -> Vec<MetricColorRule> {
     defaults()
         .into_iter()
         .map(|mut rule| {
             if matches!(
                 rule.id,
-                DisplayMetricId::BatteryTemperature
+                DisplayMetricId::DiskTemperature
+                    | DisplayMetricId::BatteryTemperature
                     | DisplayMetricId::ChargingPower
                     | DisplayMetricId::BatteryPower
                     | DisplayMetricId::SystemPower
@@ -278,6 +283,13 @@ pub fn migrate_bands(value: serde_json::Value) -> Result<Vec<MetricColorRule>, &
             .map(MetricColorRule::defaults),
         );
     }
+    if migrated.len() == 10
+        && !migrated
+            .iter()
+            .any(|rule| rule.id == DisplayMetricId::DiskTemperature)
+    {
+        migrated.push(MetricColorRule::defaults(DisplayMetricId::DiskTemperature));
+    }
     if valid(&migrated) {
         Ok(migrated)
     } else {
@@ -288,6 +300,41 @@ pub fn migrate_bands(value: serde_json::Value) -> Result<Vec<MetricColorRule>, &
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn disk_temperature_defaults_cover_every_celsius_without_overlaps_or_gaps() {
+        let defaults = MetricColorRule::defaults(DisplayMetricId::DiskTemperature);
+        assert!(defaults.enabled && defaults.valid());
+        for value in 0..=150 {
+            let matches = defaults
+                .rules
+                .iter()
+                .filter(|rule| rule.matches(value))
+                .collect::<Vec<_>>();
+            assert_eq!(matches.len(), 1, "celsius={value}");
+            let expected = if value < 50 {
+                DisplayColor::Green
+            } else if value < 60 {
+                DisplayColor::Orange
+            } else {
+                DisplayColor::Red
+            };
+            assert_eq!(matches[0].color(), expected, "celsius={value}");
+        }
+        let migrated = legacy(70, 90);
+        assert_eq!(
+            migrated
+                .iter()
+                .find(|rule| rule.id == DisplayMetricId::DiskTemperature),
+            Some(&defaults)
+        );
+        for id in [
+            DisplayMetricId::CpuTemperature,
+            DisplayMetricId::GpuTemperature,
+        ] {
+            assert!(!migrated.iter().find(|rule| rule.id == id).unwrap().enabled);
+        }
+    }
 
     #[test]
     fn battery_temperature_defaults_cover_boundaries_with_independent_power_rules() {

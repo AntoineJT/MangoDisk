@@ -44,6 +44,24 @@ async function value(wrapper: VueWrapper, selector: string, text: string) {
 }
 
 describe('color rule dialog', () => {
+  it('restores enabled disk temperature defaults without changing the saved source', async () => {
+    const source: MetricColorRule = { id: 'diskTemperature', enabled: false, rules: [] };
+    const wrapper = await editor('en', source);
+    await button(wrapper, en.systemStatus.colorRestore).trigger('click');
+    await flushPromises();
+    await button(wrapper, en.common.save).trigger('click');
+    expect(wrapper.emitted('save')?.[0]?.[0]).toEqual({
+      id: 'diskTemperature',
+      enabled: true,
+      rules: [
+        { condition: 'below', value: 50, color: 'green' },
+        { condition: 'range', from: 50, to: 60, color: 'orange' },
+        { condition: 'atLeast', value: 60, color: 'red' },
+      ],
+    });
+    expect(source).toEqual({ id: 'diskTemperature', enabled: false, rules: [] });
+  });
+
   it('restores enabled battery temperature rules with battery-specific thresholds', async () => {
     const wrapper = await editor('en', { id: 'batteryTemperature', enabled: false, rules: [] });
     await button(wrapper, en.systemStatus.colorRestore).trigger('click');

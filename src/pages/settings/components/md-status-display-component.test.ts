@@ -81,6 +81,41 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('status display interactions', () => {
+  const localizedMessages = import.meta.glob<{ systemStatus: { diskTemperature: string } }>('../../../locales/*.json', {
+    eager: true,
+    import: 'default',
+  });
+  it.each(Object.entries(localizedMessages))('renders the disk temperature label in %s', async (_path, messages) => {
+    const options = global();
+    options.plugins[1] = createI18n({
+      legacy: false,
+      locale: 'en',
+      messages: { en: messages },
+      missingWarn: false,
+      fallbackWarn: false,
+    });
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: options });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    expect(wrapper.get('[data-metric="diskTemperature"] label').text()).toBe(messages.systemStatus.diskTemperature);
+  });
+  it.each([true, false])('offers disk temperature independently of disk usage on macOS=%s', async isMacOs => {
+    const wrapper = mount(Settings, { props: { isMacOs }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const rows = wrapper.findAll('.metric-row').map(row => row.attributes('data-metric'));
+    expect(rows.indexOf('diskTemperature')).toBe(rows.indexOf('disk') + 1);
+    expect(wrapper.get('#status-diskTemperature').attributes('data-state')).toBe('unchecked');
+    await wrapper.get('#status-diskTemperature').trigger('click');
+    await flushPromises();
+    const saved = vi.mocked(ResidentService.savePreferences).mock.calls.at(-1)![0];
+    expect(saved.metrics.find(row => row.id === 'diskTemperature')?.enabled).toBe(true);
+    expect(saved.metrics.find(row => row.id === 'disk')?.enabled).toBe(false);
+    expect(saved.windowsCpuTemperatureEnabled).toBe(false);
+    expect(wrapper.find('[data-metric="diskTemperature"] .selection-toggle').exists()).toBe(true);
+  });
   it('hides selected battery rows only on confirmed absence and preserves saved choices', async () => {
     const saved = preferencesFixture();
     for (const row of saved.metrics) {
@@ -374,11 +409,14 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     expect(wrapper.find('#menu-bar-cpu-temperature').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(11);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(12);
     expect(wrapper.get('[data-metric="cpuTemperature"] label').text()).toBe('cpuTemperature.label');
     const handle = wrapper.get('[data-metric="cpuTemperature"] .drag-handle');
     await handle.trigger('keydown', { key: ' ' });
-    for (let step = 0; step < 5; step++) await handle.trigger('keydown', { key: 'ArrowUp' });
+    const position = wrapper
+      .findAll('.metric-row')
+      .findIndex(row => row.attributes('data-metric') === 'cpuTemperature');
+    for (let step = 0; step < position; step++) await handle.trigger('keydown', { key: 'ArrowUp' });
     await handle.trigger('keydown', { key: 'Enter' });
     await flushPromises();
     const saved = vi.mocked(ResidentService.savePreferences).mock.calls.at(-1)![0];
@@ -416,7 +454,7 @@ describe('status display interactions', () => {
       pointerId: 1,
       button: 0,
       clientX: 10,
-      clientY: 230,
+      clientY: wrapper.get('[data-metric="cpuTemperature"]').element.getBoundingClientRect().top + 20,
     });
     window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 10, clientY: 20 }));
     await flushPromises();
@@ -630,7 +668,7 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     expect(wrapper.find('input[name="windows-display-mode"]').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(7);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(8);
     await wrapper.get('input[name="taskbar-position"][value="left"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
@@ -642,7 +680,7 @@ describe('status display interactions', () => {
     await wrapper.get('input[name="taskbar-position"][value="auto"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
-      expect.objectContaining({ schemaVersion: 21, taskbarPosition: 'auto' })
+      expect.objectContaining({ schemaVersion: 22, taskbarPosition: 'auto' })
     );
   });
 
@@ -703,7 +741,7 @@ describe('status display interactions', () => {
     wrappers.push(wrapper);
     await flushPromises();
     await openConfiguration(wrapper);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(7);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(8);
     await wrapper.get('#status-network').trigger('click');
     await flushPromises();
     const preferences = vi.mocked(ResidentService.savePreferences).mock.calls[0]![0];

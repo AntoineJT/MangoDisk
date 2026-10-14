@@ -4,6 +4,7 @@ export type ColorMetricId =
   | Exclude<MetricId, 'network'>
   | 'cpuTemperature'
   | 'gpuTemperature'
+  | 'diskTemperature'
   | 'batteryTemperature'
   | 'chargingPower'
   | 'batteryPower'
@@ -21,11 +22,18 @@ export interface MetricColorRule {
 export const MAX_COLOR_RULES = 16;
 export const DISPLAY_COLORS: DisplayColor[] = ['default', 'green', 'yellow', 'orange', 'red', 'blue'];
 export function isTemperatureMetric(id: ColorMetricId): boolean {
-  return id === 'cpuTemperature' || id === 'gpuTemperature' || id === 'batteryTemperature';
+  return id === 'cpuTemperature' || id === 'gpuTemperature' || id === 'diskTemperature' || id === 'batteryTemperature';
 }
 export function defaultColorRule(id: ColorMetricId): MetricColorRule {
   if (isPowerMetric(id)) return { id, enabled: false, rules: [] };
-  const [middle, high] = id === 'batteryTemperature' ? [40, 45] : isTemperatureMetric(id) ? [60, 80] : [70, 90];
+  const [middle, high] =
+    id === 'diskTemperature'
+      ? [50, 60]
+      : id === 'batteryTemperature'
+        ? [40, 45]
+        : isTemperatureMetric(id)
+          ? [60, 80]
+          : [70, 90];
   return {
     id,
     enabled: true,
@@ -45,6 +53,7 @@ export function defaultColorRules(): MetricColorRule[] {
       'gpuTemperature',
       'memory',
       'disk',
+      'diskTemperature',
       'batteryTemperature',
       'chargingPower',
       'batteryPower',

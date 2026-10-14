@@ -19,6 +19,7 @@ pub enum DisplayId {
     Upload,
     Download,
     Disk,
+    DiskTemperature,
     BatteryTemperature,
     ChargingPower,
     BatteryPower,
@@ -26,7 +27,7 @@ pub enum DisplayId {
 }
 
 impl DisplayId {
-    pub const ALL: [Self; 13] = [
+    pub const ALL: [Self; 14] = [
         Self::App,
         Self::Cpu,
         Self::CpuTemperature,
@@ -36,6 +37,7 @@ impl DisplayId {
         Self::Upload,
         Self::Download,
         Self::Disk,
+        Self::DiskTemperature,
         Self::BatteryTemperature,
         Self::ChargingPower,
         Self::BatteryPower,
@@ -52,6 +54,7 @@ impl DisplayId {
             Self::Upload => "resident-upload",
             Self::Download => "resident-download",
             Self::Disk => "resident-disk",
+            Self::DiskTemperature => "resident-disk-temperature",
             Self::BatteryTemperature => "resident-battery-temperature",
             Self::ChargingPower => "resident-charging-power",
             Self::BatteryPower => "resident-battery-power",
@@ -69,7 +72,7 @@ impl DisplayId {
             Self::Gpu | Self::GpuTemperature => Some(MetricId::Gpu),
             Self::Memory => Some(MetricId::Memory),
             Self::Upload | Self::Download => Some(MetricId::Network),
-            Self::Disk => Some(MetricId::Disk),
+            Self::Disk | Self::DiskTemperature => Some(MetricId::Disk),
         }
     }
 }
@@ -108,6 +111,7 @@ pub fn indicator_title(entries: &[DisplayEntry], compact: bool) -> Option<String
                     DisplayId::App
                     | DisplayId::CpuTemperature
                     | DisplayId::GpuTemperature
+                    | DisplayId::DiskTemperature
                     | DisplayId::BatteryTemperature
                     | DisplayId::ChargingPower
                     | DisplayId::BatteryPower
@@ -132,6 +136,7 @@ pub fn desired(preferences: &ResidentPreferences) -> Vec<DisplayId> {
         .filter(|id| match id {
             DisplayId::CpuTemperature => preferences.shows_cpu_temperature(),
             DisplayId::GpuTemperature => preferences.shows_gpu_temperature(),
+            DisplayId::DiskTemperature => preferences.shows_disk_temperature(),
             DisplayId::BatteryTemperature => {
                 preferences.shows_battery_item(DisplayMetricId::BatteryTemperature)
             }
@@ -226,6 +231,16 @@ pub fn entries(
             }
             continue;
         }
+        if metric.id == DisplayMetricId::DiskTemperature {
+            if preferences.shows_disk_temperature() {
+                entries.push(disk_temperature_entry(
+                    values,
+                    labels,
+                    preferences.disk_volume.as_deref(),
+                ));
+            }
+            continue;
+        }
         if metric.id == DisplayMetricId::GpuTemperature {
             if preferences.shows_gpu_temperature() {
                 entries.push(gpu_temperature_entry(values, labels));
@@ -303,6 +318,7 @@ pub fn entries(
                 DisplayId::App
                 | DisplayId::CpuTemperature
                 | DisplayId::GpuTemperature
+                | DisplayId::DiskTemperature
                 | DisplayId::BatteryTemperature
                 | DisplayId::ChargingPower
                 | DisplayId::BatteryPower
@@ -533,6 +549,74 @@ fn gpu_temperature_entry(
     }
 }
 
+fn disk_temperature_entry(
+    values: &ResourceReadings,
+    labels: &super::labels::Labels,
+    manual: Option<&str>,
+) -> DisplayEntry {
+    use mangodisk_platform::system_resources::disk_temperature::DISK_TEMPERATURE_FRESHNESS_MS;
+    let reading = &values.disk_temperature;
+    let selected = manual.or_else(|| {
+        values
+            .volumes
+            .iter()
+            .find(|volume| volume.system)
+            .map(|volume| volume.id.as_str())
+    });
+    let value = reading.value.as_ref().filter(|value| {
+        reading.status == MetricStatus::Ready
+            && selected == Some(value.volume_id.as_str())
+            && value.valid()
+            && reading.sampled_at_ms.is_some_and(|sampled| {
+                sampled <= values.observed_at_ms
+                    && values.observed_at_ms - sampled <= DISK_TEMPERATURE_FRESHNESS_MS
+            })
+    });
+    let digits = value
+        .map(|value| format!("{:.0}", value.celsius.round()))
+        .unwrap_or_else(|| "—".into());
+    let tooltip = if let Some(value) = value {
+        format!(
+            "{} {digits}°C · {}",
+            labels.text("diskTemperature"),
+            value.volume_name
+        )
+    } else {
+        format!(
+            "{} · {}",
+            labels.text("diskTemperature"),
+            labels.status(
+                if reading.status == MetricStatus::Ready
+                    && reading
+                        .value
+                        .as_ref()
+                        .is_some_and(|value| selected != Some(value.volume_id.as_str()))
+                {
+                    MetricStatus::Loading
+                } else if reading.status == MetricStatus::Ready {
+                    MetricStatus::Stale
+                } else {
+                    reading.status
+                }
+            )
+        )
+    };
+    DisplayEntry {
+        id: DisplayId::DiskTemperature,
+        tone: Default::default(),
+        power_state: None,
+        color_value: value.map(|value| value.celsius.round() as u16),
+        marker: "°C".into(),
+        text: if value.is_some() {
+            format!("DISK {digits}°C")
+        } else {
+            "DISK —".into()
+        },
+        digits,
+        tooltip,
+    }
+}
+
 fn displayed_power(value: f64) -> f64 {
     // Sub-watt readings display as a range, so integer color rules use its
     // lower bound rather than treating a nonzero reading as idle.
@@ -730,6 +814,60 @@ fn battery_entry(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
+        use mangodisk_core::system_resources::metrics::MetricReading;
+        use mangodisk_platform::system_resources::disk_temperature::{
+            DiskTemperature, DiskTemperatureSource,
+        };
+        let labels = super::super::labels::Labels::for_locale("en-US");
+        let mut readings = ResourceReadings {
+            observed_at_ms: 1000,
+            volumes: vec![mangodisk_platform::system_resources::disk::ResourceVolume {
+                id: "disk".into(),
+                name: "System".into(),
+                system: true,
+                mount_point: String::new(),
+            }],
+            disk_temperature: MetricReading::ready(
+                DiskTemperature {
+                    volume_id: "disk".into(),
+                    volume_name: "System".into(),
+                    celsius: 34.5,
+                    source: DiskTemperatureSource::NvmeSmart,
+                },
+                1000,
+            ),
+            ..Default::default()
+        };
+        let entry = disk_temperature_entry(&readings, &labels, None);
+        assert_eq!(entry.digits, "35");
+        assert_eq!(entry.text, "DISK 35°C");
+        assert_eq!(entry.tooltip, "Disk temperature 35°C · System");
+        assert_eq!(
+            disk_temperature_entry(&readings, &labels, Some("another-disk")).digits,
+            "—"
+        );
+        assert_eq!(
+            disk_temperature_entry(&readings, &labels, Some("disk")).digits,
+            "35"
+        );
+        readings.observed_at_ms = 91_001;
+        assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+        readings.observed_at_ms = 999;
+        assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+        readings.observed_at_ms = 1000;
+        for status in [
+            MetricStatus::Loading,
+            MetricStatus::Failed,
+            MetricStatus::Disconnected,
+            MetricStatus::Unsupported,
+        ] {
+            readings.disk_temperature.status = status;
+            assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+        }
+    }
+
     #[test]
     #[cfg(target_os = "macos")]
     fn physical_absence_hides_selected_battery_items_without_changing_preferences() {
@@ -1269,7 +1407,10 @@ mod tests {
                 .filter(|id| {
                     (cfg!(target_os = "macos") || !matches!(id, DisplayId::CpuTemperature))
                         && (cfg!(any(target_os = "macos", windows))
-                            || !matches!(id, DisplayId::GpuTemperature))
+                            || !matches!(
+                                id,
+                                DisplayId::GpuTemperature | DisplayId::DiskTemperature
+                            ))
                         && (cfg!(target_os = "macos")
                             || !matches!(
                                 id,

@@ -4017,6 +4017,7 @@
     }
   },
   "systemStatus": {
+    "diskTemperature": "Температура диска",
     "cpuUsage": "Загрузка CPU",
     "gpuUsage": "Загрузка GPU",
     "appearanceTitle": "Внешний вид",
