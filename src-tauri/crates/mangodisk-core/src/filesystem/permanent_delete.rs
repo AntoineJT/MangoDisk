@@ -127,6 +127,7 @@ pub(crate) struct PermanentDeleteError {
     remaining_restored: bool,
     counts_unknown: bool,
     native_code: Option<i32>,
+    stage: &'static str,
 }
 
 /// Captures a stable target before domain-specific validation begins.
@@ -226,6 +227,7 @@ impl PermanentDeleteError {
             remaining_restored: false,
             counts_unknown: false,
             native_code: None,
+            stage: "validate",
         }
     }
 
@@ -239,6 +241,7 @@ impl PermanentDeleteError {
             remaining_restored: false,
             counts_unknown: false,
             native_code: None,
+            stage: "validate",
         }
     }
 
@@ -257,6 +260,7 @@ impl PermanentDeleteError {
             remaining_restored: false,
             counts_unknown: false,
             native_code: None,
+            stage: "remove",
         }
     }
 
@@ -286,6 +290,17 @@ impl PermanentDeleteError {
 
     pub(crate) fn reason(&self) -> Option<CoreErrorReason> {
         self.reason
+    }
+
+    pub(crate) fn native_code(&self) -> Option<i32> {
+        self.native_code
+    }
+    pub(crate) fn stage(&self) -> &'static str {
+        self.stage
+    }
+    fn at_stage(mut self, stage: &'static str) -> Self {
+        self.stage = stage;
+        self
     }
 }
 
@@ -707,7 +722,8 @@ fn delete_staged_target(
         return Err(permanent_delete_io_error(
             "failed to prepare the item for permanent deletion",
             error,
-        ));
+        )
+        .at_stage("stage_rename"));
     }
 
     if let Err(identity_error) = verify_staged_identity(&target, &staged_target, "before_remove") {
@@ -1437,7 +1453,8 @@ fn create_staging_directory(parent: &Path) -> Result<PathBuf, PermanentDeleteErr
                 return Err(permanent_delete_io_error(
                     "failed to create a private deletion staging directory",
                     error,
-                ));
+                )
+                .at_stage("create_staging"));
             }
         }
     }
@@ -1663,7 +1680,8 @@ pub(crate) fn delete_file_candidate_permanently(
     candidate: &PermanentDeleteCandidate,
 ) -> Result<(PathBuf, FileSpaceUsage), PermanentDeleteError> {
     let requested_target = PathBuf::from(&candidate.path);
-    let prepared = prepare_path_for_permanent_delete(&requested_target)?;
+    let prepared = prepare_path_for_permanent_delete(&requested_target)
+        .map_err(|error| error.at_stage("prepare_target"))?;
     validate_permanent_delete_candidate(prepared.metadata(), candidate)?;
     let target = current_platform()
         .canonicalize_no_links(&requested_target)

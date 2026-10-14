@@ -23,6 +23,34 @@ fn staging_count(parent: &Path) -> usize {
 }
 
 #[test]
+#[cfg(windows)]
+fn locked_file_failure_retains_the_native_code_and_staging_stage() {
+    use std::os::windows::fs::OpenOptionsExt;
+    let sandbox = fixture();
+    let path = sandbox.path().join("locked.bin");
+    fs::write(&path, b"keep").unwrap();
+    let metadata = fs::metadata(&path).unwrap();
+    let _locked = fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0)
+        .open(&path)
+        .unwrap();
+    let error = delete_file_candidate_permanently(&PermanentDeleteCandidate {
+        path: path.to_string_lossy().into_owned(),
+        expected_bytes: 4,
+        expected_modified_at_ms: modified_ms(&metadata),
+    })
+    .unwrap_err();
+    assert_eq!(error.native_code(), Some(32));
+    assert_eq!(error.reason(), Some(CoreErrorReason::ResourceBusy));
+    assert_eq!(error.stage(), "stage_rename");
+    assert!(!error.is_partial());
+    drop(_locked);
+    assert_eq!(fs::read(&path).unwrap(), b"keep");
+    assert_eq!(staging_count(sandbox.path()), 0);
+}
+
+#[test]
 fn successful_deletion_removes_file_and_staging_directory() {
     let sandbox = fixture();
     let path = sandbox.path().join("payload.bin");
