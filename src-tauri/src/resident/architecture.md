@@ -1021,11 +1021,14 @@ failures rather than triggering a different sensor.
 
 Windows resolves volume extents to one physical disk, preferring native storage
 temperature descriptors. If unavailable, an identified NVMe bus uses the SMART
-health log; an ATA/SATA bus uses the fixed SMART READ DATA operation. SATA access
-can require administrator permissions. No additional driver is installed and
-collection does not automatically elevate. Unsupported virtual, RAID and bridged
-devices remain unavailable. Queries are bounded, run on the disk worker and do
-not block CPU/network sampling or the UI. Logs record source or failure transitions
+health log; an ATA/SATA bus first uses the read-only storage failure-prediction
+query with its metadata handle. Its full SMART sector retains checksum validation.
+Unsupported or denied queries fall back to the fixed SMART READ DATA operation,
+whose raw device access can require administrator permissions. Invalid native
+responses fail closed instead of substituting another reading. No additional
+driver is installed and collection does not automatically elevate. Unsupported
+virtual, RAID and bridged devices remain unavailable. Queries are bounded, run on
+the disk worker and do not block CPU/network sampling or the UI. Logs record source or failure transitions
 with the volume name and native stage/code, avoiding per-sample repetition.
 
 The network catalogue exposes connected physical Wi-Fi/Ethernet links, ordered

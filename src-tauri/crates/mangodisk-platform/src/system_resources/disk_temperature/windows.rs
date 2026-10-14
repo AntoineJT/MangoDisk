@@ -40,7 +40,7 @@ fn error(stage: &str) -> PlatformError {
         format!("disk_temperature stage={stage} native_code={native}"),
     )
 }
-fn open(path: &str, access: u32) -> PlatformResult<Handle> {
+fn open(path: &str, access: u32, stage: &str) -> PlatformResult<Handle> {
     let path: Vec<u16> = path.encode_utf16().chain(Some(0)).collect();
     // Metadata queries request no data access and do not install a driver or elevate.
     let handle = unsafe {
@@ -55,7 +55,7 @@ fn open(path: &str, access: u32) -> PlatformResult<Handle> {
         )
     };
     if handle == INVALID_HANDLE_VALUE {
-        Err(error("open"))
+        Err(error(stage))
     } else {
         Ok(Handle(handle))
     }
@@ -91,7 +91,7 @@ fn ioctl(handle: &Handle, code: u32, input: &[u8], stage: &str) -> PlatformResul
     )
 }
 fn device_number(volume: &ResourceVolume) -> PlatformResult<u32> {
-    let volume = open(volume.id.trim_end_matches('\\'), 0)?;
+    let volume = open(volume.id.trim_end_matches('\\'), 0, "volume_open")?;
     let bytes = ioctl(
         &volume,
         IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
@@ -154,7 +154,7 @@ fn storage_temperature(bytes: &[u8]) -> PlatformResult<f64> {
 }
 pub(super) fn read(volume: &ResourceVolume) -> PlatformResult<(f64, DiskTemperatureSource)> {
     let number = device_number(volume)?;
-    let handle = open(&format!("\\\\.\\PhysicalDrive{number}"), 0)?;
+    let handle = open(&format!("\\\\.\\PhysicalDrive{number}"), 0, "device_open")?;
     let reading = read_device(&handle, number)?;
     let current = device_number(volume).map_err(|error| {
         PlatformError::item_changed(format!(
@@ -202,6 +202,19 @@ fn read_device(handle: &Handle, number: u32) -> PlatformResult<(f64, DiskTempera
         .map(|bytes| i32::from_le_bytes(bytes.try_into().unwrap()))
         .ok_or_else(|| unsupported("device_bus_length"))?;
     if bus == BusTypeAta || bus == BusTypeSata {
+        // This read-only storage query uses FILE_ANY_ACCESS and works with the
+        // metadata handle. Raw SMART commands require a separate read/write handle.
+        let prediction = ioctl(handle, IOCTL_STORAGE_PREDICT_FAILURE, &[], "storage_smart")
+            .and_then(|bytes| prediction_temperature(&bytes));
+        match prediction {
+            Ok(value) => return Ok((value, DiskTemperatureSource::WindowsStorage)),
+            Err(error)
+                if matches!(
+                    error.code(),
+                    PlatformErrorCode::AccessDenied | PlatformErrorCode::Unsupported
+                ) => {}
+            Err(error) => return Err(error),
+        }
         let value = read_ata(number)?;
         return Ok((value, DiskTemperatureSource::AtaSmart));
     }
@@ -236,6 +249,19 @@ fn read_device(handle: &Handle, number: u32) -> PlatformResult<(f64, DiskTempera
         nvme_log_temperature(&bytes)?,
         DiskTemperatureSource::NvmeSmart,
     ))
+}
+
+fn prediction_temperature(bytes: &[u8]) -> PlatformResult<f64> {
+    let start = offset_of!(STORAGE_PREDICT_FAILURE, VendorSpecific);
+    if bytes.len() != size_of::<STORAGE_PREDICT_FAILURE>() {
+        return Err(PlatformError::new(
+            PlatformErrorCode::InvalidData,
+            "disk_temperature stage=storage_smart invalid_response_length",
+        ));
+    }
+    // Failure prediction is a health flag, not a temperature or a reason to hide
+    // a valid reading. Keep the full ATA sector's checksum and sensor validation.
+    ata_temperature(&bytes[start..start + 512])
 }
 
 fn nvme_log_temperature(bytes: &[u8]) -> PlatformResult<f64> {
@@ -276,6 +302,7 @@ fn read_ata(number: u32) -> PlatformResult<f64> {
     let handle = open(
         &format!("\\\\.\\PhysicalDrive{number}"),
         GENERIC_READ | GENERIC_WRITE,
+        "ata_smart_open",
     )?;
     let mut input = [0u8; 32];
     input[..4].copy_from_slice(&512u32.to_le_bytes());
@@ -305,6 +332,43 @@ fn read_ata(number: u32) -> PlatformResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn storage_prediction_reads_valid_smart_without_data_access_and_keeps_integrity_checks() {
+        assert_eq!((IOCTL_STORAGE_PREDICT_FAILURE >> 14) & 3, 0);
+        assert_eq!(size_of::<STORAGE_PREDICT_FAILURE>(), 516);
+        let start = offset_of!(STORAGE_PREDICT_FAILURE, VendorSpecific);
+        let mut response = vec![0u8; size_of::<STORAGE_PREDICT_FAILURE>()];
+        response[start..start + 2].copy_from_slice(&1u16.to_le_bytes());
+        response[start + 2] = 190;
+        response[start + 7] = 30;
+        response[start + 350] = 194;
+        response[start + 355] = 45;
+        response[start + 511] = 0u8.wrapping_sub(
+            response[start..start + 511]
+                .iter()
+                .fold(0u8, |sum, byte| sum.wrapping_add(*byte)),
+        );
+        for health in [0u32, 1, u32::MAX] {
+            response[..4].copy_from_slice(&health.to_le_bytes());
+            assert_eq!(prediction_temperature(&response).unwrap(), 45.0);
+        }
+        let mut corrupt = response.clone();
+        corrupt[start + 100] ^= 1;
+        assert_eq!(
+            prediction_temperature(&corrupt).unwrap_err().code(),
+            PlatformErrorCode::InvalidData
+        );
+        for length in [0, 4, 515, 517, 1024] {
+            assert_eq!(
+                prediction_temperature(&vec![0; length]).unwrap_err().code(),
+                PlatformErrorCode::InvalidData
+            );
+        }
+        assert_eq!(
+            prediction_temperature(&vec![0; 516]).unwrap_err().code(),
+            PlatformErrorCode::Unsupported
+        );
+    }
     #[test]
     fn nvme_response_requires_matching_protocol_and_bounded_payload() {
         let mut bytes = vec![0u8; 560];
