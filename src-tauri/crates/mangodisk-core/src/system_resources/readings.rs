@@ -534,10 +534,7 @@ impl ResourceCache {
         monotonic_ms: u64,
         timestamp_ms: u64,
     ) -> NetworkSelectionReason {
-        self.readings.interfaces = interfaces
-            .iter()
-            .map(|sample| sample.interface.clone())
-            .collect();
+        self.readings.interfaces = network::catalogue(&interfaces, manual);
         let (selected, reason) =
             network::select(&interfaces, manual, self.selected_interface.as_deref());
         let Some(selected) = selected.filter(|sample| sample.interface.connected) else {

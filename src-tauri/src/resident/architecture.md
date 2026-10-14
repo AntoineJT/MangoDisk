@@ -994,3 +994,13 @@ old inactive, empty battery-temperature default; custom rules remain intact.
 Current-version users can still disable or remove every rule. Charging, battery
 and whole-system power defaults remain disabled and empty. Battery help actions
 sit immediately after their labels, separate from color controls.
+
+### Network selection
+
+The network catalogue exposes connected physical Wi-Fi/Ethernet links, ordered
+by default-route preference and stable name/identity. It does not filter by
+instantaneous traffic. Saved manual identities remain visible across disconnects
+and may still refer to a VPN. Counters retain the full native interface set;
+automatic selection continues to avoid virtual double counting. On macOS,
+carrier flags additionally require a non-loopback, non-link-local assigned IP,
+so unused Thunderbolt and Ethernet ports do not masquerade as usable links.
