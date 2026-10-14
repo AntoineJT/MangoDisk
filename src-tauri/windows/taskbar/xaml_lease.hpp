@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <winrt/Windows.UI.Xaml.Automation.Peers.h>
 
 // This protocol is private to two instances of the same embedded DLL. Explorer
 // accepts only bounded layout data; it never executes commands or opens a new log.
@@ -107,7 +108,9 @@ struct Lease {
     winrt::weak_ref<ux::FrameworkElement> target;
     ux::Thickness original{}, applied{};
     double original_min = 0, applied_min = 0, original_max = 0, applied_max = 0, amount = 0;
-    double natural_width = 0;
+    double natural_width = 0, natural_center = 0, measured_frame_width = 0;
+    LONG measured_bar_width = 0, measured_tray_left = 0;
+    UINT measured_dpi = 0;
     ApplicationWindows measured_windows;
     ULONGLONG windows_checked_at = 0;
     Placement placement = Placement::Right;
@@ -217,36 +220,73 @@ struct Lease {
             (placement == Placement::BarLeft || placement == Placement::BarRight) &&
             same_value(element.MaxWidth(), applied_max) ? original_max : element.MaxWidth();
         double centered_room = frame.ActualWidth() - reserved_width;
-        if (request.placement == Placement::BarRight) {
-            RECT bar{}, tray{};
+        RECT bar{}, tray{};
+        double before_tray = 0;
+        if (centered) {
             HWND notification = FindWindowExW(shell, nullptr, L"TrayNotifyWnd", nullptr);
             if (!notification || !GetWindowRect(shell, &bar) || !GetWindowRect(notification, &tray)) return E_PENDING;
-            centered_room = 2 * ((tray.left - bar.left) * 96.0 / dpi - wanted) - frame.ActualWidth();
+            before_tray = (tray.left - bar.left) * 96.0 / dpi - wanted;
+            // Explorer shifts centered buttons left on crowded taskbars to
+            // avoid the tray. Screen centering alone cannot protect our slot.
+            centered_room = request.placement == Placement::BarLeft
+                ? (std::min)(centered_room, before_tray)
+                : 2 * before_tray - frame.ActualWidth();
         }
         // DesiredSize and an unconstrained Measure still reflect Explorer's
         // smaller overflow model. Retain the last unconstrained layout width;
         // never use a periodic overflow measurement to release our limit.
-        double button_width = element.DesiredSize().Width;
-        if (centered && active && target.get() == element &&
-            !same_value(applied_max, original_max) && same_value(element.MaxWidth(), applied_max)) {
-            button_width = natural_width;
+        auto screen_button_center = [&](double width) {
+            auto start = find(frame, L"LaunchListButton");
+            if (!start) winrt::throw_hresult(E_NOINTERFACE);
+            auto peer = ux::Automation::Peers::FrameworkElementAutomationPeer::CreatePeerForElement(start);
+            if (!peer) winrt::throw_hresult(E_NOINTERFACE);
+            auto bounds = peer.GetBoundingRectangle();
+            if (bounds.Width <= 0) winrt::throw_hresult(E_PENDING);
+            // The repeater can span the entire taskbar while its buttons occupy
+            // only DesiredSize. Start anchors that group in screen coordinates;
+            // the repeater's ActualWidth would falsely imply screen centering.
+            return (bounds.X - bar.left) * 96.0 / dpi + width / 2;
+        };
+        bool limited = centered && active && target.get() == element &&
+            !same_value(applied_max, original_max) && same_value(element.MaxWidth(), applied_max);
+        double button_width = limited ? natural_width : element.DesiredSize().Width;
+        double button_center = centered ? (limited ? natural_center : screen_button_center(button_width)) : 0;
+        if (limited) {
             if (GetTickCount64() - windows_checked_at >= 1000) {
                 auto windows = application_windows();
                 windows_checked_at = GetTickCount64();
-                if (windows.available && (!measured_windows.available ||
-                    windows.signature != measured_windows.signature || windows.count != measured_windows.count)) {
-                    // Actual application-window changes justify one full layout
-                    // probe so closing apps can release unnecessary overflow.
+                bool geometry_changed = measured_bar_width != bar.right - bar.left ||
+                    measured_tray_left != tray.left - bar.left || measured_dpi != dpi ||
+                    !same_value(measured_frame_width, frame.ActualWidth());
+                if (geometry_changed || (windows.available && (!measured_windows.available ||
+                    windows.signature != measured_windows.signature || windows.count != measured_windows.count))) {
+                    // Window or taskbar geometry changes justify one full layout
+                    // probe so additional space can release unnecessary overflow.
                     // Measure alone does not reset the shell's overflow model.
                     element.MaxWidth(original_max);
                     frame.UpdateLayout();
                     button_width = element.DesiredSize().Width;
+                    button_center = screen_button_center(button_width);
                     natural_width = button_width;
+                    natural_center = button_center;
                     measured_windows = windows;
+                    measured_bar_width = bar.right - bar.left;
+                    measured_tray_left = tray.left - bar.left;
+                    measured_dpi = dpi;
+                    measured_frame_width = frame.ActualWidth();
                     element.MaxWidth(applied_max);
                     frame.UpdateLayout();
                 }
             }
+        }
+        if (centered) {
+            if (!std::isfinite(button_center)) return E_PENDING;
+            // Explorer's actual group center can differ from the screen center
+            // even before overflow. Keep the unconstrained visual anchor while
+            // limited; the overflow model's anchor would create feedback.
+            double visual_room = request.placement == Placement::BarLeft
+                ? 2 * (button_center - wanted) : 2 * (before_tray - button_center);
+            centered_room = (std::min)(centered_room, visual_room);
         }
         bool constrain = centered && button_width >= centered_room - 1.0 / 64.0;
         double wanted_max = constrain ? (std::min)(base_max, centered_room) : base_max;
@@ -270,6 +310,11 @@ struct Lease {
         original_max = element.MaxWidth();
         applied_max = wanted_max;
         natural_width = button_width;
+        natural_center = button_center;
+        measured_bar_width = bar.right - bar.left;
+        measured_tray_left = tray.left - bar.left;
+        measured_dpi = dpi;
+        measured_frame_width = frame.ActualWidth();
         measured_windows = application_windows();
         windows_checked_at = GetTickCount64();
         applied_min = element.ActualWidth();
@@ -302,6 +347,7 @@ struct Lease {
                     placement == Placement::AfterStart ? L"AfterStart" : L"Right") +
                 L" centered=" + std::to_wstring(centered) + L" constrained=" + std::to_wstring(constrain) +
                 L" buttons_dip=" + std::to_wstring(button_width) +
+                L" button_center_dip=" + std::to_wstring(button_center) +
                 L" frame_dip=" + std::to_wstring(frame.ActualWidth()) +
                 L" width_dip=" +
                 std::to_wstring(wanted) + L" max_width_dip=" + std::to_wstring(centered ? applied_max : original_max) + L" dpi=" + std::to_wstring(dpi) +

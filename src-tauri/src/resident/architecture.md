@@ -281,15 +281,23 @@ may remain mapped until Explorer exits; the per-user cache avoids locking update
 or uninstall files. A build-specific channel identity prevents reuse of old code.
 Old cache files are removed on a later startup when Explorer has released them.
 Centered task buttons receive a maximum width only when they would overlap the
-monitor reservation. While limited, retain the last unconstrained layout width:
+monitor reservation. Left-side capacity also respects the corridor before the
+notification tray: on crowded taskbars Explorer shifts centered buttons left to
+avoid the tray, so screen centering alone can leave the Start button covered.
+Capacity also respects the group's actual unconstrained visual center, derived
+from Start's screen bounds and the group's desired width. The repeater's actual
+width can span the entire taskbar and falsely imply screen centering. While
+limited, retain the last unconstrained layout width and visual center:
 `DesiredSize` and a temporary unconstrained measure still reflect Explorer's
 smaller overflow model and can cause repeated expansion and collapse. Poll a
 Z-order-independent signature of visible application windows once per second,
-excluding Explorer and tool windows. A changed signature permits one full layout
-probe so closing apps can release the limit. Failed enumeration retains the safe
-limit. Native regression checks include a stable overflow threshold, opening and
-closing applications, natural centering when space is available, changed monitor
-reservations, and restoration on disable or exit.
+excluding windows from the taskbar's Explorer process and tool windows. A changed
+signature or changed taskbar width, tray boundary, DPI, or XAML frame width
+permits one full layout probe so newly available space can release the limit.
+Failed enumeration alone retains the safe limit. Native regression checks include
+a stable overflow threshold, opening and closing applications, natural centering
+when space is available, tray-corridor overlap, changed monitor reservations, and
+restoration on disable or exit.
 When the app and Explorer have different process architectures (for example, an
 x64 build running on ARM64 Windows), child hosting still works but the XAML DLL
 cannot load into Explorer. Detect this before launching the companion and use
