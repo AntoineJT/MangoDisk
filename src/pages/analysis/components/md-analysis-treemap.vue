@@ -567,8 +567,8 @@ function tooltipStyle() {
 }
 
 .treemap-tile:is(:hover, [data-state='open'], .is-highlighted) {
-  /* Match the sunburst's highlighted color strength regardless of depth. */
-  --treemap-hover-overlay-opacity: 0.4;
+  /* Palettes control highlight strength so small labels retain contrast at every depth. */
+  --treemap-hover-overlay-opacity: var(--treemap-highlight-overlay-opacity);
 
   z-index: 2;
 }
@@ -619,7 +619,7 @@ function tooltipStyle() {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 2px 8px;
-  @apply text-muted-foreground;
+  color: var(--treemap-muted-foreground);
   font-size: var(--font-content-secondary);
   font-variant-numeric: tabular-nums;
 }

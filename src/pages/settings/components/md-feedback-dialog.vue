@@ -683,7 +683,7 @@ onMounted(() => {
 
 :deep(.feedback-email.invalid),
 .feedback-textarea.invalid {
-  border-color: var(--destructive);
+  border-color: var(--destructive-border);
   box-shadow: none;
 }
 
@@ -768,7 +768,7 @@ onMounted(() => {
 }
 
 .attachment-dropzone.invalid {
-  border-color: var(--destructive);
+  border-color: var(--destructive-border);
   box-shadow: none;
 }
 

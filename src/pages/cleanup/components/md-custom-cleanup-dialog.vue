@@ -898,7 +898,7 @@ onBeforeUnmount(() => {
 }
 
 .directory-drop-zone.invalid {
-  border-color: var(--destructive);
+  border-color: var(--destructive-border);
 }
 
 .directory-list {
@@ -983,7 +983,7 @@ onBeforeUnmount(() => {
 }
 
 .compact-control.invalid {
-  border-color: var(--destructive);
+  border-color: var(--destructive-border);
 }
 
 /*

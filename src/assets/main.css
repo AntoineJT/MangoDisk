@@ -456,6 +456,11 @@ body,
   }
 }
 
+/* Validation outlines need contrast against surfaces, independently of filled buttons. */
+[data-slot='input'][aria-invalid='true'] {
+  border-color: var(--destructive-border);
+}
+
 /* Generated buttons consume project-owned interaction colors without source edits. */
 [data-slot='button'].bg-primary:hover:not(:disabled) {
   background-color: var(--primary-hover);

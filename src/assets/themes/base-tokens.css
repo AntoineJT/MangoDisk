@@ -38,6 +38,7 @@
   --primary-text-subtle: var(--primary-text);
   --primary-text-hover: var(--primary-text);
   --destructive-text: var(--destructive);
+  --destructive-border: var(--destructive-text);
   --primary-hover: var(--primary);
   --destructive-hover: var(--destructive);
   --sidebar-muted-foreground: var(--muted-foreground);
@@ -48,6 +49,8 @@
   --switch-thumb: var(--background);
   --switch-thumb-checked: var(--background);
   --result-action-foreground: var(--muted-foreground);
+  --treemap-muted-foreground: var(--muted-foreground);
+  --treemap-highlight-overlay-opacity: 0.4;
   --surface-primary-badge: var(--accent);
   --result-hover: var(--muted);
   --result-selected: transparent;
