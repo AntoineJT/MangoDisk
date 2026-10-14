@@ -274,6 +274,17 @@
         "unchanged": "無需變更",
         "failed": "未能完成",
         "cancelled": "已略過"
+      },
+      "blockedDescription": "未清理任何痕跡：{sources}未通過安全檢查，請重新掃描",
+      "failureReasons": {
+        "sourceChanged": "資料已變更，請重新掃描",
+        "sourceUnavailable": "無法讀取資料，請重新掃描",
+        "preflightBlocked": "其他項目檢查未通過，已略過",
+        "browserRunning": "應用程式仍在執行，請關閉後重新掃描",
+        "operationCancelled": "操作已取消，未清理",
+        "operationFailed": "未能完成，請查看日誌",
+        "partiallyCleared": "部分已清理，其餘未完成",
+        "outcomeUncertain": "結果未確認，請重新掃描"
       }
     },
     "feedback": {

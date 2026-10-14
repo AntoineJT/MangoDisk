@@ -274,6 +274,17 @@
         "unchanged": "변경 필요 없음",
         "failed": "완료할 수 없음",
         "cancelled": "건너뜀"
+      },
+      "blockedDescription": "삭제하지 않음: {sources} 안전 검사 실패. 다시 스캔하세요",
+      "failureReasons": {
+        "sourceChanged": "데이터가 변경됨. 다시 스캔하세요",
+        "sourceUnavailable": "데이터를 읽을 수 없음. 다시 스캔하세요",
+        "preflightBlocked": "다른 항목의 안전 검사 실패로 건너뜀",
+        "browserRunning": "앱 실행 중. 종료 후 다시 스캔하세요",
+        "operationCancelled": "취소됨; 삭제하지 않음",
+        "operationFailed": "완료하지 못함. 로그를 확인하세요",
+        "partiallyCleared": "일부 삭제됨; 나머지는 미완료",
+        "outcomeUncertain": "결과 확인 불가. 다시 스캔하세요"
       }
     },
     "feedback": {

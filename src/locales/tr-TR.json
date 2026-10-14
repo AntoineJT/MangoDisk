@@ -274,6 +274,17 @@
         "unchanged": "Değişiklik gerekmiyor",
         "failed": "Tamamlanamadı",
         "cancelled": "Atlandı"
+      },
+      "blockedDescription": "Hiçbir iz silinmedi: {sources} güvenlik denetimini geçemedi. Yeniden tarayın",
+      "failureReasons": {
+        "sourceChanged": "Veriler değişti. Yeniden tarayın",
+        "sourceUnavailable": "Veriler okunamıyor. Yeniden tarayın",
+        "preflightBlocked": "Atlandı: başka bir öğe güvenlik denetimini geçemedi",
+        "browserRunning": "Uygulama açık. Kapatıp yeniden tarayın",
+        "operationCancelled": "İptal edildi; hiçbir iz silinmedi",
+        "operationFailed": "Tamamlanamadı. Günlüğü kontrol edin",
+        "partiallyCleared": "Kısmen temizlendi; işlem tamamlanamadı",
+        "outcomeUncertain": "Sonuç doğrulanamadı. Yeniden tarayın"
       }
     },
     "feedback": {

@@ -274,6 +274,17 @@
         "unchanged": "No change needed",
         "failed": "Could not complete",
         "cancelled": "Skipped"
+      },
+      "blockedDescription": "Nothing cleared: {sources} failed safety checks. Rescan to retry",
+      "failureReasons": {
+        "sourceChanged": "Data changed. Rescan to retry",
+        "sourceUnavailable": "Cannot read data. Rescan to retry",
+        "preflightBlocked": "Skipped: another item failed safety checks",
+        "browserRunning": "App still running. Close it and rescan",
+        "operationCancelled": "Cancelled; nothing cleared",
+        "operationFailed": "Could not complete. Check the log",
+        "partiallyCleared": "Partially cleared; cleanup incomplete",
+        "outcomeUncertain": "Result unverified. Rescan to check"
       }
     },
     "feedback": {

@@ -23,9 +23,11 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // Whole-system power adds two labels: Japanese measures 323,767 raw bytes.
 // The component license catalog measures 325,324 Japanese / 393,378 Russian
 // raw bytes. Add one KiB to each local raw margin; retain their gzip budgets.
+// Concise privacy failure guidance measures 326,184 Japanese / 394,554 Russian raw bytes.
+// Japanese gzip measures 61,463 bytes; retain the original Russian gzip budget.
 const localeChunkLimitOverrides = new Map([
-  ['ja-jp', { bytes: 318 * 1024, gzipBytes: 60 * 1024 }],
-  ['ru-ru', { bytes: 385 * 1024, gzipBytes: 68 * 1024 }],
+  ['ja-jp', { bytes: 319 * 1024, gzipBytes: 61 * 1024 }],
+  ['ru-ru', { bytes: 386 * 1024, gzipBytes: 68 * 1024 }],
 ]);
 
 function fail(message) {

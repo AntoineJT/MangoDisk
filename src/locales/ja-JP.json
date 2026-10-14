@@ -274,6 +274,17 @@
         "unchanged": "変更不要",
         "failed": "完了できませんでした",
         "cancelled": "スキップ済み"
+      },
+      "blockedDescription": "未消去：{sources}の安全確認に失敗。再スキャンしてください",
+      "failureReasons": {
+        "sourceChanged": "データ変更：再スキャンしてください",
+        "sourceUnavailable": "読み取り不可：再スキャンしてください",
+        "preflightBlocked": "他の項目の安全確認に失敗し、スキップしました",
+        "browserRunning": "アプリ起動中：終了して再スキャンしてください",
+        "operationCancelled": "キャンセル済み・未消去",
+        "operationFailed": "未完了：ログを確認してください",
+        "partiallyCleared": "一部消去済み・未完了",
+        "outcomeUncertain": "結果未確認：再スキャンしてください"
       }
     },
     "feedback": {

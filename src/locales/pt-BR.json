@@ -274,6 +274,17 @@
         "unchanged": "Nenhuma alteração necessária",
         "failed": "Não foi possível concluir",
         "cancelled": "Ignorado"
+      },
+      "blockedDescription": "Nada removido: {sources} falhou na verificação de segurança. Analise novamente",
+      "failureReasons": {
+        "sourceChanged": "Dados alterados. Analise novamente",
+        "sourceUnavailable": "Não foi possível ler os dados. Analise novamente",
+        "preflightBlocked": "Ignorado: outro item falhou na verificação de segurança",
+        "browserRunning": "Aplicativo em execução. Feche-o e analise novamente",
+        "operationCancelled": "Cancelado; nada removido",
+        "operationFailed": "Não foi possível concluir. Consulte o log",
+        "partiallyCleared": "Limpeza parcial; não concluída",
+        "outcomeUncertain": "Resultado não verificado. Analise novamente"
       }
     },
     "feedback": {

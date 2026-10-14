@@ -1135,30 +1135,28 @@ impl PrivacyService {
             .iter()
             .map(|candidate| {
                 if operation.ensure_not_cancelled().is_err() {
-                    Some("operationCancelled")
+                    Some(("operationCancelled", None))
                 } else if candidate
                     .browser_process_names
                     .iter()
                     .any(|name| running.contains(&name.to_lowercase()))
                 {
-                    Some("browserRunning")
-                } else if !matches!(current_fingerprint(candidate), Ok(ref value) if value == &candidate.fingerprint)
-                {
-                    Some("sourceChanged")
+                    Some(("browserRunning", None))
                 } else {
-                    None
+                    fingerprint_failure(candidate, &candidate.fingerprint)
+                        .map(|(reason, error)| (reason, Some(error)))
                 }
             })
             .collect::<Vec<_>>();
         if preflight_failures.iter().any(Option::is_some) {
             for (candidate, failure) in pending.candidates.iter().zip(&preflight_failures) {
-                if let Some(reason) = failure {
+                if let Some((reason, error)) = failure {
                     log_privacy_item_failure(
                         operation.id(),
                         candidate,
                         "preflight",
                         reason,
-                        None,
+                        error.as_ref(),
                         0,
                     );
                 }
@@ -1168,7 +1166,7 @@ impl PrivacyService {
                 .iter()
                 .zip(preflight_failures)
                 .map(|(candidate, failure)| {
-                    if let Some(reason) = failure {
+                    if let Some((reason, _)) = failure {
                         execution_result(
                             candidate,
                             if reason == "operationCancelled" {
@@ -1302,13 +1300,14 @@ impl PrivacyService {
                     continue;
                 }
             }
-            if !fingerprint_matches_expectation(candidate, &database_fingerprints) {
+            let expected = expected_fingerprint(candidate, &database_fingerprints);
+            if let Some((reason, error)) = fingerprint_failure(candidate, expected) {
                 log_privacy_item_failure(
                     operation.id(),
                     candidate,
                     "execution",
-                    "source_changed",
-                    None,
+                    reason,
+                    Some(&error),
                     0,
                 );
                 results.push(execution_result(
@@ -1316,7 +1315,7 @@ impl PrivacyService {
                     PrivacyExecutionItemStatus::Failed,
                     0,
                     false,
-                    Some("sourceChanged"),
+                    Some(reason),
                 ));
                 continue;
             }
@@ -1900,8 +1899,10 @@ fn privacy_item(input: PrivacyItemInput) -> PrivacyItem {
         PrivacyDataKind::JumpLists => (
             PrivacyCategory::SystemActivity,
             PrivacySensitivity::Activity,
-            PrivacyImpact::Low,
-            PrivacyRecommendation::Recommended,
+            // Windows updates jump lists independently of browser activity. Keep this volatile
+            // source opt-in so it cannot block the default browser cleanup plan on drift.
+            PrivacyImpact::Workflow,
+            PrivacyRecommendation::Manual,
             false,
         ),
         PrivacyDataKind::RunDialogHistory
@@ -2319,17 +2320,44 @@ fn database_fingerprint_expectations(
         .collect()
 }
 
-fn fingerprint_matches_expectation(
-    candidate: &NativePrivacyCandidate,
-    database_fingerprints: &BTreeMap<PathBuf, String>,
-) -> bool {
-    let expected = match &candidate.action {
+fn expected_fingerprint<'a>(
+    candidate: &'a NativePrivacyCandidate,
+    database_fingerprints: &'a BTreeMap<PathBuf, String>,
+) -> &'a str {
+    match &candidate.action {
         NativePrivacyAction::Database { path, .. } => database_fingerprints
             .get(path)
             .unwrap_or(&candidate.fingerprint),
         _ => &candidate.fingerprint,
-    };
-    matches!(current_fingerprint(candidate), Ok(ref value) if value == expected)
+    }
+}
+
+fn fingerprint_failure(
+    candidate: &NativePrivacyCandidate,
+    expected: &str,
+) -> Option<(&'static str, CoreError)> {
+    match current_fingerprint(candidate) {
+        Ok(current) if current == expected => None,
+        Ok(current) => Some((
+            "sourceChanged",
+            CoreError::operation_failed(format!(
+                "privacy source fingerprint changed: expected={expected} current={current}"
+            )),
+        )),
+        Err(error) => Some(("sourceUnavailable", error)),
+    }
+}
+
+#[cfg(test)]
+fn fingerprint_matches_expectation(
+    candidate: &NativePrivacyCandidate,
+    database_fingerprints: &BTreeMap<PathBuf, String>,
+) -> bool {
+    fingerprint_failure(
+        candidate,
+        expected_fingerprint(candidate, database_fingerprints),
+    )
+    .is_none()
 }
 
 fn refresh_database_fingerprint_expectation(
@@ -3312,8 +3340,17 @@ fn log_privacy_item_failure(
             PlatformMutationState::MayHaveChanged => "may_have_changed",
         })
         .unwrap_or("not_attempted");
+    let paths = match &candidate.action {
+        NativePrivacyAction::Database { path, .. }
+        | NativePrivacyAction::ReviewOnlyFile { path, .. } => vec![path],
+        NativePrivacyAction::Directories { roots } | NativePrivacyAction::System { roots, .. } => {
+            roots.iter().collect()
+        }
+        NativePrivacyAction::ApplicationNative { .. } => Vec::new(),
+    };
+    let source_paths = mangodisk_platform::diagnostics::text(&format!("{paths:?}"));
     log::warn!(
-        "privacy_item_failed operation_id={operation_id} source_id={} kind={:?} stage={stage} reason={reason} mutation_state={mutation_state} confirmed_affected_count={confirmed_affected_item_count} error_detail={error_detail}",
+        "privacy_item_failed operation_id={operation_id} source_id={} kind={:?} stage={stage} reason={reason} mutation_state={mutation_state} confirmed_affected_count={confirmed_affected_item_count} source_paths={source_paths} error_detail={error_detail}",
         candidate.item.source_id,
         candidate.item.kind
     );
@@ -3860,9 +3897,9 @@ mod tests {
         for (kind, impact, recommendation, selected_by_default) in [
             (
                 PrivacyDataKind::JumpLists,
-                PrivacyImpact::Low,
-                PrivacyRecommendation::Recommended,
-                true,
+                PrivacyImpact::Workflow,
+                PrivacyRecommendation::Manual,
+                false,
             ),
             (
                 PrivacyDataKind::ShellHistory,
@@ -4457,6 +4494,96 @@ mod tests {
         assert_eq!(fs::read(&protected_file).unwrap(), b"protected");
         fs::remove_dir_all(directory).unwrap();
         fs::remove_dir_all(protected).unwrap();
+    }
+
+    #[test]
+    fn jump_list_drift_blocks_the_complete_plan_without_mutation() {
+        let _test_guard = test_operation_lock();
+        let browser = fixture_directory("jump-list-browser");
+        let jumps = fixture_directory("jump-list-system");
+        fs::write(browser.join("cache"), b"browser traces").unwrap();
+        fs::write(jumps.join("first.automaticDestinations-ms"), b"first").unwrap();
+        let (scan_id, browser_token) = install_directory_scan_session(&browser);
+        let mut session = current_scan_session().unwrap();
+        let mut jump = session.candidates[&browser_token].clone();
+        jump.token = "b".repeat(64);
+        jump.item.token = jump.token.clone();
+        jump.item.source_id = "jump_lists".into();
+        jump.item.kind = PrivacyDataKind::JumpLists;
+        jump.action = NativePrivacyAction::System {
+            kind: PlatformPrivacySystemTraceKind::JumpLists,
+            roots: vec![jumps.clone()],
+            has_native_revision: false,
+        };
+        jump.fingerprint = current_fingerprint(&jump).unwrap();
+        let jump_token = jump.token.clone();
+        session.public_result.items.push(jump.item.clone());
+        session.candidates.insert(jump_token.clone(), jump);
+        replace_scan_session(session).unwrap();
+        let plan = PrivacyService::prepare(PrivacyExecutionRequest {
+            scan_id,
+            tokens: vec![browser_token.clone(), jump_token.clone()],
+        })
+        .unwrap();
+        fs::write(jumps.join("new.automaticDestinations-ms"), b"shell update").unwrap();
+        let result = PrivacyService::execute(execution_request(plan.plan_id)).unwrap();
+        assert_eq!(result.affected_item_count, 0);
+        assert_eq!(result.failed_item_count, 1);
+        assert_eq!(
+            result
+                .items
+                .iter()
+                .find(|item| item.token == browser_token)
+                .unwrap()
+                .failure_reason
+                .as_deref(),
+            Some("preflightBlocked")
+        );
+        assert_eq!(
+            result
+                .items
+                .iter()
+                .find(|item| item.token == jump_token)
+                .unwrap()
+                .failure_reason
+                .as_deref(),
+            Some("sourceChanged")
+        );
+        assert_eq!(fs::read(browser.join("cache")).unwrap(), b"browser traces");
+        assert_eq!(
+            fs::read(jumps.join("new.automaticDestinations-ms")).unwrap(),
+            b"shell update"
+        );
+        clear_scan_session().unwrap();
+        fs::remove_dir_all(browser).unwrap();
+        fs::remove_dir_all(jumps).unwrap();
+    }
+
+    #[test]
+    fn unreadable_fingerprint_retains_the_native_cause_and_distinct_reason() {
+        let _test_guard = test_operation_lock();
+        let directory = fixture_directory("fingerprint-unavailable");
+        let file = directory.join("history");
+        fs::write(&file, b"history").unwrap();
+        let (_, token) = install_directory_scan_session(&directory);
+        let mut candidate = current_scan_session().unwrap().candidates[&token].clone();
+        candidate.action = NativePrivacyAction::ReviewOnlyFile {
+            path: file.clone(),
+            browser: PlatformPrivacyBrowserKind::Chromium,
+            kind: PrivacyDataKind::BrowsingHistory,
+            range: PrivacyTimeRange::AllTime,
+            scan_now_ms: 0,
+        };
+        let expected = current_fingerprint(&candidate).unwrap();
+        fs::remove_file(file).unwrap();
+        let (reason, error) = fingerprint_failure(&candidate, &expected).unwrap();
+        assert_eq!(reason, "sourceUnavailable");
+        assert!(error
+            .to_string()
+            .contains("privacy fingerprint open failed"));
+        assert_eq!(error.mutation_state(), PlatformMutationState::NotAttempted);
+        clear_scan_session().unwrap();
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]
