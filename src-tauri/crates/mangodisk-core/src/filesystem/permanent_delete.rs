@@ -138,6 +138,7 @@ pub(crate) struct PermanentDeleteError {
 pub(crate) fn prepare_path_for_permanent_delete(
     path: &Path,
 ) -> Result<PreparedPermanentDelete, PermanentDeleteError> {
+    reject_system_managed_file(path)?;
     current_platform()
         .validate_path_no_links(path)
         .map_err(|error| error.to_string())?;
@@ -194,6 +195,16 @@ pub(crate) fn prepare_path_for_permanent_delete(
         identity,
         _identity_handle: identity_handle,
     })
+}
+
+fn reject_system_managed_file(path: &Path) -> Result<(), PermanentDeleteError> {
+    if current_platform().is_system_managed_file(path) {
+        return Err(PermanentDeleteError::before_mutation_with_reason(
+            "Windows manages this file; change the corresponding system setting instead of deleting it",
+            CoreErrorReason::SystemManagedFile,
+        ).at_stage("protect_system_file"));
+    }
+    Ok(())
 }
 
 fn validate_permanent_delete_target_metadata(
@@ -353,6 +364,7 @@ pub(crate) fn delete_analysis_candidate_permanently(
     candidate: AnalysisEntryCandidate,
 ) -> Result<AnalysisDeleteOutcome, PermanentDeleteError> {
     let validation_started = Instant::now();
+    reject_system_managed_file(Path::new(&candidate.path))?;
     let requested_root = PathBuf::from(&candidate.root);
     let root = current_platform()
         .canonicalize_no_links(&requested_root)
@@ -1680,8 +1692,13 @@ pub(crate) fn delete_file_candidate_permanently(
     candidate: &PermanentDeleteCandidate,
 ) -> Result<(PathBuf, FileSpaceUsage), PermanentDeleteError> {
     let requested_target = PathBuf::from(&candidate.path);
-    let prepared = prepare_path_for_permanent_delete(&requested_target)
-        .map_err(|error| error.at_stage("prepare_target"))?;
+    let prepared = prepare_path_for_permanent_delete(&requested_target).map_err(|error| {
+        if error.reason() == Some(CoreErrorReason::SystemManagedFile) {
+            error
+        } else {
+            error.at_stage("prepare_target")
+        }
+    })?;
     validate_permanent_delete_candidate(prepared.metadata(), candidate)?;
     let target = current_platform()
         .canonicalize_no_links(&requested_target)

@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "Deleted, but the list could not be refreshed",
       "message": "Analyze this folder again to see its latest contents"
+    },
+    "systemManagedFile": {
+      "title": "System-managed file",
+      "message": "Windows manages this file. Use the corresponding system setting to change its space usage; it cannot be deleted directly"
     }
   },
   "folderPicker": {

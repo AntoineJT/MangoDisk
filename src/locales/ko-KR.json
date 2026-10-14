@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "삭제했지만 목록을 새로 고치지 못했습니다",
       "message": "최신 내용을 보려면 이 폴더를 다시 분석하세요"
+    },
+    "systemManagedFile": {
+      "title": "시스템 관리 파일",
+      "message": "Windows가 관리하는 파일입니다. 해당 시스템 설정에서 공간 사용량을 조정하세요. 직접 삭제할 수 없습니다"
     }
   },
   "folderPicker": {

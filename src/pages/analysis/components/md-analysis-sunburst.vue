@@ -166,7 +166,12 @@ onDeactivated(resetInteraction);
         :entry-key="`${result.scanId}:${contextSector?.key ?? ''}`"
         :enabled="!openDisabled"
         :open-disabled="openDisabled || !contextEntry"
-        :delete-disabled="deleteDisabled || !contextSector?.entry || contextSector.depth > 1"
+        :delete-disabled="
+          deleteDisabled ||
+          !contextSector?.entry ||
+          Boolean(contextSector.entry.deletionProtection) ||
+          contextSector.depth > 1
+        "
         :reveal-disabled="!contextEntry || deletingPath === contextEntry.path"
         @menu-state-change="setContextMenuOpen"
         @open="contextEntry && emit('openEntry', contextEntry)"

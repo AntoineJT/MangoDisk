@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "删除已完成，列表刷新失败",
       "message": "请重新分析当前文件夹，查看最新内容"
+    },
+    "systemManagedFile": {
+      "title": "系统管理的文件",
+      "message": "此文件由 Windows 管理。请通过对应的系统设置调整其空间占用，不能直接删除"
     }
   },
   "folderPicker": {

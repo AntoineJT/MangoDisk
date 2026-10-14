@@ -42,6 +42,8 @@ export interface DirectoryEntryInfo {
   isDirectory: boolean;
   modifiedAtMs: number | null;
   contentFingerprint: string | null;
+  /** Older cached results omit this hint; native deletion always checks protection. */
+  deletionProtection?: 'systemManagedFile' | null;
 }
 
 export interface AnalysisResult {

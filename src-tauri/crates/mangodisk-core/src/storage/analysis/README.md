@@ -19,3 +19,13 @@ startup, and discards navigation results when switching modes. Invalid saved
 modes fall back to standard. Its labels describe standard bytes as disk usage and fast bytes
 as file size. The standard CLI/Core convenience APIs retain their default behavior;
 call `AnalysisService::analyze_with_mode_progress` to select a metric explicitly.
+
+Analysis retains Windows-managed volume files in its space accounting. Entry
+transport adds an optional `deletionProtection` hint (`systemManagedFile` or
+`null`); adapters disable ordinary deletion for protected entries. Older cached
+results may omit the hint, so Core always checks the platform classification
+before opening any deletion target. This covers hibernation, paging, swap, and
+DumpStack files at local volume roots, including verbatim and case variants,
+local drive device paths, Win32 trailing-dot/space aliases, and file streams.
+Verbatim trailing dots and spaces remain literal names rather than aliases.
+Use the corresponding system setting instead of deleting these files directly.

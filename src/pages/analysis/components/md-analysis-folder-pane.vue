@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
             <MdFileEntryContextMenu
               :entry-key="entry.path"
               :open-disabled="openDisabled"
-              :delete-disabled="deleteDisabled"
+              :delete-disabled="deleteDisabled || Boolean(entry.deletionProtection)"
               :reveal-disabled="deletingPath === entry.path"
               @open="emit('openEntry', entry)"
               @reveal="emit('reveal', entry.path)"

@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "Silindi ancak liste yenilenemedi",
       "message": "Güncel içeriğini görmek için bu klasörü yeniden analiz edin"
+    },
+    "systemManagedFile": {
+      "title": "Sistemin yönettiği dosya",
+      "message": "Bu dosyayı Windows yönetir. Kapladığı alanı değiştirmek için ilgili sistem ayarını kullanın; dosya doğrudan silinemez"
     }
   },
   "folderPicker": {

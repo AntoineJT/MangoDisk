@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "刪除已完成，清單重新整理失敗",
       "message": "請重新分析目前資料夾，查看最新內容"
+    },
+    "systemManagedFile": {
+      "title": "系統管理的檔案",
+      "message": "此檔案由 Windows 管理。請透過對應的系統設定調整其空間使用量，無法直接刪除"
     }
   },
   "folderPicker": {

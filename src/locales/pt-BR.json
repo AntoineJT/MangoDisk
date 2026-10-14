@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "Excluído, mas não foi possível atualizar a lista",
       "message": "Analise esta pasta novamente para ver o conteúdo atualizado"
+    },
+    "systemManagedFile": {
+      "title": "Arquivo gerenciado pelo sistema",
+      "message": "O Windows gerencia este arquivo. Use a configuração correspondente do sistema para ajustar o espaço ocupado; ele não pode ser excluído diretamente"
     }
   },
   "folderPicker": {

@@ -275,13 +275,20 @@ function openEntry(entry: DirectoryEntryInfo) {
 }
 
 function requestDelete(entry: DirectoryEntryInfo) {
-  if (props.busy || props.deleting || !resultMatchesExclusions.value) return;
+  if (props.busy || props.deleting || entry.deletionProtection || !resultMatchesExclusions.value) return;
   pendingDelete.value = entry;
   confirmOpen.value = true;
 }
 
 function confirmDelete() {
-  if (!pendingDelete.value || props.busy || props.deleting || !resultMatchesExclusions.value) return;
+  if (
+    !pendingDelete.value ||
+    pendingDelete.value.deletionProtection ||
+    props.busy ||
+    props.deleting ||
+    !resultMatchesExclusions.value
+  )
+    return;
   emit('delete', pendingDelete.value);
   confirmOpen.value = false;
   pendingDelete.value = null;

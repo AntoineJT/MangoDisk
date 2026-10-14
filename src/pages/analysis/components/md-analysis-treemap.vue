@@ -334,7 +334,9 @@ function tooltipStyle() {
       :entry-key="`${result.scanId}:${contextTile?.key ?? ''}`"
       :enabled="!openDisabled"
       :open-disabled="openDisabled || !contextTile?.entry"
-      :delete-disabled="deleteDisabled || !contextTile?.entry || contextTile.depth > 1"
+      :delete-disabled="
+        deleteDisabled || !contextTile?.entry || Boolean(contextTile.entry.deletionProtection) || contextTile.depth > 1
+      "
       :reveal-disabled="!contextTile?.entry || deletingPath === contextTile.entry.path"
       @menu-state-change="setContextMenuOpen"
       @open="contextTile?.entry && emit('openEntry', contextTile.entry)"

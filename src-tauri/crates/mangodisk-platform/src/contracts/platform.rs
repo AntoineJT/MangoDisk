@@ -20,6 +20,12 @@ use super::{
 };
 
 pub trait Platform: Send + Sync {
+    /// Classifies OS-owned volume files without opening them or requiring elevation.
+    /// Analysis may display their space usage, but ordinary deletion must reject them.
+    fn is_system_managed_file(&self, _path: &Path) -> bool {
+        false
+    }
+
     /// Compares a known scan identity without requiring multiple links to remain.
     fn matches_file_identity(
         &self,

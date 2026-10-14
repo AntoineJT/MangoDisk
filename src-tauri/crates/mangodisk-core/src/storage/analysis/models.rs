@@ -59,20 +59,66 @@ pub struct AnalysisDirectoryNode {
     pub files: Vec<DirectoryEntryInfo>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Debug, Clone)]
 pub struct DirectoryEntryInfo {
     pub name: String,
     pub path: String,
     /// Bytes in the owning result's scan metric.
     pub bytes: u64,
     /// Logical content length retained for delete preflight and cache updates.
-    #[serde(skip)]
     pub(crate) logical_bytes: u64,
     pub file_count: u64,
     pub is_directory: bool,
     pub modified_at_ms: Option<u64>,
     pub content_fingerprint: Option<String>,
+}
+
+impl Serialize for DirectoryEntryInfo {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use mangodisk_platform::Platform;
+        use serde::ser::SerializeStruct;
+        let protection = mangodisk_platform::current_platform()
+            .is_system_managed_file(std::path::Path::new(&self.path))
+            .then_some(crate::shared::CoreErrorReason::SystemManagedFile.as_str());
+        let mut entry = serializer.serialize_struct("DirectoryEntryInfo", 8)?;
+        entry.serialize_field("name", &self.name)?;
+        entry.serialize_field("path", &self.path)?;
+        entry.serialize_field("bytes", &self.bytes)?;
+        entry.serialize_field("fileCount", &self.file_count)?;
+        entry.serialize_field("isDirectory", &self.is_directory)?;
+        entry.serialize_field("modifiedAtMs", &self.modified_at_ms)?;
+        entry.serialize_field("contentFingerprint", &self.content_fingerprint)?;
+        entry.serialize_field("deletionProtection", &protection)?;
+        entry.end()
+    }
+}
+
+#[cfg(test)]
+mod entry_protocol_tests {
+    use super::*;
+
+    #[test]
+    fn entry_transport_retains_accounting_and_exposes_native_delete_protection() {
+        let entry = DirectoryEntryInfo {
+            name: "hiberfil.sys".into(),
+            path: r"C:\hiberfil.sys".into(),
+            bytes: 10,
+            logical_bytes: 20,
+            file_count: 1,
+            is_directory: false,
+            modified_at_ms: None,
+            content_fingerprint: None,
+        };
+        let value = serde_json::to_value(&entry).unwrap();
+        assert_eq!(value["bytes"], 10);
+        assert!(value.get("logicalBytes").is_none());
+        assert_eq!(value.as_object().unwrap().len(), 8);
+        if cfg!(windows) {
+            assert_eq!(value["deletionProtection"], "systemManagedFile");
+        } else {
+            assert!(value["deletionProtection"].is_null());
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

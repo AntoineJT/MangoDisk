@@ -1756,6 +1756,10 @@
     "analysisRefreshFailedAfterDelete": {
       "title": "削除済み・一覧の更新に失敗",
       "message": "再分析して最新の内容を確認してください"
+    },
+    "systemManagedFile": {
+      "title": "システム管理ファイル",
+      "message": "Windows 管理のファイルです。削除せず、システム設定で容量を調整してください"
     }
   },
   "folderPicker": {

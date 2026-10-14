@@ -16,6 +16,7 @@ import MdAnalysisBrowserToolbar from './components/md-analysis-browser-toolbar.v
 import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
 import MdAnalysisVisualPane from './components/md-analysis-visual-pane.vue';
 import MdAnalysisScanButton from './components/md-analysis-scan-button.vue';
+import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
 import { i18n } from '@/i18n';
 import { Select } from '@/components/ui/select';
 import type { AnalysisDeleteResult, AnalysisResult } from '@/lib/models/analysis';
@@ -44,6 +45,39 @@ beforeEach(() => {
 });
 
 describe('analysis page', () => {
+  it('rejects a protected entry even when a child emits a delete event', async () => {
+    const entry = {
+      name: 'hiberfil.sys',
+      path: 'C:\\hiberfil.sys',
+      bytes: 64,
+      fileCount: 1,
+      isDirectory: false,
+      modifiedAtMs: null,
+      contentFingerprint: null,
+      deletionProtection: 'systemManagedFile' as const,
+    };
+    const wrapper = shallowMount(AnalysisPage, {
+      props: {
+        result: { ...result, entries: [entry] },
+        excludedFolders: [],
+        homePath: '/fixture',
+        disk: null,
+        disks: [],
+        progress: null,
+        busy: false,
+        cancelling: false,
+        deleting: false,
+      },
+      global: { plugins: [i18n], stubs: { MdPageShell: { template: '<div><slot /></div>' } } },
+    });
+    wrapper.getComponent(MdAnalysisFolderPane).vm.$emit('delete', entry);
+    await flushPromises();
+    const dialog = wrapper.getComponent(MdDestructiveActionDialog);
+    expect(dialog.props('open')).toBe(false);
+    dialog.vm.$emit('confirm');
+    expect(wrapper.emitted('delete')).toBeUndefined();
+    wrapper.unmount();
+  });
   it.each(['macos', 'windows'])('keeps the %s browser mounted during recovery progress and cancellation', async os => {
     vi.useFakeTimers();
     vi.spyOn(OperatingSystemService, 'isWindows').mockReturnValue(os === 'windows');
