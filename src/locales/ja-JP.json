@@ -4146,7 +4146,8 @@
     "updateRequired": "MangoDisk の画面表示に必要なコンポーネントが古くなっています。Microsoft Edge WebView2 Runtime を更新してから、MangoDisk を再起動してください",
     "update": "更新ページを開く",
     "exit": "終了",
-    "openFailed": "ブラウザーを開けませんでした。次のアドレスにアクセスして、Microsoft Edge WebView2 Runtime を更新してください：\n{url}"
+    "openFailed": "ブラウザーを開けませんでした。次のアドレスにアクセスして、Microsoft Edge WebView2 Runtime を更新してください：\n{url}",
+    "recoveryFailed": "画面を復元できません。処理状況を確認後、再起動してください"
   },
   "memoryRelease": {
     "title": "メモリ解放設定",

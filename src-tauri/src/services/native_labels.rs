@@ -97,7 +97,13 @@ mod tests {
             "en-US", "zh-CN", "zh-TW", "ja-JP", "ko-KR", "tr-TR", "pt-BR", "ru-RU",
         ] {
             let labels = NativeLabels::for_locale(locale);
-            for key in ["updateRequired", "update", "exit", "openFailed"] {
+            for key in [
+                "updateRequired",
+                "update",
+                "exit",
+                "openFailed",
+                "recoveryFailed",
+            ] {
                 let value = labels.text(&format!("/webviewRuntime/{key}"));
                 assert!(!value.is_empty() && value != "—", "{locale}: {key}");
             }

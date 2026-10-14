@@ -4146,7 +4146,8 @@
     "updateRequired": "MangoDisk'i görüntüleyen bileşen güncel değil. Microsoft Edge WebView2 Runtime'ı güncelleyin, ardından MangoDisk'i yeniden açın",
     "update": "Güncellemeyi indir",
     "exit": "Çık",
-    "openFailed": "Tarayıcı açılamadı. Microsoft Edge WebView2 Runtime'ı güncellemek için şu adresi ziyaret edin:\n{url}"
+    "openFailed": "Tarayıcı açılamadı. Microsoft Edge WebView2 Runtime'ı güncellemek için şu adresi ziyaret edin:\n{url}",
+    "recoveryFailed": "Uygulama arayüzü geri yüklenemedi. Arka plan görevleri hâlâ çalışıyor olabilir. Bir işlemi tekrarlamadan önce durumunu kontrol edin, ardından MangoDisk’i kapatıp yeniden açın"
   },
   "memoryRelease": {
     "title": "Bellek boşaltma ayarları",

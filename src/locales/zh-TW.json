@@ -4146,7 +4146,8 @@
     "updateRequired": "目前的介面執行元件版本較舊。請更新 Microsoft Edge WebView2 Runtime，然後重新開啟 MangoDisk",
     "update": "前往更新",
     "exit": "結束",
-    "openFailed": "無法開啟瀏覽器。請手動前往以下網址，更新 Microsoft Edge WebView2 Runtime：\n{url}"
+    "openFailed": "無法開啟瀏覽器。請手動前往以下網址，更新 Microsoft Edge WebView2 Runtime：\n{url}",
+    "recoveryFailed": "應用程式介面無法恢復，背景工作可能仍在執行。請先確認工作狀態，避免重複執行，再結束並重新開啟 MangoDisk"
   },
   "memoryRelease": {
     "title": "記憶體釋放設定",

@@ -148,6 +148,8 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
             .title_bar_style(tauri::TitleBarStyle::Overlay)
             .hidden_title(true);
         let window = builder.build()?;
+        #[cfg(windows)]
+        crate::webview_recovery::install(&window);
         #[cfg(target_os = "macos")]
         window.with_webview(|webview| {
             use objc2_app_kit::{NSWindow, NSWindowButton};
@@ -210,6 +212,18 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
     }
     drop(creation);
     Ok(())
+}
+
+#[cfg(windows)]
+pub(crate) fn recreate_webview(app: &tauri::AppHandle, visible: bool) -> tauri::Result<()> {
+    let state = app.state::<Arc<ResidentState>>();
+    state.panel_ready.store(false, Ordering::Relaxed);
+    if visible {
+        open(app)
+    } else {
+        hide(app);
+        ensure_created(app)
+    }
 }
 
 #[cfg(target_os = "macos")]

@@ -6,6 +6,8 @@ mod resident;
 #[cfg(windows)]
 pub use resident::taskbar_display::run_layout_helper_mode;
 mod services;
+#[cfg(any(windows, test))]
+mod webview_recovery;
 mod webview_runtime;
 
 use log::LevelFilter;
@@ -341,6 +343,8 @@ pub fn run() {
                 return Ok(());
             }
             configure_core_storage(app)?;
+            #[cfg(windows)]
+            app.manage(webview_recovery::RecoveryState::default());
             resident::install(app.handle())?;
             services::app_updates::start(app.handle());
             let feedback_store = FeedbackDraftStore::initialize(&app.path().app_cache_dir()?);
@@ -375,6 +379,20 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("MangoDisk failed to start");
     app.run(move |_app, _event| {
+        #[cfg(windows)]
+        if let tauri::RunEvent::ExitRequested {
+            code: None, api, ..
+        } = &_event
+        {
+            // Closing the last broken view must not terminate Core jobs while
+            // the browser recovery worker is recreating the native windows.
+            if _app
+                .try_state::<webview_recovery::RecoveryState>()
+                .is_some_and(|state| state.recreating())
+            {
+                api.prevent_exit();
+            }
+        }
         if !webview_update_required && matches!(_event, tauri::RunEvent::Ready) {
             resident::panel::prewarm(_app);
         }

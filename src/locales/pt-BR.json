@@ -4146,7 +4146,8 @@
     "updateRequired": "O componente usado para exibir o MangoDisk está desatualizado. Atualize o Microsoft Edge WebView2 Runtime e abra o MangoDisk novamente",
     "update": "Obter atualização",
     "exit": "Sair",
-    "openFailed": "Não foi possível abrir o navegador. Acesse este endereço para atualizar o Microsoft Edge WebView2 Runtime:\n{url}"
+    "openFailed": "Não foi possível abrir o navegador. Acesse este endereço para atualizar o Microsoft Edge WebView2 Runtime:\n{url}",
+    "recoveryFailed": "Não foi possível restaurar a interface. Tarefas em segundo plano podem continuar em execução. Verifique o estado antes de repetir uma operação e depois feche e abra o MangoDisk novamente"
   },
   "memoryRelease": {
     "title": "Configurações de liberação de memória",

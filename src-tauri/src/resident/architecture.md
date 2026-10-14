@@ -1038,3 +1038,27 @@ and may still refer to a VPN. Counters retain the full native interface set;
 automatic selection continues to avoid virtual double counting. On macOS,
 carrier flags additionally require a non-loopback, non-link-local assigned IP,
 so unused Thunderbolt and Ethernet ports do not masquerade as usable links.
+
+## Windows WebView process recovery
+
+`webview_recovery` listens to WebView2 `ProcessFailed` for the main window,
+resident panel, and memory settings. Diagnostics retain the window label,
+browser PID, native failure kind, reason, exit code, and recovery action.
+Renderer exits reload the affected document. Unresponsiveness requires two
+observations spanning at least fifteen seconds, with no observation gap longer
+than thirty seconds. Isolated stalls receive a new grace period because WebView2
+does not emit a responsive event. GPU and utility process failures
+remain under WebView2's own recovery policy. Main-browser failure closes all
+associated controllers before reconstructing the application's visible windows
+and hidden resident panel. Closing the last broken window during this interval
+does not exit the application; explicit Quit still does.
+
+Automatic recovery is limited to two attempts per window or shared browser in
+five minutes. Navigation completion confirms renderer reload; missing completion
+or exhausted retries produces a localized native warning that remains usable
+without Vue. Failures from several controllers share one open warning until it
+is dismissed, while retaining each controller's diagnostic. Core operations and
+privileged sessions are retained throughout;
+recovery never reissues a destructive command. Hidden main windows are recreated
+on the next foreground request, and frontend readiness is reset before revealing
+a recovered main window. Follow Microsoft's [process-related event guidance](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/process-related-events).

@@ -4146,7 +4146,8 @@
     "updateRequired": "The component used to display MangoDisk is out of date. Update Microsoft Edge WebView2 Runtime, then reopen MangoDisk",
     "update": "Get update",
     "exit": "Exit",
-    "openFailed": "The browser could not be opened. Please visit this address to update Microsoft Edge WebView2 Runtime:\n{url}"
+    "openFailed": "The browser could not be opened. Please visit this address to update Microsoft Edge WebView2 Runtime:\n{url}",
+    "recoveryFailed": "The app interface could not be restored. Background tasks may still be running. Check their status before retrying an operation, then exit and reopen MangoDisk"
   },
   "memoryRelease": {
     "title": "Memory release settings",

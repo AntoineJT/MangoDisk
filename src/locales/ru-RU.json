@@ -4143,10 +4143,11 @@
     "batteryUnsupportedHint": "На этом Mac данные батареи недоступны"
   },
   "webviewRuntime": {
-    "updateRequired": "Компонент, используемый для отображения MangoDisk, устарел. Обновите среду выполнения Microsoft Edge WebView2, затем откройте MangoDisk снова",
+    "updateRequired": "Обновите WebView2 Runtime и перезапустите MangoDisk",
     "update": "Обновить",
     "exit": "Выйти",
-    "openFailed": "Не удалось открыть браузер. Пожалуйста, перейдите по этому адресу, чтобы обновить среду выполнения Microsoft Edge WebView2:\n{url}"
+    "openFailed": "Браузер недоступен. Адрес обновления WebView2 Runtime:\n{url}",
+    "recoveryFailed": "Сбой интерфейса. Фоновые задачи могут работать. Проверьте их перед повтором и перезапустите MangoDisk"
   },
   "memoryRelease": {
     "title": "Настройки освобождения памяти",
