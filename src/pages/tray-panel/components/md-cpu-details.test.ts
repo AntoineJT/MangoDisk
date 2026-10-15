@@ -38,11 +38,42 @@ const windowsReading = () => {
   return reading;
 };
 describe('CPU detail observations', () => {
+  it('keeps the temperature heading and shows setup in the chart area when collection is off', async () => {
+    const reading = windowsReading();
+    reading.cpuTemperature = {
+      status: 'ready',
+      sampledAtMs: 70_000,
+      value: { celsius: 60, kind: 'package', source: 'intelDtsPawnIo', sensorCount: 1 },
+    };
+    reading.cpuTemperatureHistory = [{ sampledAtMs: 70_000, primary: 60, secondary: null }];
+    const wrapper = render(reading, false);
+    const card = wrapper.get('.temperature-details');
+    expect(card.get('.temperature-disabled-heading').text()).toContain(enUS.cpuTemperature.label);
+    expect(card.get('strong').text()).toBe('—');
+    expect(card.get('.temperature-chart').text()).toContain(enUS.windowsMonitoring.collectionOff);
+    expect(card.findComponent(MdIconTrend).exists()).toBe(false);
+    await card.get('button').trigger('click');
+    expect(wrapper.emitted('configureTemperature')).toHaveLength(1);
+    await wrapper.setProps({ temperatureEnabled: true });
+    expect(wrapper.get('.temperature-details').text()).toContain('60°C');
+    expect(wrapper.find('.temperature-placeholder').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it.each(['loading', 'stale', 'failed'] as const)('places missing %s readings in the chart area', status => {
+    const reading = windowsReading();
+    reading.cpuTemperature.status = status;
+    const wrapper = render(reading);
+    expect(wrapper.get('.temperature-chart [role="status"]').text()).toBe(enUS.systemStatus[status]);
+    expect(wrapper.find('.temperature-status').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it('hides the entire temperature card when collection is unsupported', () => {
     const reading = emptyReadings();
     const wrapper = render(reading, false, false);
     expect(wrapper.find('.temperature-details').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain(enUS.windowsMonitoring.disabledHint);
+    expect(wrapper.text()).not.toContain(enUS.windowsMonitoring.collectionOff);
     wrapper.unmount();
   });
 

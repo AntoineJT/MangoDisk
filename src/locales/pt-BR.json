@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "O PawnIO não foi totalmente removido. Feche outros aplicativos de monitoramento e tente novamente",
       "removalFailed": "A remoção não foi concluída. Atualize o status e tente novamente"
     },
-    "disabledHint": "A coleta da temperatura da CPU está desativada. Ative nas configurações dos itens exibidos",
+    "collectionOff": "A coleta de temperatura está desativada",
+    "goToSettings": "Ir para configurações",
     "supportHint": "Oferece temperaturas do pacote Intel e do chip AMD em PCs x64 compatíveis",
     "collectionHint": "A temperatura é registrada enquanto o MangoDisk está em execução",
     "displayHint": "Ocultar a temperatura não interrompe o registro",

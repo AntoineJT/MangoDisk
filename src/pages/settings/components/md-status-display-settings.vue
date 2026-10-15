@@ -29,7 +29,10 @@ import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
 import { LoggerService } from '@/lib/services/logger-service';
 
-const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean }>(), { isLinux: false });
+const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean; openRevision?: number }>(), {
+  isLinux: false,
+  openRevision: 0,
+});
 const { t } = useI18n({ useScope: 'global' });
 const settings = useResidentSettingsStore();
 const monitoring = useWindowsMonitoringStore();
@@ -121,6 +124,14 @@ function enableIcon(enabled: boolean) {
   void settings.change({ showIcon: enabled });
 }
 const settingsOpen = ref(false);
+const pendingOpenRevision = ref(0);
+watch(
+  () => props.openRevision,
+  revision => {
+    if (revision > 0) pendingOpenRevision.value = revision;
+  },
+  { immediate: true }
+);
 const temperatureSetupOpen = ref(false);
 const selectTemperatureAfterSetup = ref(false);
 const activeColor = ref<ColorMetricId | null>(null);
@@ -170,6 +181,18 @@ watch(settingsOpen, open => {
     activeColor.value = null;
   }
 });
+watch(
+  [pendingOpenRevision, displayEnabled, () => settings.loading],
+  ([revision, enabled, loading]) => {
+    // Navigation can arrive before persisted display preferences finish loading.
+    if (revision > 0 && settings.preferences && !loading) {
+      pendingOpenRevision.value = 0;
+      if (enabled) settingsOpen.value = true;
+      else void nextTick(() => document.getElementById('resident-enabled')?.focus());
+    }
+  },
+  { immediate: true }
+);
 function handleDialogEscape(event: KeyboardEvent) {
   if (dragging.value) {
     event.preventDefault();

@@ -55,6 +55,7 @@ const analysisStore = useAnalysisStore();
 const props = defineProps<{
   settings: AppSettings;
   focusRevision: number;
+  displaySettingsRevision?: number;
 }>();
 const emit = defineEmits<{
   error: [error: unknown];
@@ -248,7 +249,7 @@ function updateTheme(value: unknown) {
         </Select>
       </MdSettingsRow>
       <MdAutostartSettings />
-      <MdStatusDisplaySettings :is-mac-os="isMacOs" :is-linux="isLinux" />
+      <MdStatusDisplaySettings :is-mac-os="isMacOs" :is-linux="isLinux" :open-revision="displaySettingsRevision" />
     </MdSettingsGroup>
 
     <MdSettingsGroup :title="t('settings.scanAnalysisSection')">

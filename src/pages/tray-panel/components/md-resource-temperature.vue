@@ -21,8 +21,9 @@ const props = withDefaults(
     compact?: boolean;
     interactive?: boolean;
     heading?: string;
+    showStatus?: boolean;
   }>(),
-  { compact: false, interactive: false, heading: undefined }
+  { compact: false, interactive: false, heading: undefined, showStatus: true }
 );
 defineEmits<{ activate: [] }>();
 const { t } = useI18n({ useScope: 'global' });
@@ -86,7 +87,7 @@ const hint = computed(() =>
         </div>
         <strong>{{ value ? Math.round(value.celsius) : '—' }}<small v-if="value">°C</small></strong>
       </div>
-      <span v-if="!value" class="temperature-status" role="status">{{ statusText }}</span>
+      <span v-if="!value && showStatus" class="temperature-status" role="status">{{ statusText }}</span>
     </template>
   </div>
 </template>

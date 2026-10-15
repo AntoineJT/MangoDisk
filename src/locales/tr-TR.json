@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "PawnIO tamamen kaldırılamadı. Diğer izleme uygulamalarını kapatıp tekrar deneyin",
       "removalFailed": "Kaldırma tamamlanmadı. Durumu yenileyip tekrar deneyin"
     },
-    "disabledHint": "CPU sıcaklığı toplama kapalı. Görüntüleme öğeleri ayarlarından etkinleştirin",
+    "collectionOff": "Sıcaklık ölçümü kapalı",
+    "goToSettings": "Ayarlara git",
     "supportHint": "Uyumlu x64 bilgisayarlarda Intel paket ve AMD yonga sıcaklıklarını destekler",
     "collectionHint": "MangoDisk çalışırken sıcaklık kaydedilir",
     "displayHint": "Sıcaklık göstergesini gizlemek kaydı durdurmaz",

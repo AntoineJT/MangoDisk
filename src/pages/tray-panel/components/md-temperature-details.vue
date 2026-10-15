@@ -6,15 +6,18 @@ defineProps<{ history: TrendPoint[]; observedAtMs: number; active: boolean; labe
 <template>
   <section class="temperature-details">
     <slot />
-    <div v-if="history.length" class="temperature-chart">
-      <MdResourceTrend
-        :key="identity"
-        metric="temperature"
-        :history="history"
-        :observed-at-ms="observedAtMs"
-        :active="active"
-        :label="label"
-      />
+    <div class="temperature-chart">
+      <slot name="placeholder">
+        <MdResourceTrend
+          v-if="history.length"
+          :key="identity"
+          metric="temperature"
+          :history="history"
+          :observed-at-ms="observedAtMs"
+          :active="active"
+          :label="label"
+        />
+      </slot>
     </div>
   </section>
 </template>
@@ -25,9 +28,15 @@ defineProps<{ history: TrendPoint[]; observedAtMs: number; active: boolean; labe
   min-width: 0;
   padding: 10px 12px;
   flex: none;
+  height: 90px;
+  display: flex;
+  flex-direction: column;
 }
 .temperature-chart {
-  display: flow-root;
+  display: grid;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
 }
 .temperature-chart :deep(.resource-trend) {
   height: 28px;

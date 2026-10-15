@@ -81,6 +81,28 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('status display interactions', () => {
+  it('opens the display dialog after a navigation request waits for preferences', async () => {
+    let resolvePreferences!: (value: ReturnType<typeof preferencesFixture>) => void;
+    vi.mocked(ResidentService.preferences).mockReturnValueOnce(
+      new Promise(resolve => {
+        resolvePreferences = resolve;
+      })
+    );
+    const wrapper = mount(Settings, { props: { isMacOs: false, openRevision: 1 }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    resolvePreferences(preferencesFixture());
+    await flushPromises();
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+    await wrapper.get('[role="dialog"]').trigger('keydown', { key: 'Escape' });
+    await flushPromises();
+    await wrapper.setProps({ openRevision: 2 });
+    await flushPromises();
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true);
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+  });
+
   const localizedMessages = import.meta.glob<{ systemStatus: { diskTemperature: string } }>('../../../locales/*.json', {
     eager: true,
     import: 'default',

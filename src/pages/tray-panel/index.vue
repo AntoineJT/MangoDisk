@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
           :active="panelVisible"
           :temperature-enabled="temperatureEnabled"
           :temperature-supported="temperatureSupported"
-          @configure-temperature="navigate('settings')"
+          @configure-temperature="navigate('displaySettings')"
         />
         <MdApplicationResourceList
           class="monitor-processes"

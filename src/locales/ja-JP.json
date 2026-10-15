@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "PawnIO の削除が未完了です。他の監視アプリを終了して再試行してください",
       "removalFailed": "削除が未完了です。状態を更新して再試行してください"
     },
-    "disabledHint": "CPU 温度の収集は無効です。表示項目の設定で有効にできます",
+    "collectionOff": "温度の収集は無効です",
+    "goToSettings": "設定を開く",
     "supportHint": "対応 x64 PC の Intel CPU パッケージ温度と AMD CPU ダイ温度をサポートします",
     "collectionHint": "MangoDisk の実行中は温度の推移を記録します",
     "displayHint": "温度表示を非表示にしても記録は続きます",

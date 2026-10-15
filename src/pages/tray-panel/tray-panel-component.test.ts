@@ -37,6 +37,7 @@ import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import type { ResidentReading } from '@/lib/models/resident';
 import { preferencesFixture } from '@/tests/fixtures/resident';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
+import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
 
 vi.mock('@/lib/services/resident-service', () => ({
   ResidentService: {
@@ -163,7 +164,19 @@ describe('monitoring panel interactions', () => {
     await flushPromises();
     expect(ResidentService.preferences).toHaveBeenCalledOnce();
     expect(useResidentSettingsStore(pinia).preferences?.windowsCpuTemperatureEnabled).toBe(true);
-    expect(wrapper.text()).not.toContain('windowsMonitoring.disabledHint');
+    expect(wrapper.text()).not.toContain('windowsMonitoring.collectionOff');
+  });
+
+  it('opens display configuration directly from the disabled temperature hint', async () => {
+    vi.mocked(OperatingSystemService.isWindows).mockReturnValue(true);
+    vi.mocked(ResidentService.preferences).mockResolvedValue(preferencesFixture());
+    vi.mocked(ResidentService.panelMetric).mockResolvedValue('cpu');
+    const { wrapper, pinia } = render();
+    await flushPromises();
+    useWindowsMonitoringStore(pinia).observation = { state: 'ready', driverAvailable: true, serviceInstalled: true };
+    await flushPromises();
+    await wrapper.get('.temperature-placeholder button').trigger('click');
+    expect(ResidentService.openMain).toHaveBeenCalledWith('displaySettings');
   });
 
   it.each([enUS, zhCN, zhTW, jaJP, koKR, trTR, ptBR])(

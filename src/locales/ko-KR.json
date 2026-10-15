@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "PawnIO가 완전히 제거되지 않았습니다. 다른 모니터링 앱을 닫고 다시 시도하세요",
       "removalFailed": "제거가 완료되지 않았습니다. 상태를 새로 고친 후 다시 시도하세요"
     },
-    "disabledHint": "CPU 온도 수집이 꺼져 있습니다. 표시 항목 설정에서 활성화할 수 있습니다",
+    "collectionOff": "온도 수집이 꺼져 있습니다",
+    "goToSettings": "설정으로 이동",
     "supportHint": "호환되는 x64 PC에서 Intel CPU 패키지 온도와 AMD CPU 다이 온도를 지원합니다",
     "collectionHint": "MangoDisk 실행 중에는 온도 추이를 계속 기록합니다",
     "displayHint": "온도 표시를 숨겨도 기록은 계속됩니다",

@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "PawnIO was not fully removed. Close other monitoring apps and try again",
       "removalFailed": "Removal did not finish. Refresh the status and try again"
     },
-    "disabledHint": "CPU temperature collection is off. Enable it in Display items settings",
+    "collectionOff": "Temperature collection is off",
+    "goToSettings": "Go to settings",
     "supportHint": "Supports Intel package and AMD die temperatures on compatible x64 PCs",
     "collectionHint": "Temperature is recorded while MangoDisk is running",
     "displayHint": "Hiding the temperature display does not stop recording",

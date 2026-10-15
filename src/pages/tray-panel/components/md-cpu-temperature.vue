@@ -8,8 +8,9 @@ withDefaults(
     compact?: boolean;
     interactive?: boolean;
     heading?: string;
+    showStatus?: boolean;
   }>(),
-  { compact: false, interactive: false, heading: undefined }
+  { compact: false, interactive: false, heading: undefined, showStatus: true }
 );
 defineEmits<{ activate: [] }>();
 </script>
@@ -22,6 +23,7 @@ defineEmits<{ activate: [] }>();
     :compact="compact"
     :interactive="interactive"
     :heading="heading"
+    :show-status="showStatus"
     @activate="$emit('activate')"
   />
 </template>

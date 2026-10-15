@@ -123,6 +123,13 @@ const cleanupOrchestrating = ref(false);
 const deepCleanupCancelling = ref(false);
 const cleanupCancellationRetried = ref(false);
 const settingsFocusRevision = ref(0);
+const displaySettingsRevision = ref(0);
+watch(
+  () => store.currentPage,
+  page => {
+    if (page !== PAGE_IDS.settings) displaySettingsRevision.value = 0;
+  }
+);
 const scanExclusionsEditor = ref<InstanceType<typeof MdStorageScanExclusionsEditor> | null>(null);
 function openScanExclusions() {
   void scanExclusionsEditor.value?.open();
@@ -332,6 +339,10 @@ async function handleResidentDestination(destination: ResidentDestination) {
     await openAboutSettings();
     return;
   }
+  if (destination === 'displaySettings') {
+    if (await navigate(PAGE_IDS.settings)) displaySettingsRevision.value += 1;
+    return;
+  }
   await navigate(
     destination === 'applications'
       ? PAGE_IDS.applicationUninstall
@@ -379,10 +390,12 @@ async function navigate(page: PageId) {
       if (destination === PAGE_IDS.settings && appUpdateStore.updateNoticeUnread) {
         settingsFocusRevision.value += 1;
       }
+      return true;
     }
   } catch (error) {
     store.reportError(error);
   }
+  return false;
 }
 
 async function openAboutSettings() {
@@ -802,6 +815,7 @@ async function cancelDeepCleanup() {
           v-else-if="store.currentPage === PAGE_IDS.settings"
           :settings="store.settings"
           :focus-revision="settingsFocusRevision"
+          :display-settings-revision="displaySettingsRevision"
           @save="saveSettings"
           @error="store.reportError"
           @open-scan-exclusions="openScanExclusions"

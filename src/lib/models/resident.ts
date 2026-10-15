@@ -32,7 +32,7 @@ export interface ResidentPreferences {
   gpuAdapter: string | null;
 }
 
-export type ResidentDestination = 'main' | 'cleanup' | 'applications' | 'settings' | 'about';
+export type ResidentDestination = 'main' | 'cleanup' | 'applications' | 'settings' | 'displaySettings' | 'about';
 
 export interface MemoryReleaseResult {
   schemaVersion: 1;

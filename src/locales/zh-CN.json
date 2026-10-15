@@ -4272,7 +4272,8 @@
       "driverRemovalFailed": "PawnIO 驱动未完全移除，请关闭其他监控软件后重试",
       "removalFailed": "移除未完成，请刷新状态后重试"
     },
-    "disabledHint": "CPU 温度采集尚未启用，可在显示项目设置中开启",
+    "collectionOff": "温度采集尚未启用",
+    "goToSettings": "去设置",
     "supportHint": "支持兼容 x64 电脑的 Intel CPU 封装温度和 AMD CPU 芯片温度",
     "collectionHint": "MangoDisk 运行时持续记录温度曲线",
     "displayHint": "隐藏温度显示后，仍会继续记录温度曲线",
