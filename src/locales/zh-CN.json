@@ -4058,7 +4058,7 @@
     "ready": "已更新",
     "stale": "数据已过期",
     "disconnected": "未连接",
-    "unsupported": "此设备暂不支持",
+    "unsupported": "暂不支持",
     "failed": "暂时无法获取",
     "details": "系统状态",
     "openMain": "打开 MangoDisk",

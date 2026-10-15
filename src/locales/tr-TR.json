@@ -4058,7 +4058,7 @@
     "ready": "Güncel",
     "stale": "Veriler güncel değil",
     "disconnected": "Bağlantı kesildi",
-    "unsupported": "Bu cihazda kullanılamıyor",
+    "unsupported": "Desteklenmiyor",
     "failed": "Veriler okunamadı",
     "details": "Sistem durumu",
     "openMain": "MangoDisk'i aç",

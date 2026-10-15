@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import { METRIC_LABEL_KEYS } from '@/lib/models/system-resources';
+import { METRIC_LABEL_KEYS, METRIC_STATUS_KEYS } from '@/lib/models/system-resources';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdSwitch from '@/components/custom/md-switch.vue';
@@ -27,6 +27,7 @@ import type { ResidentPreferences, ResidentReading, ResidentDisplayMetricId } fr
 import { ResidentService } from '@/lib/services/resident-service';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
+import { currentGpuTemperature } from '@/lib/utils/gpu-temperature';
 import { LoggerService } from '@/lib/services/logger-service';
 
 const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean; openRevision?: number }>(), {
@@ -36,6 +37,10 @@ const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean; op
 const { t } = useI18n({ useScope: 'global' });
 const settings = useResidentSettingsStore();
 const monitoring = useWindowsMonitoringStore();
+const cpuTemperatureStatusLabel = computed(() => {
+  const key = monitoring.statusLabel(settings.preferences?.windowsCpuTemperatureEnabled ?? false);
+  return key === 'windowsMonitoring.states.unsupportedHardware' ? 'systemStatus.unsupported' : key;
+});
 const temperatureSelectionPending = ref(false);
 const panelOpening = ref(false);
 const panelError = ref(false);
@@ -55,7 +60,40 @@ const interfaces = ref<NetworkInterface[]>([]);
 const volumes = ref<ResourceVolume[]>([]);
 const gpuAdapters = ref<{ id: string; name: string }[]>([]);
 const catalogueError = ref(false);
-const gpuTemperatureStatus = ref<ResidentReading['gpuTemperature']['status']>('loading');
+const gpuTemperatureReading = ref<ResidentReading['gpuTemperature']>({
+  status: 'loading',
+  sampledAtMs: null,
+  value: null,
+});
+const gpuTemperatureObservedAtMs = ref(0);
+const gpuSelectionObservedAtMs = ref<number | null>(null);
+watch(
+  () => [settings.draft?.gpuAdapter, settings.preferences?.gpuAdapter] as const,
+  (selection, previous) => {
+    if (selection.some((adapter, index) => previous[index] !== undefined && adapter !== previous[index])) {
+      // Other metrics can publish newer snapshots containing the previous GPU
+      // sample. Wait for a temperature sample taken after the selection change.
+      gpuSelectionObservedAtMs.value = gpuTemperatureObservedAtMs.value;
+    }
+  },
+  { flush: 'sync' }
+);
+const gpuTemperatureAvailable = computed(() => {
+  if (settings.draft?.gpuAdapter !== settings.preferences?.gpuAdapter) return false;
+  if (
+    gpuSelectionObservedAtMs.value !== null &&
+    (gpuTemperatureReading.value.sampledAtMs ?? 0) <= gpuSelectionObservedAtMs.value
+  ) {
+    return false;
+  }
+  const value = currentGpuTemperature(gpuTemperatureReading.value, gpuTemperatureObservedAtMs.value);
+  return value !== null && (!settings.draft?.gpuAdapter || value.adapterId === settings.draft.gpuAdapter);
+});
+const gpuTemperatureStatus = computed(() =>
+  gpuTemperatureReading.value.status === 'ready' && !gpuTemperatureAvailable.value
+    ? 'loading'
+    : gpuTemperatureReading.value.status
+);
 const batteryPresent = ref<boolean | null>(null);
 const batteryTemperatureStatus = ref<ResidentReading['batteryTemperature']['status']>('loading');
 const chargingPowerStatus = ref<ResidentReading['chargingPower']['status']>('loading');
@@ -252,7 +290,8 @@ function accept(value: ResidentReading) {
   interfaces.value = value.interfaces;
   volumes.value = value.volumes;
   gpuAdapters.value = value.gpuAdapters;
-  gpuTemperatureStatus.value = value.gpuTemperature.status;
+  gpuTemperatureReading.value = value.gpuTemperature;
+  gpuTemperatureObservedAtMs.value = value.observedAtMs;
   batteryPresent.value = value.batteryPresent;
   batteryTemperatureStatus.value = value.batteryTemperature.status;
   chargingPowerStatus.value = value.chargingPower.status;
@@ -260,7 +299,7 @@ function accept(value: ResidentReading) {
   systemPowerStatus.value = value.systemPower.status;
 }
 async function enable(id: ResidentDisplayMetricId, enabled: boolean) {
-  if (id === 'gpuTemperature' && enabled && gpuTemperatureStatus.value === 'unsupported') return;
+  if (id === 'gpuTemperature' && enabled && !gpuTemperatureAvailable.value) return;
   if (id === 'cpuTemperature' && !props.isMacOs && !props.isLinux && enabled) {
     if (temperatureSelectionPending.value || monitoring.loading || monitoring.busy) return;
     temperatureSelectionPending.value = true;
@@ -616,7 +655,7 @@ onBeforeUnmount(() => {
                             :model-value="row.enabled"
                             :disabled="
                               selectionLocked(row.enabled) ||
-                              (row.id === 'gpuTemperature' && !row.enabled && gpuTemperatureStatus === 'unsupported') ||
+                              (row.id === 'gpuTemperature' && !row.enabled && !gpuTemperatureAvailable) ||
                               (row.id === 'cpuTemperature' &&
                                 !isMacOs &&
                                 !isLinux &&
@@ -657,21 +696,17 @@ onBeforeUnmount(() => {
                           </button>
                         </MdTooltip>
                         <span
-                          v-if="
-                            row.id === 'cpuTemperature' &&
-                            !isMacOs &&
-                            !isLinux &&
-                            monitoring.statusLabel(settings.preferences?.windowsCpuTemperatureEnabled ?? false)
-                          "
+                          v-if="row.id === 'gpuTemperature' && !gpuTemperatureAvailable"
+                          role="status"
+                          class="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 text-content-meta font-medium leading-4 text-muted-foreground"
+                          >{{ t(METRIC_STATUS_KEYS[gpuTemperatureStatus]) }}</span
+                        >
+                        <span
+                          v-if="row.id === 'cpuTemperature' && !isMacOs && !isLinux && cpuTemperatureStatusLabel"
                           role="status"
                           class="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 text-content-meta font-medium leading-4"
                           :class="monitoring.needsAttention ? 'text-destructive-text' : 'text-muted-foreground'"
-                          >{{
-                            t(
-                              monitoring.statusLabel(settings.preferences?.windowsCpuTemperatureEnabled ?? false) ??
-                                'windowsMonitoring.states.notEnabled'
-                            )
-                          }}</span
+                          >{{ t(cpuTemperatureStatusLabel ?? 'windowsMonitoring.states.notEnabled') }}</span
                         >
                       </div>
 
@@ -937,6 +972,20 @@ onBeforeUnmount(() => {
 }
 .status-item .metric-label-group label {
   flex: 0 1 auto;
+}
+.status-item[data-metric='gpuTemperature'] .metric-label-group {
+  flex: none;
+  flex-wrap: nowrap;
+}
+.status-item[data-metric='gpuTemperature'] label {
+  flex: none;
+  white-space: nowrap;
+}
+.status-item[data-metric='gpuTemperature'] .selection-toggle {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-left: auto;
+  justify-content: flex-end;
 }
 .logo-marker {
   display: grid;

@@ -885,7 +885,11 @@ history rather than attributing a previous GPU's samples to the new selection.
 
 The resident GPU worker reads temperature at four-second intervals while
 macOS or Windows monitoring is enabled, including when its display item or detail panel is hidden.
-The display checkbox controls presentation only. GPU and CPU cards share their
+The display checkbox controls presentation only. Enabling GPU temperature requires
+a fresh, valid reading from the selected adapter; a loading or failed observation
+does not establish support. Settings show the unavailable status beside the label
+and keep device selection and disabling a saved item available.
+GPU and CPU cards share their
 numeric, tooltip and chart presentation; unsupported temperature sections are omitted.
 Transient failures preserve original timestamps and real history without adding
 points or replacing missing values with zero. Values expire after ten seconds.

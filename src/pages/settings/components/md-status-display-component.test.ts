@@ -451,7 +451,7 @@ describe('status display interactions', () => {
     await handle.trigger('keydown', { key: 'Enter' });
     await flushPromises();
     expect(wrapper.findAll('.metric-row')[0]!.attributes('data-metric')).toBe('cpuTemperature');
-    expect(wrapper.find('[role="status"]').text()).toContain('systemStatus.saveFailed');
+    expect(wrapper.find('.settings-feedback[role="status"]').text()).toContain('systemStatus.saveFailed');
     vi.mocked(ResidentService.preferences).mockResolvedValue(saved);
     wrapper.unmount();
     const reloaded = mount(Settings, { props: { isMacOs: true }, global: global() });
@@ -976,6 +976,19 @@ describe('per-item color configuration', () => {
 });
 
 describe('GPU temperature display settings', () => {
+  function gpuReading(revision = 1, adapterId = 'a') {
+    const reading = readingFixture(revision);
+    reading.observedAtMs = revision;
+    reading.gpuTemperature = {
+      status: 'ready',
+      sampledAtMs: revision,
+      value: { adapterId, adapterName: adapterId, celsius: 52, kind: 'device', source: 'driver', sensorCount: 1 },
+    };
+    return reading;
+  }
+  beforeEach(() => {
+    vi.mocked(ResidentService.catalogue).mockResolvedValue(gpuReading());
+  });
   it('reloads the GPU chosen in another window before editing display settings', async () => {
     const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
     wrappers.push(wrapper);
@@ -983,7 +996,7 @@ describe('GPU temperature display settings', () => {
     const external = { ...preferencesFixture(), revision: 9, gpuAdapter: 'gpu-b' };
     vi.mocked(ResidentService.preferences).mockResolvedValue(external);
     vi.mocked(ResidentService.catalogue).mockResolvedValue({
-      ...readingFixture(),
+      ...gpuReading(1, 'gpu-b'),
       gpuAdapters: [{ id: 'gpu-b', name: 'GPU 1 · Radeon' }],
     });
     await openConfiguration(wrapper);
@@ -1010,31 +1023,165 @@ describe('GPU temperature display settings', () => {
     expect(saved.metrics.find(item => item.id === 'gpuTemperature')?.enabled).toBe(true);
     expect(saved.metrics.find(item => item.id === 'gpu')?.enabled).toBe(false);
   });
-  it('keeps device selection available when the current GPU does not support temperature', async () => {
-    const initial = readingFixture(1);
-    initial.gpuTemperature.status = 'unsupported';
-    initial.gpuAdapters = [
-      { id: 'a', name: 'Unsupported GPU' },
-      { id: 'b', name: 'Supported GPU' },
-    ];
-    vi.mocked(ResidentService.catalogue).mockResolvedValue(initial);
-    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+  it.each([true, false])(
+    'explains unsupported GPU temperature and keeps device selection with isMacOs=%s',
+    async isMacOs => {
+      const initial = readingFixture(1);
+      initial.gpuTemperature.status = 'unsupported';
+      initial.gpuAdapters = [
+        { id: 'a', name: 'Unsupported GPU' },
+        { id: 'b', name: 'Supported GPU' },
+      ];
+      vi.mocked(ResidentService.catalogue).mockResolvedValue(initial);
+      vi.mocked(WindowsMonitoringService.observe).mockResolvedValue({
+        state: 'unsupportedHardware',
+        driverAvailable: false,
+        serviceInstalled: false,
+      });
+      const wrapper = mount(Settings, { props: { isMacOs }, global: global() });
+      wrappers.push(wrapper);
+      await flushPromises();
+      await openConfiguration(wrapper);
+      const row = wrapper.get('[data-metric="gpuTemperature"]');
+      expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
+      if (!isMacOs) {
+        expect(wrapper.get('[data-metric="cpuTemperature"] [role="status"]').text()).toBe(
+          row.get('[role="status"]').text()
+        );
+      }
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      expect(row.get('.selection-toggle').attributes('disabled')).toBeUndefined();
+      row.getComponent(Select).vm.$emit('update:modelValue', 'b');
+      await flushPromises();
+      expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ gpuAdapter: 'b' }));
+      const onReading = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+      const pending = readingFixture(2);
+      onReading(pending);
+      await flushPromises();
+      expect(row.get('[role="status"]').text()).toBe('systemStatus.loading');
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
+      await flushPromises();
+      expect(ResidentService.savePreferences).toHaveBeenCalledTimes(1);
+      const unsupported = readingFixture(3);
+      unsupported.gpuTemperature.status = 'unsupported';
+      onReading(unsupported);
+      await flushPromises();
+      expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      const supported = gpuReading(4, 'b');
+      supported.gpuAdapters = initial.gpuAdapters;
+      onReading(supported);
+      await flushPromises();
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
+      expect(row.find('[role="status"]').exists()).toBe(false);
+    }
+  );
+  it.each(['stale', 'failed', 'disconnected'] as const)(
+    'blocks enabling temperature with a %s reading',
+    async status => {
+      const reading = gpuReading();
+      reading.gpuTemperature.status = status;
+      vi.mocked(ResidentService.catalogue).mockResolvedValue(reading);
+      const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+      wrappers.push(wrapper);
+      await flushPromises();
+      await openConfiguration(wrapper);
+      const row = wrapper.get('[data-metric="gpuTemperature"]');
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
+      await flushPromises();
+      expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+    }
+  );
+  it('rejects temperature readings belonging to the previously selected adapter', async () => {
+    const preferences = { ...preferencesFixture(), gpuAdapter: 'b' };
+    vi.mocked(ResidentService.preferences).mockResolvedValue(preferences);
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
     wrappers.push(wrapper);
     await flushPromises();
     await openConfiguration(wrapper);
     const row = wrapper.get('[data-metric="gpuTemperature"]');
     expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
-    expect(row.get('.selection-toggle').attributes('disabled')).toBeUndefined();
-    row.getComponent(Select).vm.$emit('update:modelValue', 'b');
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.loading');
+    row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
     await flushPromises();
-    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ gpuAdapter: 'b' }));
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+  });
+  it('waits for a new automatic GPU observation before enabling temperature', async () => {
+    vi.mocked(ResidentService.preferences).mockResolvedValue({ ...preferencesFixture(), gpuAdapter: 'a' });
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const row = wrapper.get('[data-metric="gpuTemperature"]');
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
+    row.getComponent(Select).vm.$emit('update:modelValue', 'automatic');
+    await flushPromises();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenCalledTimes(1);
     const onReading = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
-    const supported = readingFixture(2);
-    supported.gpuTemperature.status = 'ready';
-    supported.gpuAdapters = initial.gpuAdapters;
-    onReading(supported);
+    const oldSample = { ...gpuReading(1, 'a'), revision: 2, observedAtMs: 2 };
+    onReading(oldSample);
+    await flushPromises();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.loading');
+    const unsupported = readingFixture(2);
+    unsupported.gpuTemperature.status = 'unsupported';
+    onReading(unsupported);
+    await flushPromises();
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    onReading(gpuReading(3, 'b'));
     await flushPromises();
     expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
+  });
+
+  it('ignores samples received before the GPU selection is committed', async () => {
+    vi.mocked(ResidentService.preferences).mockResolvedValue({ ...preferencesFixture(), gpuAdapter: 'a' });
+    let commit!: (value: ReturnType<typeof preferencesFixture>) => void;
+    vi.mocked(ResidentService.savePreferences).mockImplementationOnce(() => new Promise(resolve => (commit = resolve)));
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const row = wrapper.get('[data-metric="gpuTemperature"]');
+    row.getComponent(Select).vm.$emit('update:modelValue', 'automatic');
+    await flushPromises();
+    const onReading = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+    onReading(gpuReading(2, 'a'));
+    await flushPromises();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    const requested = vi.mocked(ResidentService.savePreferences).mock.calls.at(-1)![0];
+    commit({ ...requested, revision: requested.revision + 1 });
+    await flushPromises();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    onReading(gpuReading(3, 'b'));
+    await flushPromises();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
+  });
+
+  it('allows an unavailable saved temperature item to be turned off', async () => {
+    const preferences = preferencesFixture();
+    preferences.metrics.find(item => item.id === 'gpuTemperature')!.enabled = true;
+    vi.mocked(ResidentService.preferences).mockResolvedValue(preferences);
+    const reading = readingFixture();
+    reading.gpuTemperature.status = 'unsupported';
+    vi.mocked(ResidentService.catalogue).mockResolvedValue(reading);
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const checkbox = wrapper.get('#status-gpuTemperature');
+    expect(checkbox.attributes('disabled')).toBeUndefined();
+    await checkbox.trigger('click');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({ metrics: expect.arrayContaining([{ id: 'gpuTemperature', enabled: false }]) })
+    );
   });
   it('offers the shared GPU temperature display on Windows', async () => {
     const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });

@@ -4058,7 +4058,7 @@
     "ready": "更新済み",
     "stale": "データが古くなっています",
     "disconnected": "未接続",
-    "unsupported": "このデバイスでは利用できません",
+    "unsupported": "非対応",
     "failed": "データを取得できません",
     "details": "システムの状態",
     "openMain": "MangoDisk を開く",

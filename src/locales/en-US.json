@@ -4058,7 +4058,7 @@
     "ready": "Up to date",
     "stale": "Data is out of date",
     "disconnected": "Disconnected",
-    "unsupported": "Not available on this device",
+    "unsupported": "Not supported",
     "failed": "Unable to read data",
     "details": "System status",
     "openMain": "Open MangoDisk",

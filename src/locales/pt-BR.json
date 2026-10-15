@@ -4058,7 +4058,7 @@
     "ready": "Atualizado",
     "stale": "Dados desatualizados",
     "disconnected": "Desconectado",
-    "unsupported": "Indisponível neste dispositivo",
+    "unsupported": "Não suportado",
     "failed": "Não foi possível ler os dados",
     "details": "Estado do sistema",
     "openMain": "Abrir MangoDisk",
