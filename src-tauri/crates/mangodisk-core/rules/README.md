@@ -21,6 +21,14 @@ The in-app privileged check remains limited to previous Windows installations. E
 does not bypass locked files, ACLs, reparse-point checks, or verification. Item failures retain bounded path, stage,
 and native-error diagnostics.
 
+The macOS additional-user-cache cleaner retains reviewed snapshots for failed and unselected
+sources across cleanup steps. Only successfully deleted sources leave the snapshot. Retries
+must recheck ownership, running processes, links, and metadata against the original review.
+Cache roots and descendants retain their physical identities, so replacing an object while
+preserving its size and modification time requires a new scan. Changed data must never be
+silently reauthorized. Execution diagnostics include the operation, source path, failure stage,
+and native cause, with bounded item details.
+
 ## Directory layout
 
 ```text

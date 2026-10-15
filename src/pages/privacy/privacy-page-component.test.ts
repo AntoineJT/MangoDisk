@@ -3,6 +3,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { toast } from 'vue-sonner';
 
 import { i18n } from '@/i18n';
 import type { PrivacyExecutionPlan, PrivacyExecutionResult, PrivacyScanResult } from '@/lib/models/privacy';
@@ -22,6 +23,8 @@ const serviceMocks = vi.hoisted(() => ({
   executeWithProgress: vi.fn(),
   cancelExecution: vi.fn(),
 }));
+
+vi.mock('vue-sonner', () => ({ toast: { warning: vi.fn(), success: vi.fn() } }));
 
 vi.mock('@/lib/services/privacy-service', () => ({ PrivacyService: serviceMocks }));
 vi.mock('@/lib/services/application-icon-service', () => ({
@@ -146,6 +149,8 @@ function mountPage() {
 
 describe('privacy page cleanup flow', () => {
   beforeEach(() => {
+    vi.mocked(toast.warning).mockClear();
+    vi.mocked(toast.success).mockClear();
     setActivePinia(createPinia());
     for (const mock of Object.values(serviceMocks)) mock.mockReset();
     vi.spyOn(useAppStore(), 'refreshSystemDisk').mockResolvedValue(true);
@@ -157,6 +162,34 @@ describe('privacy page cleanup flow', () => {
 
     expect(scanButton.attributes('size')).toBe('lg');
     expect(scanButton.attributes('type')).toBe('button');
+    wrapper.unmount();
+  });
+
+  it('reports an empty execution as no remaining selection without showing cleanup success', async () => {
+    const store = usePrivacyStore();
+    store.scanResult = structuredClone(scan);
+    store.selectedTokens = ['history-token'];
+    serviceMocks.prepare.mockResolvedValue(structuredClone(plan));
+    serviceMocks.executeWithProgress.mockResolvedValue({
+      planId: plan.planId,
+      affectedItemCount: 0,
+      failedItemCount: 0,
+      items: [],
+      scan: structuredClone(scan),
+    });
+    const wrapper = mountPage();
+
+    await wrapper.get('.prepare-cleanup').trigger('click');
+    await flushPromises();
+    await wrapper.get('.execute-plan').trigger('click');
+    await flushPromises();
+
+    expect(toast.warning).toHaveBeenCalledWith(i18n.global.t('privacy.feedback.noRemainingSelection'));
+    expect(toast.success).not.toHaveBeenCalled();
+    expect(wrapper.get('.privacy-result-dialog').attributes('data-open')).toBe('false');
+    expect(store.scanResult).toEqual(scan);
+    expect(store.selectedTokens).toEqual(['history-token']);
+    expect(serviceMocks.scanWithProgress).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

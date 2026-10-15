@@ -1078,10 +1078,43 @@ impl PrivacyService {
                 "privacy execution excludes an unauthorized source",
             ));
         }
+        let selected_item_count = pending.candidates.len();
         pending
             .candidates
             .retain(|candidate| !excluded_source_ids.contains(&candidate.item.source_id));
         let total_item_count = pending.candidates.len() as u64;
+        if pending.candidates.is_empty() {
+            // Source exclusions may remove the complete authorized selection. This is a skipped
+            // confirmation, not a cleanup operation or a valid empty history record.
+            operation.ensure_not_cancelled()?;
+            update(PrivacyExecutionProgress {
+                stage: PrivacyExecutionStage::Finalizing,
+                current_token: None,
+                current_source_name: None,
+                current_kind: None,
+                completed_item_count: 0,
+                total_item_count: 0,
+                affected_item_count: 0,
+                elapsed_ms: now_ms().saturating_sub(started_at_ms),
+                completed_items: Vec::new(),
+            });
+            let scan = current_scan_session().ok().and_then(|session| {
+                (session.public_result.scan_id == pending.public_plan.scan_id)
+                    .then_some(session.public_result)
+            });
+            log::info!(
+                "privacy_execution_skipped operation_id={} reason=allSourcesExcluded selected_item_count={} excluded_source_count={} retained_item_count=0 history_saved=false outcome=unchanged",
+                operation.id(), selected_item_count, excluded_source_ids.len()
+            );
+            operation.complete();
+            return Ok(PrivacyExecutionResult {
+                plan_id: request.plan_id,
+                affected_item_count: 0,
+                failed_item_count: 0,
+                items: Vec::new(),
+                scan,
+            });
+        }
         update(PrivacyExecutionProgress {
             stage: PrivacyExecutionStage::Validating,
             current_token: None,
@@ -1113,17 +1146,28 @@ impl PrivacyService {
                 .iter()
                 .any(|name| running.contains(&name.to_lowercase()));
             if was_running && !is_running {
-                candidate.fingerprint = current_fingerprint(candidate)?;
+                candidate.fingerprint = current_fingerprint(candidate).inspect_err(|error| {
+                    log_privacy_item_failure(
+                        operation.id(),
+                        candidate,
+                        "refresh_candidate",
+                        "sourceUnavailable",
+                        Some(error),
+                        0,
+                    );
+                })?;
                 candidate.item.capability = PrivacyCapabilityState::Ready;
                 refreshed_candidate_count = refreshed_candidate_count.saturating_add(1);
             }
         }
         if refreshed_candidate_count > 0 || !excluded_source_ids.is_empty() {
             log::info!(
-                "privacy_execution_selection_refreshed operation_id={} refreshed_candidate_count={} excluded_source_count={}",
+                "privacy_execution_selection_refreshed operation_id={} refreshed_candidate_count={} excluded_source_count={} selected_item_count={} retained_item_count={}",
                 operation.id(),
                 refreshed_candidate_count,
-                excluded_source_ids.len()
+                excluded_source_ids.len(),
+                selected_item_count,
+                total_item_count
             );
         }
 
@@ -1208,7 +1252,8 @@ impl PrivacyService {
                 elapsed_ms: now_ms().saturating_sub(started_at_ms),
                 completed_items: execution_progress_items(&results),
             });
-            append_history_record(
+            let history_saved = append_history_record(
+                operation.id(),
                 request.plan_id.clone(),
                 pending.time_range,
                 &pending.candidates,
@@ -1217,10 +1262,13 @@ impl PrivacyService {
                 now_ms(),
             );
             log::warn!(
-                "privacy_execution_preflight_blocked operation_id={} failed_count={} cancelled_count={}",
+                "privacy_execution_preflight_blocked operation_id={} selected_item_count={} retained_item_count={} failed_count={} cancelled_count={} history_saved={} outcome=unchanged",
                 operation.id(),
+                selected_item_count,
+                total_item_count,
                 failed_item_count,
-                cancelled_item_count
+                cancelled_item_count,
+                history_saved
             );
             operation.complete();
             let scan = current_scan_session().ok().and_then(|session| {
@@ -1395,7 +1443,8 @@ impl PrivacyService {
             elapsed_ms: now_ms().saturating_sub(started_at_ms),
             completed_items: execution_progress_items(&results),
         });
-        append_history_record(
+        let history_saved = append_history_record(
+            operation.id(),
             request.plan_id.clone(),
             pending.time_range,
             &pending.candidates,
@@ -1413,7 +1462,8 @@ impl PrivacyService {
         let operation_id = operation.id();
         let scan_reconciled = scan.is_some();
         log::info!(
-            "privacy_execution_completed operation_id={operation_id} affected_count={affected_item_count} failed_count={failed_item_count} cancelled_count={cancelled_item_count} partial_failure_count={partial_failure_count} uncertain_failure_count={uncertain_failure_count} scan_reconciled={scan_reconciled}"
+            "privacy_execution_completed operation_id={operation_id} affected_count={affected_item_count} failed_count={failed_item_count} cancelled_count={cancelled_item_count} partial_failure_count={partial_failure_count} uncertain_failure_count={uncertain_failure_count} scan_reconciled={scan_reconciled} selected_item_count={selected_item_count} retained_item_count={total_item_count} result_item_count={} history_saved={history_saved}",
+            results.len()
         );
         operation.complete();
         Ok(PrivacyExecutionResult {
@@ -2488,12 +2538,14 @@ fn roots_summary_fingerprint(
                 "privacy directory exceeds the bounded scan limit",
             ));
         }
-        let metadata = fs::symlink_metadata(root)
-            .map_err(|error| privacy_io_error("privacy directory metadata unavailable", error))?;
+        let metadata = fs::symlink_metadata(root).map_err(|error| {
+            privacy_path_io_error("privacy directory metadata unavailable", root, error)
+        })?;
         if current_platform().is_link_like(&metadata) {
-            return Err(CoreError::operation_failed(
-                "privacy directory contains an unsafe root link",
-            ));
+            return Err(CoreError::operation_failed(format!(
+                "privacy directory contains an unsafe root link: {}",
+                current_platform().display_path(root)
+            )));
         }
         facts.push((
             root.to_string_lossy().into_owned(),
@@ -2502,11 +2554,11 @@ fn roots_summary_fingerprint(
             modified_at_nanos(&metadata),
         ));
         if metadata.is_dir() {
-            for entry in fs::read_dir(root)
-                .map_err(|error| privacy_io_error("privacy directory is unreadable", error))?
-            {
+            for entry in fs::read_dir(root).map_err(|error| {
+                privacy_path_io_error("privacy directory is unreadable", root, error)
+            })? {
                 let entry = entry.map_err(|error| {
-                    privacy_io_error("privacy directory entry is unreadable", error)
+                    privacy_path_io_error("privacy directory entry is unreadable", root, error)
                 })?;
                 if facts.len() as u64 >= MAX_DIRECTORY_SCAN_ENTRIES {
                     return Err(CoreError::operation_failed(
@@ -2514,12 +2566,17 @@ fn roots_summary_fingerprint(
                     ));
                 }
                 let metadata = fs::symlink_metadata(entry.path()).map_err(|error| {
-                    privacy_io_error("privacy entry metadata unavailable", error)
+                    privacy_path_io_error(
+                        "privacy entry metadata unavailable",
+                        &entry.path(),
+                        error,
+                    )
                 })?;
                 if current_platform().is_link_like(&metadata) {
-                    return Err(CoreError::operation_failed(
-                        "privacy directory contains a link-like entry",
-                    ));
+                    return Err(CoreError::operation_failed(format!(
+                        "privacy directory contains a link-like entry: {}",
+                        current_platform().display_path(&entry.path())
+                    )));
                 }
                 facts.push((
                     entry.file_name().to_string_lossy().into_owned(),
@@ -2834,6 +2891,19 @@ fn privacy_io_error(context: &str, error: std::io::Error) -> CoreError {
     }
 }
 
+// A source may span several roots; retain the failing child rather than only its source list.
+fn privacy_path_io_error(context: &str, path: &Path, error: std::io::Error) -> CoreError {
+    privacy_io_error(
+        &format!(
+            "{context} path={} error_kind={:?} os_error={:?}",
+            current_platform().display_path(path),
+            error.kind(),
+            error.raw_os_error()
+        ),
+        error,
+    )
+}
+
 fn privacy_mutation_failure(
     error: CoreError,
     confirmed_affected_item_count: u64,
@@ -2852,12 +2922,13 @@ fn tree_fingerprint_with_cancellation(
     cancellation: &PlatformCancellation,
 ) -> CoreResult<(String, u64, u64)> {
     let metadata = fs::symlink_metadata(root).map_err(|error| {
-        CoreError::operation_failed(format!("privacy directory metadata unavailable: {error}"))
+        privacy_path_io_error("privacy directory metadata unavailable", root, error)
     })?;
     if current_platform().is_link_like(&metadata) {
-        return Err(CoreError::operation_failed(
-            "privacy directory contains an unsafe root link",
-        ));
+        return Err(CoreError::operation_failed(format!(
+            "privacy directory contains an unsafe root link: {}",
+            current_platform().display_path(root)
+        )));
     }
     let mut entries = vec![root.to_path_buf()];
     let mut facts = Vec::new();
@@ -2873,12 +2944,13 @@ fn tree_fingerprint_with_cancellation(
             ));
         }
         let metadata = fs::symlink_metadata(&path).map_err(|error| {
-            CoreError::operation_failed(format!("privacy entry metadata unavailable: {error}"))
+            privacy_path_io_error("privacy entry metadata unavailable", &path, error)
         })?;
         if current_platform().is_link_like(&metadata) {
-            return Err(CoreError::operation_failed(
-                "privacy directory contains a link-like entry",
-            ));
+            return Err(CoreError::operation_failed(format!(
+                "privacy directory contains a link-like entry: {}",
+                current_platform().display_path(&path)
+            )));
         }
         let relative = path
             .strip_prefix(root)
@@ -2888,14 +2960,16 @@ fn tree_fingerprint_with_cancellation(
         facts.push((relative, metadata.len(), metadata.is_dir()));
         if metadata.is_dir() {
             for entry in fs::read_dir(&path).map_err(|error| {
-                CoreError::operation_failed(format!("privacy directory is unreadable: {error}"))
+                privacy_path_io_error("privacy directory is unreadable", &path, error)
             })? {
                 entries.push(
                     entry
                         .map_err(|error| {
-                            CoreError::operation_failed(format!(
-                                "privacy directory entry is unreadable: {error}"
-                            ))
+                            privacy_path_io_error(
+                                "privacy directory entry is unreadable",
+                                &path,
+                                error,
+                            )
                         })?
                         .path(),
                 );
@@ -2937,7 +3011,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
         // directory contents are cleared, while a session file is removed as one atomic item.
         let metadata = fs::symlink_metadata(root).map_err(|error| {
             privacy_mutation_failure(
-                privacy_io_error("privacy root metadata unavailable", error),
+                privacy_path_io_error("privacy root metadata unavailable", root, error),
                 confirmed_affected_item_count,
                 confirmed_affected_item_count > 0,
             )
@@ -2953,9 +3027,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
             root_kinds.push(true);
             let entries = fs::read_dir(root).map_err(|error| {
                 privacy_mutation_failure(
-                    CoreError::operation_failed(format!(
-                        "privacy directory is unreadable: {error}"
-                    )),
+                    privacy_path_io_error("privacy directory is unreadable", root, error),
                     confirmed_affected_item_count,
                     confirmed_affected_item_count > 0,
                 )
@@ -2964,9 +3036,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
                 let path = entry
                     .map_err(|error| {
                         privacy_mutation_failure(
-                            CoreError::operation_failed(format!(
-                                "privacy entry is unreadable: {error}"
-                            )),
+                            privacy_path_io_error("privacy entry is unreadable", root, error),
                             confirmed_affected_item_count,
                             root_changed || confirmed_affected_item_count > 0,
                         )
@@ -2974,9 +3044,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
                     .path();
                 let metadata = fs::symlink_metadata(&path).map_err(|error| {
                     privacy_mutation_failure(
-                        CoreError::operation_failed(format!(
-                            "privacy entry metadata unavailable: {error}"
-                        )),
+                        privacy_path_io_error("privacy entry metadata unavailable", &path, error),
                         confirmed_affected_item_count,
                         root_changed || confirmed_affected_item_count > 0,
                     )
@@ -2997,9 +3065,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
                 };
                 removal.map_err(|error| {
                     privacy_mutation_failure(
-                        CoreError::operation_failed(format!(
-                            "privacy entry removal failed: {error}"
-                        )),
+                        privacy_path_io_error("privacy entry removal failed", &path, error),
                         confirmed_affected_item_count,
                         true,
                     )
@@ -3010,7 +3076,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
             root_kinds.push(false);
             fs::remove_file(root).map_err(|error| {
                 privacy_mutation_failure(
-                    CoreError::operation_failed(format!("privacy entry removal failed: {error}")),
+                    privacy_path_io_error("privacy entry removal failed", root, error),
                     confirmed_affected_item_count,
                     true,
                 )
@@ -3033,7 +3099,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
         if was_directory {
             let metadata = fs::symlink_metadata(root).map_err(|error| {
                 privacy_mutation_failure(
-                    privacy_io_error("privacy directory verification failed", error),
+                    privacy_path_io_error("privacy directory verification failed", root, error),
                     confirmed_affected_item_count,
                     true,
                 )
@@ -3047,7 +3113,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
             }
             let mut entries = fs::read_dir(root).map_err(|error| {
                 privacy_mutation_failure(
-                    privacy_io_error("privacy directory verification failed", error),
+                    privacy_path_io_error("privacy directory verification failed", root, error),
                     confirmed_affected_item_count,
                     true,
                 )
@@ -3064,7 +3130,7 @@ fn clear_directories(roots: &[PathBuf]) -> Result<u64, PrivacyMutationFailure> {
                 Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
                 Err(error) => {
                     return Err(privacy_mutation_failure(
-                        privacy_io_error("privacy file verification failed", error),
+                        privacy_path_io_error("privacy file verification failed", root, error),
                         confirmed_affected_item_count,
                         true,
                     ))
@@ -3348,7 +3414,12 @@ fn log_privacy_item_failure(
         }
         NativePrivacyAction::ApplicationNative { .. } => Vec::new(),
     };
-    let source_paths = mangodisk_platform::diagnostics::text(&format!("{paths:?}"));
+    let source_paths = paths
+        .iter()
+        .map(|path| current_platform().display_path(path))
+        .collect::<Vec<_>>()
+        .join(" | ");
+    let source_paths = mangodisk_platform::diagnostics::text(&source_paths);
     log::warn!(
         "privacy_item_failed operation_id={operation_id} source_id={} kind={:?} stage={stage} reason={reason} mutation_state={mutation_state} confirmed_affected_count={confirmed_affected_item_count} source_paths={source_paths} error_detail={error_detail}",
         candidate.item.source_id,
@@ -3357,13 +3428,14 @@ fn log_privacy_item_failure(
 }
 
 fn append_history_record(
+    operation_id: u64,
     plan_id: String,
     time_range: PrivacyTimeRange,
     candidates: &[NativePrivacyCandidate],
     results: &[PrivacyExecutionItemResult],
     started_at_ms: u64,
     finished_at_ms: u64,
-) {
+) -> bool {
     let items = candidates
         .iter()
         .zip(results)
@@ -3404,11 +3476,19 @@ fn append_history_record(
             items,
         }),
     };
+    let record_operation_id = record.operation_id.clone();
     if let Err(error) = HistoryService::append(record) {
         log::warn!(
-            "privacy_history_save_failed error={}",
+            "privacy_history_save_failed operation_id={} history_operation_id={} candidate_count={} result_count={} outcome=not_saved error={}",
+            operation_id,
+            record_operation_id,
+            candidates.len(),
+            results.len(),
             mangodisk_platform::diagnostics::text(&error)
         );
+        false
+    } else {
+        true
     }
 }
 
@@ -4787,6 +4867,149 @@ mod tests {
         fs::remove_dir_all(&directory).unwrap();
         clear_scan_session().unwrap();
         clear_pending_plan().unwrap();
+    }
+
+    #[test]
+    fn excluding_all_sources_skips_execution_and_preserves_the_scan() {
+        let _test_guard = test_operation_lock();
+        let directory = fixture_directory("all-sources-excluded");
+        let file = directory.join("history");
+        fs::write(&file, b"privacy trace").unwrap();
+        let (scan_id, token) = install_directory_scan_session(&directory);
+        let mut session = current_scan_session().unwrap();
+        let candidate = session.candidates.get_mut(&token).unwrap();
+        candidate.item.capability = PrivacyCapabilityState::BrowserRunning;
+        candidate.item.requires_browser_close = true;
+        candidate.browser_process_names = vec!["mangodisk-browser-not-running".into()];
+        session.public_result.items[0] = candidate.item.clone();
+        let revision = session.public_result.revision.clone();
+        replace_scan_session(session).unwrap();
+        let plan = PrivacyService::prepare(PrivacyExecutionRequest {
+            scan_id: scan_id.clone(),
+            tokens: vec![token.clone()],
+        })
+        .unwrap();
+        let request = PrivacyExecutionRunRequest {
+            plan_id: plan.plan_id,
+            excluded_source_ids: vec!["synthetic".into()],
+        };
+        let mut progress = Vec::new();
+        let result = PrivacyService::execute_with_progress(request.clone(), |value| {
+            progress.push(value);
+        })
+        .unwrap();
+
+        assert!(result.items.is_empty());
+        assert_eq!(result.affected_item_count, 0);
+        assert_eq!(result.failed_item_count, 0);
+        let scan = result.scan.unwrap();
+        assert_eq!(scan.scan_id, scan_id);
+        assert_eq!(scan.revision, revision);
+        assert_eq!(scan.items[0].item_count, 1);
+        assert_eq!(
+            progress.len(),
+            1,
+            "an empty selection must skip validation and cleaning"
+        );
+        assert_eq!(progress[0].stage, PrivacyExecutionStage::Finalizing);
+        assert_eq!(progress[0].total_item_count, 0);
+        assert_eq!(fs::read(&file).unwrap(), b"privacy trace");
+        assert!(
+            PrivacyService::execute(request).is_err(),
+            "a skipped plan must still be consumed"
+        );
+        assert_eq!(
+            PrivacyService::prepare(PrivacyExecutionRequest {
+                scan_id,
+                tokens: vec![token]
+            })
+            .unwrap()
+            .items
+            .len(),
+            1,
+            "excluded sources must remain available for a later confirmation"
+        );
+        clear_scan_session().unwrap();
+        clear_pending_plan().unwrap();
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn partial_source_exclusion_records_only_the_executed_selection() {
+        let _test_guard = test_operation_lock();
+        let directory = fixture_directory("partial-exclusion");
+        let excluded_root = directory.join("excluded");
+        let retained_root = directory.join("retained");
+        fs::create_dir_all(&excluded_root).unwrap();
+        fs::create_dir_all(&retained_root).unwrap();
+        fs::write(excluded_root.join("keep"), b"excluded trace").unwrap();
+        fs::write(retained_root.join("clear"), b"authorized trace").unwrap();
+        let (scan_id, excluded_token) = install_directory_scan_session(&excluded_root);
+        let mut session = current_scan_session().unwrap();
+        let excluded = session.candidates.get_mut(&excluded_token).unwrap();
+        excluded.item.capability = PrivacyCapabilityState::BrowserRunning;
+        excluded.item.requires_browser_close = true;
+        excluded.browser_process_names = vec!["mangodisk-browser-not-running".into()];
+        session.public_result.items[0] = excluded.item.clone();
+        let mut retained = excluded.clone();
+        retained.token = "b".repeat(64);
+        retained.item.token = retained.token.clone();
+        retained.item.source_id = "retained".into();
+        retained.item.capability = PrivacyCapabilityState::Ready;
+        retained.item.requires_browser_close = false;
+        retained.browser_process_names.clear();
+        retained.action = NativePrivacyAction::Directories {
+            roots: vec![retained_root.clone()],
+        };
+        retained.fingerprint = current_fingerprint(&retained).unwrap();
+        let retained_token = retained.token.clone();
+        session.public_result.items.push(retained.item.clone());
+        session.candidates.insert(retained_token.clone(), retained);
+        replace_scan_session(session).unwrap();
+        let plan = PrivacyService::prepare(PrivacyExecutionRequest {
+            scan_id,
+            tokens: vec![excluded_token.clone(), retained_token.clone()],
+        })
+        .unwrap();
+        let plan_id = plan.plan_id.clone();
+        let result = PrivacyService::execute(PrivacyExecutionRunRequest {
+            plan_id: plan.plan_id,
+            excluded_source_ids: vec!["synthetic".into()],
+        })
+        .unwrap();
+
+        assert_eq!(result.items.len(), 1);
+        assert_eq!(result.items[0].token, retained_token);
+        assert_eq!(result.items[0].status, PrivacyExecutionItemStatus::Cleared);
+        assert_eq!(result.affected_item_count, 1);
+        assert_eq!(fs::read_dir(&retained_root).unwrap().count(), 0);
+        assert_eq!(
+            fs::read(excluded_root.join("keep")).unwrap(),
+            b"excluded trace"
+        );
+        let scan = result.scan.unwrap();
+        assert_eq!(
+            scan.items
+                .iter()
+                .find(|item| item.token == excluded_token)
+                .unwrap()
+                .item_count,
+            1
+        );
+        let record = HistoryService::list()
+            .unwrap()
+            .into_iter()
+            .find(|record| record.operation_id == format!("privacy-{plan_id}"))
+            .expect("nonempty cleanup must retain its history");
+        assert_eq!(record.selected_item_count, 1);
+        let OperationDetails::PrivacyCleanup(details) = record.details else {
+            panic!("privacy cleanup must retain typed history details");
+        };
+        assert_eq!(details.items.len(), 1);
+        assert_eq!(details.items[0].source_id, "retained");
+        clear_scan_session().unwrap();
+        clear_pending_plan().unwrap();
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]
