@@ -455,10 +455,13 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         // first, then apply the target monitor's physical size so logical-size
         // conversion cannot clip the WebView after a scale/display change.
         #[cfg(windows)]
-        window.set_size(tauri::PhysicalSize::new(
-            width.round() as u32,
-            height.round() as u32,
-        ))?;
+        {
+            refresh_windows_frame(&window)?;
+            window.set_size(tauri::PhysicalSize::new(
+                width.round() as u32,
+                height.round() as u32,
+            ))?;
+        }
         log::info!(
             "resident_panel_positioned scale={scale} x={x} y={y} width={width} height={height}"
         );
@@ -489,6 +492,34 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
             "resident_panel_show_dispatched elapsed_ms={}",
             started.elapsed().as_millis()
         );
+    }
+    Ok(())
+}
+
+#[cfg(windows)]
+fn refresh_windows_frame(window: &tauri::WebviewWindow) -> tauri::Result<()> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
+    };
+
+    // Before its first show, a shadowed borderless window can still report the
+    // hidden caption as a client-area offset. Tao adds that stale offset when
+    // sizing, extending the popup over the taskbar. Recalculate the native frame
+    // before measuring offsets, including after a target-monitor DPI transition.
+    let hwnd = window.hwnd()?.0;
+    let updated = unsafe {
+        SetWindowPos(
+            hwnd.cast(),
+            std::ptr::null_mut(),
+            0,
+            0,
+            0,
+            0,
+            SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER,
+        )
+    };
+    if updated == 0 {
+        return Err(std::io::Error::last_os_error().into());
     }
     Ok(())
 }
