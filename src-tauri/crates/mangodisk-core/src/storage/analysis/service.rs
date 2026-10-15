@@ -82,17 +82,43 @@ impl AnalysisService {
         callback: impl ProgressSink,
     ) -> CoreResult<AnalysisResult> {
         let excluded_paths = excluded_paths.into();
+        let requested_root = path.clone();
         let snapshot = StorageTraversal::analyze_path_with_mode_snapshot(
             path,
             refresh,
             excluded_paths,
             scan_mode,
             move |progress| callback.report(progress),
-        )?;
-        Ok(super::session::publish_result_with_exclusions(
-            snapshot.result,
-            snapshot.exclusions,
-        )?)
+        ).inspect_err(|error| {
+            log::log!(if error.code() == crate::CoreErrorCode::OperationCancelled { log::Level::Info } else { log::Level::Warn },
+                "analysis_request_failed process_id={} requested_root={} code={:?} cancelled={} error={}",
+                std::process::id(), mangodisk_platform::diagnostics::text(&requested_root.as_deref().unwrap_or("<system-volume>")),
+                error.code(), error.code() == crate::CoreErrorCode::OperationCancelled, mangodisk_platform::diagnostics::text(error)
+            );
+        })?;
+        let publish_started = Instant::now();
+        log::info!(
+            "analysis_result_publish_started process_id={} root={}",
+            std::process::id(),
+            mangodisk_platform::diagnostics::text(&snapshot.result.root)
+        );
+        let result =
+            super::session::publish_result_with_exclusions(snapshot.result, snapshot.exclusions)
+                .inspect_err(|error| {
+                    log::warn!(
+                        "analysis_result_publish_failed process_id={} error={}",
+                        std::process::id(),
+                        mangodisk_platform::diagnostics::text(error)
+                    );
+                })?;
+        log::info!(
+            "analysis_result_published process_id={} root={} scan_id={} elapsed_ms={}",
+            std::process::id(),
+            mangodisk_platform::diagnostics::text(&result.root),
+            result.scan_id,
+            publish_started.elapsed().as_millis()
+        );
+        Ok(result)
     }
 
     pub(crate) fn analyze_with_diagnostics(

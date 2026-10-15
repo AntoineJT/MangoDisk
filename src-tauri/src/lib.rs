@@ -3,6 +3,7 @@ mod application_menu;
 mod commands;
 mod events;
 mod resident;
+mod runtime_diagnostics;
 #[cfg(windows)]
 pub use resident::taskbar_display::run_layout_helper_mode;
 mod services;
@@ -305,11 +306,16 @@ pub fn run() {
             commands::system_maintenance::get_system_maintenance_runtime,
         ])
         .setup(move |app| {
+            runtime_diagnostics::install_panic_logging();
             mangodisk_platform::system_identity::log_current();
             log::info!(
-                "application_started version={} distribution={}",
+                "application_started version={} distribution={} process_id={} build_profile={} architecture={} executable={}",
                 app.package_info().version,
-                commands::app_distribution::current().diagnostic_name()
+                commands::app_distribution::current().diagnostic_name(),
+                std::process::id(),
+                if cfg!(debug_assertions) { "debug" } else { "release" },
+                std::env::consts::ARCH,
+                mangodisk_platform::diagnostics::text(&std::env::current_exe().map(|path| path.display().to_string()).unwrap_or_else(|error| format!("unavailable: {error}")))
             );
             // Tauri reports the available WebView2 runtime on Windows and the
             // system WebKit bundle build on macOS, not the Safari app version.
@@ -379,6 +385,15 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("MangoDisk failed to start");
     app.run(move |_app, _event| {
+        if let tauri::RunEvent::ExitRequested { code, .. } = &_event {
+            log::info!(
+                "application_exit_requested process_id={} exit_code={:?}",
+                std::process::id(),
+                code
+            );
+        } else if matches!(&_event, tauri::RunEvent::Exit) {
+            log::info!("application_exited process_id={}", std::process::id());
+        }
         #[cfg(windows)]
         if let tauri::RunEvent::ExitRequested {
             code: None, api, ..

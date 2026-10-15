@@ -29,3 +29,25 @@ DumpStack files at local volume roots, including verbatim and case variants,
 local drive device paths, Win32 trailing-dot/space aliases, and file streams.
 Verbatim trailing dots and spaces remain literal names rather than aliases.
 Use the corresponding system setting instead of deleting these files directly.
+
+## Interrupted scan diagnostics
+
+Analysis logs identify stage transitions, rate-limited path/count progress, and Windows
+worker activity (at most three active task samples per five seconds). Finalization and
+result publication have separate events so a missing result can be localized beyond
+directory enumeration. Cancellation is an informational outcome. Application startup
+records include the process, executable and build profile; normal exit and Rust panic
+events distinguish observable shutdown paths. Forced termination and native aborts may
+leave no final event and must not be diagnosed as a specific crash from that absence alone.
+
+On a disposable Windows machine, run native validation from a normal desktop token:
+
+```powershell
+$env:MANGODISK_ANALYSIS_VALIDATION_ROOT = 'C:\'
+$env:MANGODISK_ANALYSIS_VALIDATION_DIR = Join-Path $PWD 'validation/analysis'
+cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core --test windows_analysis_validation -- --ignored --nocapture
+```
+
+The selected root is read-only. Unique fixtures and application storage stay under the
+evidence directory. The test covers completion, cancellation, retry, ACL denial and an
+invalid root, and verifies logging boundaries. Preserve local evidence outside commits.

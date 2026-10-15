@@ -30,6 +30,7 @@ use mangodisk_platform::{
     LargeFileCandidateSummary, Platform, ScanPurpose,
 };
 
+mod analysis_diagnostics;
 mod index_sink;
 mod indexed_scopes;
 #[cfg(any(windows, test))]
@@ -329,7 +330,21 @@ impl StorageTraversal {
             exclusions.unavailable_count(),
             exclusions.out_of_scope_count()
         );
-        let progress = Arc::new(ProgressTracker::new(operation.id(), callback, 0));
+        let mut scan_log = analysis_diagnostics::AnalysisScanLog::new(
+            operation.id(),
+            &root,
+            operation.cancelled(),
+        );
+        scan_log.stage("cache_validation");
+        let last_progress_log = std::sync::atomic::AtomicU64::new(0);
+        let progress = Arc::new(ProgressTracker::new(
+            operation.id(),
+            move |progress: TraversalProgress| {
+                analysis_diagnostics::log_progress(&progress, &last_progress_log);
+                callback(progress);
+            },
+            0,
+        ));
         let cache_validation_started = Instant::now();
         let cache_decision = if refresh {
             CacheReuseDecision::Miss
@@ -349,6 +364,7 @@ impl StorageTraversal {
                     diagnostics.fast_path = "cache";
                     log::info!("analysis_scan_cache_reused operation_id={} root={} scan_mode={} total_bytes={} entry_count={} elapsed_ms={}", operation.id(), diagnostic_path(&root), scan_mode.as_str(), result.total_bytes, result.entries.len(), started.elapsed().as_millis());
                     operation.complete();
+                    scan_log.complete();
                     return Ok(AnalysisTraversalSnapshot {
                         result,
                         diagnostics,
@@ -363,6 +379,7 @@ impl StorageTraversal {
         let cache_mutation_revision = cache::mutation_revision()?;
         let change_token = capture_filesystem_change_token(&root);
         let traversal_started = Instant::now();
+        scan_log.stage("native_traversal");
         // Native streams return allocated bytes. Logical scans use metadata traversal
         // to avoid native allocation queries and preserve one consistent byte metric.
         let fast_scan = if scan_mode == AnalysisScanMode::Fast {
@@ -406,6 +423,7 @@ impl StorageTraversal {
                 (scan.aggregate, scan.completed_sink)
             }
             FastAnalysisOutcome::Unsupported | FastAnalysisOutcome::LogicalTraversal => {
+                scan_log.stage("metadata_traversal");
                 diagnostics.fast_path = if scan_mode == AnalysisScanMode::Fast {
                     "logical_traversal"
                 } else {
@@ -425,6 +443,7 @@ impl StorageTraversal {
                 .map_err(traversal_core_error)?
             }
             FastAnalysisOutcome::PlatformFailed { error } => {
+                scan_log.stage("metadata_traversal");
                 diagnostics.fast_path = "fallback";
                 diagnostics.fallback_reason = Some("fastPathFailed");
                 log::warn!(
@@ -453,6 +472,7 @@ impl StorageTraversal {
         progress.finish(TraversalStage::Analyzing, &root);
         operation.ensure_not_cancelled()?;
         let result_build_started = Instant::now();
+        scan_log.stage("result_build");
         #[cfg(windows)]
         let result_workers = parallel_analysis::worker_count(&root);
         #[cfg(not(windows))]
@@ -471,6 +491,7 @@ impl StorageTraversal {
         // A cancellation during that stage must not publish a completed snapshot.
         operation.ensure_not_cancelled()?;
         let cache_write_started = Instant::now();
+        scan_log.stage("cache_publish");
         publish_completed_index(
             &root,
             root_aggregate,
@@ -503,6 +524,7 @@ impl StorageTraversal {
             started.elapsed().as_millis()
         );
         operation.complete();
+        scan_log.complete();
         Ok(AnalysisTraversalSnapshot {
             result,
             diagnostics,
@@ -1881,7 +1903,22 @@ fn traverse_memory_only(
         scan_exclusions,
     )?;
     let completed = if purpose == ScanPurpose::Analysis {
-        sink.finish_analysis()?
+        let started = Instant::now();
+        log::info!(
+            "analysis_scan_stage_started operation_id={} root={} stage=index_finalize",
+            progress.operation_id(),
+            diagnostic_path(root)
+        );
+        let completed = sink.finish_analysis().inspect_err(|error| {
+            log::warn!(
+                "analysis_scan_stage_failed operation_id={} root={} stage=index_finalize error={}",
+                progress.operation_id(),
+                diagnostic_path(root),
+                mangodisk_platform::diagnostics::text(error)
+            );
+        })?;
+        log::info!("analysis_scan_stage_finished operation_id={} root={} stage=index_finalize directory_count={} retained_file_count={} elapsed_ms={}", progress.operation_id(), diagnostic_path(root), completed.directories.len(), completed.files.len(), started.elapsed().as_millis());
+        completed
     } else {
         sink.finish()?
     };
