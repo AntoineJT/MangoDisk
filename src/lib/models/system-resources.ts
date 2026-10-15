@@ -155,6 +155,13 @@ export interface BatteryPower {
   state: BatteryPowerState;
   source: BatterySource;
 }
+export interface FanSpeed {
+  id: number;
+  rpm: number | null;
+}
+export interface FanSample {
+  fans: FanSpeed[];
+}
 export interface SystemPower {
   watts: number;
 }
@@ -166,7 +173,7 @@ export interface DiskTemperature {
 }
 
 export interface ResourceReadings {
-  schemaVersion: 22;
+  schemaVersion: 23;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;
@@ -180,6 +187,7 @@ export interface ResourceReadings {
   chargingPower: MetricReading<ChargingPower>;
   batteryPower: MetricReading<BatteryPower>;
   systemPower: MetricReading<SystemPower>;
+  fanSpeed: MetricReading<FanSample>;
   gpu: MetricReading<GpuUsage>;
   gpuDetails: MetricReading<GpuUsage>;
   gpuDetailHistory: TrendPoint[];

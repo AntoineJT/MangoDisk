@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem } from '@/components/ui/select';
 import { SelectTrigger } from 'reka-ui';
 import MdTaskbarPosition from './md-taskbar-position.vue';
 import MdStatusAppearance from './md-status-appearance.vue';
+import MdFanDisplaySettings from './md-fan-display-settings.vue';
 import MdStatusColorRuleEditor from './md-status-color-rule-editor.vue';
 import type { ColorMetricId, MetricColorRule } from '@/lib/models/resident-color-rules';
 import { ICON_NAMES } from '@/lib/models/ui';
@@ -98,6 +99,8 @@ const batteryPresent = ref<boolean | null>(null);
 const batteryTemperatureStatus = ref<ResidentReading['batteryTemperature']['status']>('loading');
 const chargingPowerStatus = ref<ResidentReading['chargingPower']['status']>('loading');
 const systemPowerStatus = ref<ResidentReading['systemPower']['status']>('loading');
+const fanReading = ref<ResidentReading['fanSpeed']>({ status: 'loading', sampledAtMs: null, value: null });
+const fans = computed(() => fanReading.value.value?.fans ?? []);
 const batteryPowerStatus = ref<ResidentReading['batteryPower']['status']>('loading');
 function batteryHint(id: ResidentDisplayMetricId) {
   const unavailable =
@@ -132,6 +135,7 @@ const displayLabelKeys = {
   chargingPower: 'systemStatus.chargingPower',
   batteryPower: 'systemStatus.batteryPower',
   systemPower: 'systemStatus.systemPower',
+  fanSpeed: 'systemStatus.fanSpeed',
 };
 const visibleRows = computed(() =>
   rows.value
@@ -142,7 +146,7 @@ const visibleRows = computed(() =>
         (!props.isLinux || row.id !== 'cpuTemperature') &&
         (!props.isLinux || row.id !== 'diskTemperature') &&
         (!props.isLinux || row.id !== 'gpu') &&
-        (props.isMacOs || (!isBatteryMetric(row.id) && row.id !== 'systemPower'))
+        (props.isMacOs || (!isBatteryMetric(row.id) && row.id !== 'systemPower' && row.id !== 'fanSpeed'))
     )
     .map(row =>
       row.id === 'cpuTemperature' && !props.isMacOs && !settings.draft?.windowsCpuTemperatureEnabled
@@ -188,7 +192,9 @@ async function saveColor(rule: MetricColorRule) {
   await settings.change({ colorRules: settings.draft.colorRules.map(saved => (saved.id === rule.id ? rule : saved)) });
   if (!settings.error) activeColor.value = null;
 }
-const expandedSelection = ref<'network' | 'disk' | 'gpu' | 'gpuTemperature' | 'diskTemperature' | null>(null);
+const expandedSelection = ref<'network' | 'disk' | 'gpu' | 'gpuTemperature' | 'diskTemperature' | 'fanSpeed' | null>(
+  null
+);
 // Keep the native switch and collapsed content on the committed state. Failed
 // writes must not hide the user's controls or leave a misleading enabled state.
 const displayEnabled = computed(() => settings.preferences?.enabled ?? false);
@@ -243,7 +249,15 @@ function restoreConfigurationFocus(event: Event) {
   document.getElementById(displayEnabled.value ? 'resident-configure' : 'resident-enabled')?.focus();
 }
 function setSelectionOpen(id: ResidentDisplayMetricId, open: boolean) {
-  if (id !== 'network' && id !== 'disk' && id !== 'gpu' && id !== 'gpuTemperature' && id !== 'diskTemperature') return;
+  if (
+    id !== 'network' &&
+    id !== 'disk' &&
+    id !== 'gpu' &&
+    id !== 'gpuTemperature' &&
+    id !== 'diskTemperature' &&
+    id !== 'fanSpeed'
+  )
+    return;
   if (open) {
     expandedSelection.value = id;
   } else if (expandedSelection.value === id) expandedSelection.value = null;
@@ -285,7 +299,7 @@ let disposed = false;
 let unlisten: (() => void) | null = null;
 let revision = -1;
 function accept(value: ResidentReading) {
-  if (disposed || value.schemaVersion !== 22 || value.revision < revision) return;
+  if (disposed || value.schemaVersion !== 23 || value.revision < revision) return;
   revision = value.revision;
   interfaces.value = value.interfaces;
   volumes.value = value.volumes;
@@ -297,6 +311,7 @@ function accept(value: ResidentReading) {
   chargingPowerStatus.value = value.chargingPower.status;
   batteryPowerStatus.value = value.batteryPower.status;
   systemPowerStatus.value = value.systemPower.status;
+  fanReading.value = value.fanSpeed;
 }
 async function enable(id: ResidentDisplayMetricId, enabled: boolean) {
   if (id === 'gpuTemperature' && enabled && !gpuTemperatureAvailable.value) return;
@@ -697,6 +712,21 @@ onBeforeUnmount(() => {
                           </button>
                         </MdTooltip>
                         <span
+                          v-if="
+                            row.id === 'fanSpeed' && row.enabled && (fanReading.status !== 'ready' || fans.length === 0)
+                          "
+                          role="status"
+                          class="text-content-meta text-muted-foreground"
+                        >
+                          {{
+                            t(
+                              fanReading.status === 'ready' && fans.length === 0
+                                ? 'systemStatus.noFans'
+                                : METRIC_STATUS_KEYS[fanReading.status]
+                            )
+                          }}
+                        </span>
+                        <span
                           v-if="row.id === 'gpuTemperature' && !gpuTemperatureAvailable"
                           role="status"
                           class="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 text-content-meta font-medium leading-4 text-muted-foreground"
@@ -722,6 +752,16 @@ onBeforeUnmount(() => {
                         "
                         >{{ t('windowsMonitoring.manage') }}</Button
                       >
+                      <MdFanDisplaySettings
+                        v-if="row.id === 'fanSpeed' && settings.draft"
+                        :mode="settings.draft.fanDisplay"
+                        :ids="settings.draft.fanIds"
+                        :reading="fanReading"
+                        :disabled="!row.enabled || settings.saving"
+                        :open="expandedSelection === row.id"
+                        @update:open="setSelectionOpen(row.id, $event)"
+                        @change="settings.change($event)"
+                      />
                       <Select
                         v-if="
                           row.id === 'network' ||
@@ -946,6 +986,16 @@ onBeforeUnmount(() => {
   min-width: 0;
   gap: 8px;
 }
+.status-item[data-metric='fanSpeed'] .color-toggle {
+  grid-column: 4;
+  grid-row: 1;
+}
+.status-item[data-metric='fanSpeed'] .metric-heading {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto auto;
+  column-gap: 8px;
+  row-gap: 0;
+}
 .metric-label-group {
   display: flex;
   align-items: center;
@@ -1032,6 +1082,9 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 @media (pointer: coarse) {
+  .status-item[data-metric='fanSpeed'] .metric-heading {
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  }
   .status-item label,
   .drag-handle,
   .selection-toggle {

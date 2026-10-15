@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "Fan hızı",
+    "fanAutomatic": "En yüksek hız",
+    "fanAverage": "Ortalama hız",
+    "fanSelected": "Fan seç",
+    "fanSelectionLimit": "En fazla iki fan seçebilirsiniz",
+    "fanValidReadings": "Geçerli okumalar {valid}/{total}",
+    "fanNumber": "Fan {number}",
+    "noFans": "Bu cihazda fan yok",
     "diskTemperature": "Disk sıcaklığı",
     "cpuUsage": "CPU kullanımı",
     "gpuUsage": "GPU kullanımı",

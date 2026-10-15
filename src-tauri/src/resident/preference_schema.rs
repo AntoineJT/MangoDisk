@@ -2,7 +2,7 @@
 use mangodisk_core::system_resources::metrics::MetricId;
 use serde::{Deserialize, Serialize};
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 22;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 25;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -11,6 +11,15 @@ pub enum TaskbarPosition {
     Auto,
     Left,
     Right,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FanDisplayMode {
+    #[default]
+    Highest,
+    Average,
+    Selected,
 }
 
 /// Display selection is independent of the five resource sampling workers.
@@ -29,6 +38,7 @@ pub enum DisplayMetricId {
     ChargingPower,
     BatteryPower,
     SystemPower,
+    FanSpeed,
 }
 
 impl DisplayMetricId {
@@ -41,7 +51,8 @@ impl DisplayMetricId {
             | Self::BatteryTemperature
             | Self::ChargingPower
             | Self::BatteryPower
-            | Self::SystemPower => None,
+            | Self::SystemPower
+            | Self::FanSpeed => None,
             Self::Gpu => Some(MetricId::Gpu),
             Self::Memory => Some(MetricId::Memory),
             Self::Disk => Some(MetricId::Disk),
@@ -75,9 +86,11 @@ pub struct ResidentPreferences {
     pub network_interface: Option<String>,
     pub disk_volume: Option<String>,
     pub gpu_adapter: Option<String>,
+    pub fan_display: FanDisplayMode,
+    pub fan_ids: Vec<u8>,
 }
 
-const DISPLAY_ORDER: [DisplayMetricId; 12] = [
+const DISPLAY_ORDER: [DisplayMetricId; 13] = [
     DisplayMetricId::Cpu,
     DisplayMetricId::CpuTemperature,
     DisplayMetricId::Gpu,
@@ -89,6 +102,7 @@ const DISPLAY_ORDER: [DisplayMetricId; 12] = [
     DisplayMetricId::ChargingPower,
     DisplayMetricId::BatteryPower,
     DisplayMetricId::SystemPower,
+    DisplayMetricId::FanSpeed,
     DisplayMetricId::Network,
 ];
 
@@ -112,6 +126,8 @@ impl Default for ResidentPreferences {
             schema_version: PREFERENCE_SCHEMA_VERSION,
             revision: 0,
             windows_cpu_temperature_enabled: false,
+            fan_display: FanDisplayMode::Highest,
+            fan_ids: vec![0],
             enabled: true,
             show_icon: true,
             taskbar_position: TaskbarPosition::default(),
@@ -153,6 +169,7 @@ impl ResidentPreferences {
                         DisplayMetricId::BatteryTemperature
                         | DisplayMetricId::ChargingPower
                         | DisplayMetricId::BatteryPower
+                        | DisplayMetricId::FanSpeed
                         | DisplayMetricId::SystemPower => {
                             cfg!(target_os = "macos")
                         }
@@ -195,6 +212,14 @@ impl ResidentPreferences {
                 .iter()
                 .any(|metric| metric.id == id && metric.enabled)
     }
+    pub fn shows_fan_speed(&self) -> bool {
+        cfg!(target_os = "macos")
+            && self
+                .metrics
+                .iter()
+                .any(|metric| metric.id == DisplayMetricId::FanSpeed && metric.enabled)
+    }
+
     pub fn shows_system_power(&self) -> bool {
         cfg!(target_os = "macos")
             && self
@@ -215,6 +240,13 @@ impl ResidentPreferences {
         }
         if !super::color_rules::valid(&self.color_rules)
             || self.metrics.len() > 64
+            || self.fan_ids.is_empty()
+            || self.fan_ids.len() > 2
+            || self
+                .fan_ids
+                .iter()
+                .any(|id| *id >= mangodisk_platform::system_resources::fans::MAX_FANS)
+            || (self.fan_ids.len() == 2 && self.fan_ids[0] == self.fan_ids[1])
             || [
                 &self.network_interface,
                 &self.disk_volume,
@@ -228,6 +260,7 @@ impl ResidentPreferences {
         {
             return Err("preferences_invalid");
         }
+        self.fan_ids.sort_unstable();
         let mut seen = Vec::new();
         self.metrics.retain(|metric| {
             if seen.contains(&metric.id) {
@@ -250,6 +283,7 @@ impl ResidentPreferences {
                         | DisplayMetricId::ChargingPower
                         | DisplayMetricId::BatteryPower
                         | DisplayMetricId::SystemPower
+                        | DisplayMetricId::FanSpeed
                 )
             })
             .chain([
@@ -259,6 +293,7 @@ impl ResidentPreferences {
                 DisplayMetricId::ChargingPower,
                 DisplayMetricId::BatteryPower,
                 DisplayMetricId::SystemPower,
+                DisplayMetricId::FanSpeed,
             ])
         {
             if !seen.contains(&id) {
@@ -295,6 +330,57 @@ impl ResidentPreferences {
 
 pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
     let version = value.get("schemaVersion").and_then(|v| v.as_u64());
+    if version.is_some_and(|version| version < 23)
+        && (value.get("fanId").is_some_and(|value| !value.is_null())
+            || value
+                .get("metrics")
+                .and_then(|value| value.as_array())
+                .is_some_and(|metrics| metrics.iter().any(|metric| metric["id"] == "fanSpeed")))
+    {
+        return Err("preferences_invalid");
+    }
+    if matches!(version, Some(2..=24)) {
+        if let Some(rules) = value
+            .get_mut("colorRules")
+            .and_then(|value| value.as_array_mut())
+        {
+            if rules.iter().any(|rule| rule["id"] == "fanSpeed") {
+                return Err("preferences_invalid");
+            }
+            if version.is_some_and(|version| version >= 16) {
+                rules.push(
+                    serde_json::to_value(super::color_rules::MetricColorRule::defaults(
+                        DisplayMetricId::FanSpeed,
+                    ))
+                    .map_err(|_| "preferences_invalid")?,
+                );
+            }
+        }
+    }
+    if matches!(version, Some(2..=23)) {
+        if value.get("fanDisplay").is_some() || value.get("fanIds").is_some() {
+            return Err("preferences_invalid");
+        }
+        let old_id = value
+            .as_object_mut()
+            .ok_or("preferences_invalid")?
+            .remove("fanId");
+        let selected = match old_id {
+            None | Some(serde_json::Value::Null) => None,
+            Some(id) => Some(
+                id.as_u64()
+                    .filter(|id| *id < 10)
+                    .ok_or("preferences_invalid")?,
+            ),
+        };
+        value["fanDisplay"] = if selected.is_some() {
+            "selected"
+        } else {
+            "highest"
+        }
+        .into();
+        value["fanIds"] = serde_json::json!([selected.unwrap_or(0)]);
+    }
     if matches!(version, Some(2..=21)) {
         if value
             .get("metrics")
@@ -516,13 +602,13 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
             preferences.normalize()
         }
-        Some(20 | 21) => {
+        Some(20..=24) => {
             let mut preferences = serde_json::from_value::<ResidentPreferences>(value)
                 .map_err(|_| "preferences_invalid")?;
             preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
             preferences.normalize()
         }
-        Some(22) => serde_json::from_value::<ResidentPreferences>(value)
+        Some(25) => serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?
             .normalize(),
         _ => Err("preferences_version"),
@@ -534,7 +620,12 @@ pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'sta
             .metrics
             .iter()
             .map(|metric| metric.id)
-            .filter(|id| *id != DisplayMetricId::DiskTemperature)
+            .filter(|id| {
+                !matches!(
+                    id,
+                    DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+                )
+            })
             .eq(PREVIOUS_DEFAULT_ORDER)
     {
         let index = preferences
@@ -650,9 +741,181 @@ fn migrate_display_destination(
 mod tests {
     use super::*;
     #[test]
+    fn version_twenty_four_adds_only_fan_color_defaults_and_rejects_malformed_rules() {
+        use super::super::color_rules::{ColorRule, DisplayColor};
+        let mut expected = ResidentPreferences {
+            revision: 42,
+            fan_display: FanDisplayMode::Selected,
+            fan_ids: vec![0, 1],
+            ..Default::default()
+        };
+        expected.color_rules[0].rules = vec![ColorRule::AtLeast {
+            value: 30,
+            color: DisplayColor::Blue,
+        }];
+        let mut previous = serde_json::to_value(&expected).unwrap();
+        previous["schemaVersion"] = 24.into();
+        previous["colorRules"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|rule| rule["id"] != "fanSpeed");
+        assert_eq!(super::decode(previous.clone()).unwrap(), expected);
+        let mut invalid = previous.clone();
+        invalid["colorRules"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::to_value(expected.color_rules.last().unwrap()).unwrap());
+        assert!(super::decode(invalid).is_err());
+        let mut invalid = previous.clone();
+        invalid["colorRules"][0]["rules"][0]["value"] = 101.into();
+        assert!(super::decode(invalid).is_err());
+        let mut invalid = previous.clone();
+        invalid["colorRules"].as_array_mut().unwrap().remove(0);
+        assert!(super::decode(invalid).is_err());
+        previous["schemaVersion"] = 25.into();
+        assert!(super::decode(previous).is_err());
+        assert_eq!(
+            super::decode(serde_json::to_value(&expected).unwrap()).unwrap(),
+            expected
+        );
+    }
+
+    #[test]
+    fn fan_speed_migration_preserves_saved_order_colors_and_manual_source_choices() {
+        let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
+        old["schemaVersion"] = 22.into();
+        old["colorRules"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|rule| rule["id"] != "fanSpeed");
+        old.as_object_mut().unwrap().remove("fanDisplay");
+        old.as_object_mut().unwrap().remove("fanIds");
+        let rows = old["metrics"].as_array_mut().unwrap();
+        rows.retain(|row| row["id"] != "fanSpeed");
+        rows.reverse();
+        old["diskVolume"] = "saved-volume".into();
+        old["networkInterface"] = "saved-interface".into();
+        let before = old.clone();
+        let migrated = super::decode(old).unwrap();
+        assert_eq!(migrated.schema_version, 25);
+        assert_eq!(migrated.fan_display, FanDisplayMode::Highest);
+        assert_eq!(migrated.fan_ids, vec![0]);
+        let value = serde_json::to_value(&migrated).unwrap();
+        let rows: Vec<_> = value["metrics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|row| row["id"] != "fanSpeed")
+            .cloned()
+            .collect();
+        assert_eq!(serde_json::Value::Array(rows), before["metrics"]);
+        assert_eq!(
+            serde_json::Value::Array(
+                value["colorRules"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter(|rule| rule["id"] != "fanSpeed")
+                    .cloned()
+                    .collect()
+            ),
+            before["colorRules"]
+        );
+        assert_eq!(value["diskVolume"], before["diskVolume"]);
+        assert_eq!(value["networkInterface"], before["networkInterface"]);
+        assert!(
+            !migrated
+                .metrics
+                .iter()
+                .find(|row| row.id == DisplayMetricId::FanSpeed)
+                .unwrap()
+                .enabled
+        );
+        assert_eq!(super::decode(value).unwrap(), migrated);
+    }
+
+    #[test]
+    fn fan_pair_migration_bounds_and_platform_visibility_are_explicit() {
+        for (id, mode, ids) in [
+            (serde_json::json!(null), FanDisplayMode::Highest, vec![0]),
+            (serde_json::json!(9), FanDisplayMode::Selected, vec![9]),
+        ] {
+            let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
+            old["schemaVersion"] = 23.into();
+            old["colorRules"]
+                .as_array_mut()
+                .unwrap()
+                .retain(|rule| rule["id"] != "fanSpeed");
+            old.as_object_mut().unwrap().remove("fanDisplay");
+            old.as_object_mut().unwrap().remove("fanIds");
+            old["fanId"] = id;
+            let migrated = super::decode(old).unwrap();
+            assert_eq!(migrated.fan_display, mode);
+            assert_eq!(migrated.fan_ids, ids);
+        }
+        for ids in [vec![], vec![0, 1, 2], vec![0, 0], vec![10]] {
+            let preferences = ResidentPreferences {
+                fan_ids: ids,
+                ..Default::default()
+            };
+            assert_eq!(preferences.normalize().unwrap_err(), "preferences_invalid");
+        }
+        let preferences = ResidentPreferences {
+            fan_ids: vec![9, 0],
+            ..Default::default()
+        }
+        .normalize()
+        .unwrap();
+        assert_eq!(preferences.fan_ids, vec![0, 9]);
+        assert_eq!(
+            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            preferences
+        );
+        for old_id in [
+            serde_json::json!(-1),
+            serde_json::json!(10),
+            serde_json::json!(0.5),
+            serde_json::json!("0"),
+        ] {
+            let mut old = serde_json::to_value(&preferences).unwrap();
+            old["schemaVersion"] = 23.into();
+            old["colorRules"]
+                .as_array_mut()
+                .unwrap()
+                .retain(|rule| rule["id"] != "fanSpeed");
+            old.as_object_mut().unwrap().remove("fanDisplay");
+            old.as_object_mut().unwrap().remove("fanIds");
+            old["fanId"] = old_id;
+            assert_eq!(decode(old).unwrap_err(), "preferences_invalid");
+        }
+        let mut preferences = ResidentPreferences {
+            show_icon: false,
+            ..Default::default()
+        };
+        for row in &mut preferences.metrics {
+            row.enabled = row.id == DisplayMetricId::FanSpeed;
+        }
+        assert_eq!(preferences.shows_fan_speed(), cfg!(target_os = "macos"));
+        assert_eq!(preferences.effective_icon(), !cfg!(target_os = "macos"));
+        let mut old = serde_json::to_value(&preferences).unwrap();
+        old["schemaVersion"] = 22.into();
+        assert_eq!(decode(old).unwrap_err(), "preferences_invalid");
+    }
+
+    #[test]
     fn disk_temperature_migrates_after_disk_disabled_without_changing_saved_settings() {
         let mut old = serde_json::to_value(ResidentPreferences::default()).unwrap();
         old["schemaVersion"] = 21.into();
+        old["colorRules"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|rule| rule["id"] != "fanSpeed");
+        old.as_object_mut().unwrap().remove("fanDisplay");
+        old.as_object_mut().unwrap().remove("fanIds");
+        old["metrics"]
+            .as_array_mut()
+            .unwrap()
+            .retain(|row| row["id"] != "fanSpeed");
         old["networkInterface"] = "saved-vpn".into();
         old["diskVolume"] = "saved-volume".into();
         for field in ["metrics", "colorRules"] {
@@ -733,12 +996,42 @@ mod tests {
                 .as_array()
                 .unwrap()
                 .iter()
-                .filter(|row| row["id"] != "diskTemperature")
+                .filter(|row| row["id"] != "diskTemperature" && row["id"] != "fanSpeed")
                 .cloned()
                 .collect(),
         )
     }
     fn decode_fixture(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
+        if value["schemaVersion"]
+            .as_u64()
+            .is_some_and(|version| version < 25)
+        {
+            if let Some(rules) = value
+                .get_mut("colorRules")
+                .and_then(|value| value.as_array_mut())
+            {
+                rules.retain(|rule| rule["id"] != "fanSpeed");
+            }
+        }
+        if value["schemaVersion"]
+            .as_u64()
+            .is_some_and(|version| version < 24)
+        {
+            value.as_object_mut().unwrap().remove("fanDisplay");
+            value.as_object_mut().unwrap().remove("fanIds");
+        }
+        if value["schemaVersion"]
+            .as_u64()
+            .is_some_and(|version| version < 23)
+        {
+            value.as_object_mut().unwrap().remove("fanId");
+            if let Some(rows) = value
+                .get_mut("metrics")
+                .and_then(|rows| rows.as_array_mut())
+            {
+                rows.retain(|row| row["id"] != "fanSpeed");
+            }
+        }
         if value
             .get("schemaVersion")
             .and_then(|value| value.as_u64())
@@ -774,7 +1067,7 @@ mod tests {
                 previous.metrics.swap(0, 1);
             }
             let mut expected = previous.clone();
-            expected.schema_version = 22;
+            expected.schema_version = 25;
             if !custom {
                 let network = expected.metrics.remove(6);
                 expected.metrics.push(network);
@@ -824,6 +1117,7 @@ mod tests {
                     | DisplayMetricId::ChargingPower
                     | DisplayMetricId::BatteryPower
                     | DisplayMetricId::SystemPower
+                    | DisplayMetricId::FanSpeed
             )
         });
         assert_eq!(partial.normalize().unwrap(), expected);
@@ -985,13 +1279,14 @@ mod tests {
                     row["id"] != "batteryPower"
                         && row["id"] != "systemPower"
                         && row["id"] != "diskTemperature"
+                        && row["id"] != "fanSpeed"
                 })
                 .collect::<Vec<_>>(),
             old_metrics
                 .as_array()
                 .unwrap()
                 .iter()
-                .filter(|row| row["id"] != "diskTemperature")
+                .filter(|row| row["id"] != "diskTemperature" && row["id"] != "fanSpeed")
                 .collect::<Vec<_>>()
         );
         assert_eq!(
@@ -1056,16 +1351,17 @@ mod tests {
             "id": id, "enabled": false, "bands": [{"from": 0, "color": "blue"}, {"from": 55, "color": "yellow"}, {"from": 95, "color": "red"}]
         })).collect());
         let migrated = decode_fixture(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 22);
+        assert_eq!(migrated.schema_version, 25);
         assert_eq!(
             previous_rows(&serde_json::to_value(&migrated.metrics).unwrap()),
             previous_rows(&old["metrics"])
         );
-        for rule in migrated
-            .color_rules
-            .iter()
-            .filter(|rule| rule.id != DisplayMetricId::DiskTemperature)
-        {
+        for rule in migrated.color_rules.iter().filter(|rule| {
+            !matches!(
+                rule.id,
+                DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+            )
+        }) {
             assert!(!rule.enabled);
             assert_eq!(rule.rules[0].bounds(), (0, Some(55)));
             assert_eq!(rule.rules[1].bounds(), (55, Some(95)));
@@ -1097,7 +1393,7 @@ mod tests {
     #[test]
     fn current_rules_reject_unknown_colors_missing_metrics_and_legacy_fields() {
         let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
-        assert_eq!(decode_fixture(current.clone()).unwrap().schema_version, 22);
+        assert_eq!(decode_fixture(current.clone()).unwrap().schema_version, 25);
         let mut value = current.clone();
         value["colorRules"][0]["rules"][0]["color"] = "purple".into();
         assert!(decode_fixture(value).is_err());
@@ -1124,7 +1420,7 @@ mod tests {
             old["enabled"] = false.into();
             old["revision"] = 47.into();
             let migrated = decode_fixture(old).unwrap();
-            assert_eq!(migrated.schema_version, 22);
+            assert_eq!(migrated.schema_version, 25);
             assert_eq!(migrated.revision, 47);
             assert!(!migrated.enabled);
             assert_eq!(migrated.gpu_adapter.as_deref(), Some("selected-adapter"));
@@ -1203,7 +1499,7 @@ mod tests {
         old["revision"] = 42.into();
         old["metrics"].as_array_mut().unwrap().reverse();
         let migrated = decode_fixture(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 22);
+        assert_eq!(migrated.schema_version, 25);
         assert_eq!(migrated.revision, 42);
         let mut expected = old["metrics"].clone();
         expected
@@ -1301,7 +1597,7 @@ mod tests {
         old["networkInterface"] = "wifi".into();
         old.as_object_mut().unwrap().remove("gpuAdapter");
         let migrated = decode_fixture(old.clone()).unwrap();
-        assert_eq!(migrated.schema_version, 22);
+        assert_eq!(migrated.schema_version, 25);
         assert_eq!(migrated.network_interface.as_deref(), Some("wifi"));
         assert!(migrated.gpu_adapter.is_none());
         old["gpuAdapter"] = "unexpected".into();
@@ -1335,14 +1631,17 @@ mod tests {
             {"id":"network", "enabled":true}, {"id":"disk", "enabled":false}
         ]);
         let migrated = decode_fixture(old).unwrap();
-        assert_eq!(migrated.schema_version, 22);
+        assert_eq!(migrated.schema_version, 25);
         assert_eq!(migrated.revision, 42);
         assert_eq!(
             migrated
                 .metrics
                 .iter()
                 .map(|metric| metric.id)
-                .filter(|id| *id != DisplayMetricId::DiskTemperature)
+                .filter(|id| !matches!(
+                    id,
+                    DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+                ))
                 .collect::<Vec<_>>(),
             vec![
                 DisplayMetricId::Memory,
@@ -1423,7 +1722,7 @@ mod tests {
             .unwrap()
             .push(serde_json::json!({"id":"gpuTemperature","enabled":false}));
         let migrated = decode_fixture(old).unwrap();
-        assert_eq!(migrated.schema_version, 22);
+        assert_eq!(migrated.schema_version, 25);
         assert!(!migrated.menu_bar_compact);
         assert!(migrated.usage_colors);
         assert_eq!(
@@ -1453,7 +1752,10 @@ mod tests {
                 .metrics
                 .iter()
                 .map(|m| m.id)
-                .filter(|id| *id != DisplayMetricId::DiskTemperature)
+                .filter(|id| !matches!(
+                    id,
+                    DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+                ))
                 .collect::<Vec<_>>(),
             [
                 DisplayMetricId::Cpu,
@@ -1498,7 +1800,7 @@ mod tests {
             old.as_object_mut().unwrap().remove("taskbarCompact");
             old["taskbarPosition"] = position.into();
             let migrated = decode_fixture(old).unwrap();
-            assert_eq!(migrated.schema_version, 22);
+            assert_eq!(migrated.schema_version, 25);
             assert_eq!(
                 serde_json::to_value(migrated).unwrap()["taskbarPosition"],
                 position
@@ -1542,7 +1844,10 @@ mod tests {
                 .iter()
                 .filter(|metric| metric.enabled)
                 .map(|metric| metric.id)
-                .filter(|id| *id != DisplayMetricId::DiskTemperature)
+                .filter(|id| !matches!(
+                    id,
+                    DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+                ))
                 .collect::<Vec<_>>(),
             vec![DisplayMetricId::Cpu, DisplayMetricId::Memory]
         );
@@ -1580,7 +1885,7 @@ mod tests {
                 assert_eq!(migrated.shows(MetricId::Memory), memory);
                 assert!(migrated.show_icon);
                 assert!(!migrated.shows(MetricId::Cpu));
-                assert_eq!(migrated.schema_version, 22);
+                assert_eq!(migrated.schema_version, 25);
             }
         }
     }
@@ -1675,7 +1980,7 @@ mod tests {
         }
         .normalize()
         .unwrap();
-        assert_eq!(preferences.metrics.len(), 12);
+        assert_eq!(preferences.metrics.len(), 13);
         assert_eq!(
             preferences.metrics.last().unwrap().id,
             DisplayMetricId::Network
@@ -1730,6 +2035,7 @@ mod tests {
                                             | DisplayMetricId::ChargingPower
                                             | DisplayMetricId::BatteryPower
                                             | DisplayMetricId::SystemPower
+                                            | DisplayMetricId::FanSpeed
                                     ))
                         })
                 );

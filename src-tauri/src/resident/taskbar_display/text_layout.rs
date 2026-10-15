@@ -193,6 +193,7 @@ mod tests {
                 let columns = super::super::presentation::columns(
                     &[DisplayEntry {
                         power_state: None,
+                        fan_rows: None,
                         id,
                         tone,
                         color_value: Some(90),
@@ -251,6 +252,7 @@ mod tests {
                         &[DisplayEntry {
                             tone: Default::default(),
                             power_state: None,
+                            fan_rows: None,
                             color_value: None,
                             id: DisplayId::Upload,
                             text: title.into(),

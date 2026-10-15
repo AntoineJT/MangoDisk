@@ -42,6 +42,7 @@ pub struct ResourceReadings {
     pub battery_present: Option<bool>,
     pub charging_power: MetricReading<ChargingPower>,
     pub battery_power: MetricReading<BatteryPower>,
+    pub fan_speed: MetricReading<mangodisk_platform::system_resources::fans::FanSample>,
     pub system_power: MetricReading<mangodisk_platform::system_resources::power::SystemPower>,
     pub gpu: MetricReading<GpuUsage>,
     pub gpu_details: MetricReading<GpuUsage>,
@@ -70,7 +71,7 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 22,
+            schema_version: 23,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
             cpu_identity: None,
@@ -83,6 +84,7 @@ impl Default for ResourceReadings {
             battery_present: None,
             charging_power: MetricReading::default(),
             battery_power: MetricReading::default(),
+            fan_speed: MetricReading::default(),
             system_power: MetricReading::default(),
             gpu: MetricReading::default(),
             gpu_details: MetricReading::default(),
@@ -248,6 +250,30 @@ impl ResourceCache {
                 .cpu_frequency
                 .expire(timestamp_ms, MetricId::Cpu.freshness_ms()),
         }
+    }
+
+    pub fn fan_speed(
+        &mut self,
+        sample: mangodisk_platform::PlatformResult<
+            mangodisk_platform::system_resources::fans::FanSample,
+        >,
+        timestamp_ms: u64,
+    ) {
+        self.readings.fan_speed = match sample {
+            Ok(value) if value.is_valid() => MetricReading::ready(value, timestamp_ms),
+            result => MetricReading {
+                status: match result {
+                    Err(error)
+                        if error.code() == mangodisk_platform::PlatformErrorCode::Unsupported =>
+                    {
+                        MetricStatus::Unsupported
+                    }
+                    _ => MetricStatus::Failed,
+                },
+                sampled_at_ms: None,
+                value: None,
+            },
+        };
     }
 
     pub fn system_power(
@@ -740,6 +766,10 @@ impl ResourceCache {
         self.readings
             .battery_power
             .expire(now_ms, BATTERY_FRESHNESS_MS);
+        self.readings.fan_speed.expire(
+            now_ms,
+            mangodisk_platform::system_resources::fans::FAN_FRESHNESS_MS,
+        );
         self.readings.system_power.expire(
             now_ms,
             mangodisk_platform::system_resources::power::SYSTEM_POWER_FRESHNESS_MS,
@@ -767,8 +797,9 @@ impl ResourceCache {
         before != self.statuses()
     }
 
-    fn statuses(&self) -> [MetricStatus; 17] {
+    fn statuses(&self) -> [MetricStatus; 18] {
         [
+            self.readings.fan_speed.status,
             self.readings.system_power.status,
             self.readings.battery_temperature.status,
             self.readings.charging_power.status,
@@ -1376,7 +1407,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 22);
+        assert_eq!(wire["schemaVersion"], 23);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -1498,7 +1529,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 22);
+        assert_eq!(cache.snapshot(1000).schema_version, 23);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

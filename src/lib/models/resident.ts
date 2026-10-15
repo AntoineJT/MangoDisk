@@ -12,10 +12,11 @@ export type ResidentDisplayMetricId =
   | 'batteryTemperature'
   | 'chargingPower'
   | 'batteryPower'
-  | 'systemPower';
+  | 'systemPower'
+  | 'fanSpeed';
 
 export interface ResidentPreferences {
-  schemaVersion: 22;
+  schemaVersion: 25;
   windowsCpuTemperatureEnabled: boolean;
   revision: number;
   enabled: boolean;
@@ -30,6 +31,8 @@ export interface ResidentPreferences {
   networkInterface: string | null;
   diskVolume: string | null;
   gpuAdapter: string | null;
+  fanDisplay: 'highest' | 'average' | 'selected';
+  fanIds: number[];
 }
 
 export type ResidentDestination = 'main' | 'cleanup' | 'applications' | 'settings' | 'displaySettings' | 'about';

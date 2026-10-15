@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "Скорость вентилятора",
+    "fanAutomatic": "Максимальные обороты",
+    "fanAverage": "Средние обороты",
+    "fanSelected": "Выбрать вентиляторы",
+    "fanSelectionLimit": "Можно выбрать не более двух вентиляторов",
+    "fanValidReadings": "Доступные показания {valid}/{total}",
+    "fanNumber": "Вентилятор {number}",
+    "noFans": "В этом устройстве нет вентиляторов",
     "diskTemperature": "Температура диска",
     "cpuUsage": "Загрузка CPU",
     "gpuUsage": "Загрузка GPU",

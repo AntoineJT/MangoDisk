@@ -4,7 +4,7 @@ import { emptyReadings } from '@/lib/utils/system-resources';
 
 export function preferencesFixture(): ResidentPreferences {
   return {
-    schemaVersion: 22,
+    schemaVersion: 25,
     windowsCpuTemperatureEnabled: false,
     revision: 0,
     enabled: true,
@@ -28,10 +28,13 @@ export function preferencesFixture(): ResidentPreferences {
       { id: 'chargingPower', enabled: false },
       { id: 'batteryPower', enabled: false },
       { id: 'systemPower', enabled: false },
+      { id: 'fanSpeed', enabled: false },
     ],
     networkInterface: null,
     diskVolume: null,
     gpuAdapter: null,
+    fanDisplay: 'highest',
+    fanIds: [0],
   };
 }
 export function readingFixture(revision = 1): ResidentReading {

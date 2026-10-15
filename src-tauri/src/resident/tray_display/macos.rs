@@ -140,6 +140,27 @@ fn image(columns: Vec<Column>, icon: bool, dark: bool, compact: bool) -> Retaine
                         false,
                     );
                 }
+            } else if let Some(tones) = column.fan_tones {
+                for ((value, y), tone) in [(&column.top, 0.0), (&column.bottom, 11.0)]
+                    .into_iter()
+                    .zip(tones)
+                {
+                    let [r, g, b] = tone.rgb(if dark { [255; 3] } else { [0; 3] });
+                    let value_color = NSColor::colorWithSRGBRed_green_blue_alpha(
+                        f64::from(r) / 255.0,
+                        f64::from(g) / 255.0,
+                        f64::from(b) / 255.0,
+                        1.0,
+                    );
+                    text(
+                        value,
+                        rect(x, y, f64::from(column.width), 11.0),
+                        if compact { 10.0 } else { 11.0 },
+                        0.0,
+                        &value_color,
+                        false,
+                    );
+                }
             } else {
                 let [r, g, b] = column.tone.rgb(if dark { [255; 3] } else { [0; 3] });
                 let value_color = NSColor::colorWithSRGBRed_green_blue_alpha(
@@ -276,6 +297,7 @@ mod tests {
         let entry = DisplayEntry {
             tone: Default::default(),
             power_state: None,
+            fan_rows: None,
             color_value: None,
             id: super::super::format::DisplayId::Cpu,
             digits: "100".into(),
@@ -325,6 +347,56 @@ mod tests {
                     measured(heading, 7.5, 0.0) <= f64::from(column[0].width),
                     "battery state heading {heading} overflows"
                 );
+            }
+        }
+        for compact in [false, true] {
+            let size = if compact { 11.0 } else { 12.0 };
+            let column = macos_presentation::columns(
+                &[DisplayEntry {
+                    id: super::super::format::DisplayId::FanSpeed,
+                    ..entry.clone()
+                }],
+                compact,
+            );
+            for value in ["0", "1350", "30000", "—"] {
+                assert!(
+                    measured(value, size, 0.3) <= f64::from(column[0].width),
+                    "fan speed {value} overflows (compact={compact})"
+                );
+            }
+        }
+        for compact in [false, true] {
+            let column = macos_presentation::columns(
+                &[DisplayEntry {
+                    id: super::super::format::DisplayId::FanSpeed,
+                    fan_rows: Some(["F1 0", "F10 30000"].map(|text| {
+                        crate::resident::tray_display::format::FanRow {
+                            id: 0,
+                            text: text.into(),
+                            color_value: None,
+                            tone: Default::default(),
+                        }
+                    })),
+                    ..entry.clone()
+                }],
+                compact,
+            );
+            for value in ["F1 0", "F10 30000", "F2 —"] {
+                assert!(
+                    measured(value, if compact { 10.0 } else { 11.0 }, 0.0)
+                        <= f64::from(column[0].width),
+                    "paired fan {value} overflows (compact={compact})"
+                );
+            }
+            for heading in ["FMAX", "FAVG", "FAN 10"] {
+                let single = macos_presentation::columns(
+                    &[DisplayEntry {
+                        id: super::super::format::DisplayId::FanSpeed,
+                        ..entry.clone()
+                    }],
+                    compact,
+                );
+                assert!(measured(heading, 7.5, 0.0) <= f64::from(single[0].width));
             }
         }
         // Real AppKit metrics catch regressions that string-length tests miss.

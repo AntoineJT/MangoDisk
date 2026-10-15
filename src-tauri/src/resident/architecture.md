@@ -1066,3 +1066,43 @@ privileged sessions are retained throughout;
 recovery never reissues a destructive command. Hidden main windows are recreated
 on the next foreground request, and frontend readiness is reset before revealing
 a recovered main window. Follow Microsoft's [process-related event guidance](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/process-related-events).
+
+## macOS fan speed
+
+Preference envelopes use version 25; readings retain version 23. Previous preferences retain all
+saved display choices, relative order, colors, and device selections. Migration
+adds fan speed disabled before a trailing network item, with automatic fan
+selection. Version-23 automatic and fixed choices migrate to highest and selected
+modes. Selected IDs contain one or two unique, bounded IDs sorted numerically;
+missing tachometers never change the saved selection.
+
+The platform fan reader uses the existing read-only Apple SMC connection. FNum
+identifies the fan count; F0Ac through F9Ac expose actual RPM. Integer counts,
+Intel unsigned fpe2 speeds, and Apple Silicon float speeds have explicit encoding
+and size checks. Counts are bounded to ten, RPM to 0–30000, and malformed or
+non-finite values fail closed. Zero RPM is valid. A successful zero count denotes
+fanless hardware; an unavailable count remains Unsupported. Missing individual
+tachometers retain their identity with no fabricated zero reading.
+
+Sampling runs on the existing two-second CPU worker only while resident display
+and fan speed are enabled. Disabling releases its independent SMC connection.
+Key metadata is cached per connection; missing keys are retried, and native
+failures discard the connection and metadata before the next sample. Logs record
+capability/error transitions with sensor diagnostics, without per-sample RPM logs.
+Core expires readings after five seconds. Highest mode uses the highest valid
+RPM with deterministic fan-ID ties. Average mode includes stopped fans as zero
+and excludes unreadable tachometers; tooltips report valid/total counts. Selected
+mode shows one fan as a heading/value pair, or two fans as equal-height numbered
+rows in a single column. Missing selections remain in their physical rows as a
+dash. Display text omits RPM units. Settings enforce one or two selections, and
+backend validation rejects empty, duplicate, oversized or out-of-range lists. Windows and Linux do not expose this
+item. Fan speed has no trend or control interface.
+
+Fan color conditions use RPM with configurable thresholds bounded to 30000.
+The default bands are green below 2000, orange from 2000 to below 4000, and
+red from 4000 upward. These are speed bands, not hardware health limits.
+Version-24 and older preferences acquire only the missing default fan rule;
+existing color choices are preserved. Highest and average modes color their
+aggregate value; paired rows classify independently by fan ID. Missing or stale
+values use the system foreground. Descending boundaries hold for 100 RPM to
+avoid flicker and reset when the mode, selected fans, or rules change.

@@ -109,6 +109,9 @@ impl ResidentState {
         let temperature_sampling = (cfg!(windows) && preferences.windows_cpu_temperature_enabled)
             || (cfg!(target_os = "macos") && preferences.enabled);
         MetricId::ALL.map(|metric| Demand {
+            fan_speed: metric == MetricId::Cpu
+                && preferences.enabled
+                && preferences.shows_fan_speed(),
             system_power: metric == MetricId::Cpu
                 && preferences.enabled
                 && preferences.shows_system_power(),
@@ -412,8 +415,12 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                 battery,
                                 system_power,
                                 battery_present,
+                                fan_speed,
                             }) => {
                                 cache.battery_presence(battery_present, completion.timestamp_ms);
+                                if let Some(sample) = fan_speed {
+                                    cache.fan_speed(sample, completion.timestamp_ms);
+                                }
                                 if let Some(sample) = system_power {
                                     cache.system_power(sample, completion.timestamp_ms);
                                 }

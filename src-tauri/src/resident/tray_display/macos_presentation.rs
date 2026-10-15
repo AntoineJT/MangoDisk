@@ -44,6 +44,7 @@ pub struct Column {
     pub id: DisplayId,
     pub tone: super::usage_color::UsageTone,
     pub power_state: Option<mangodisk_platform::system_resources::battery::BatteryPowerState>,
+    pub fan_tones: Option<[super::usage_color::UsageTone; 2]>,
     pub top: String,
     pub bottom: String,
     pub width: u32,
@@ -111,6 +112,18 @@ pub fn columns(entries: &[DisplayEntry], compact: bool) -> Vec<Column> {
                     },
                     if compact { 37 } else { 46 },
                 ),
+                DisplayId::FanSpeed => match &entry.fan_rows {
+                    Some(rows) => (
+                        rows[0].text.clone(),
+                        rows[1].text.clone(),
+                        if compact { 58 } else { 64 },
+                    ),
+                    None => (
+                        entry.marker.clone(),
+                        entry.digits.clone(),
+                        if compact { 38 } else { 42 },
+                    ),
+                },
                 DisplayId::ChargingPower | DisplayId::BatteryPower | DisplayId::SystemPower => (
                     if entry.id == DisplayId::SystemPower {
                         "SYS"
@@ -167,6 +180,10 @@ pub fn columns(entries: &[DisplayEntry], compact: bool) -> Vec<Column> {
                 id: entry.id,
                 tone: entry.tone,
                 power_state: entry.power_state,
+                fan_tones: entry
+                    .fan_rows
+                    .as_ref()
+                    .map(|rows| rows.each_ref().map(|row| row.tone)),
                 top,
                 bottom,
                 width,
@@ -208,6 +225,47 @@ pub fn width(columns: &[Column], icon: bool, compact: bool) -> u32 {
 mod tests {
     use super::*;
     #[test]
+    fn fan_pair_uses_one_column_and_keeps_width_for_missing_or_maximum_values() {
+        for compact in [false, true] {
+            let mut fan = entry(DisplayId::FanSpeed, "0", "FMAX");
+            let single = columns(&[fan.clone()], compact);
+            assert_eq!(single[0].top, "FMAX");
+            assert_eq!(single[0].bottom, "0");
+            for rows in [
+                ["F1 0", "F2 2400"],
+                ["F1 —", "F2 —"],
+                ["F9 30000", "F10 30000"],
+            ] {
+                fan.fan_rows =
+                    Some(
+                        [0, 1].map(|index| crate::resident::tray_display::format::FanRow {
+                            id: index as u8,
+                            text: rows[index].into(),
+                            color_value: None,
+                            tone: Default::default(),
+                        }),
+                    );
+                let pair = columns(&[fan.clone()], compact);
+                assert_eq!(pair.len(), 1);
+                assert_eq!(pair[0].fan_tones, Some([Default::default(); 2]));
+                fan.fan_rows.as_mut().unwrap()[1].tone =
+                    super::super::usage_color::UsageTone::Critical;
+                let colored = columns(&[fan.clone()], compact);
+                assert_ne!(colored, pair);
+                assert_eq!(
+                    colored[0].fan_tones,
+                    Some([
+                        super::super::usage_color::UsageTone::Normal,
+                        super::super::usage_color::UsageTone::Critical
+                    ])
+                );
+                assert_eq!(pair[0].width, if compact { 58 } else { 64 });
+                assert!(!pair[0].top.contains("RPM"));
+                assert!(!pair[0].bottom.contains("RPM"));
+            }
+        }
+    }
+    #[test]
     fn disk_temperature_columns_keep_celsius_and_unavailable_width() {
         for compact in [false, true] {
             let ready = columns(&[entry(DisplayId::DiskTemperature, "150", "°C")], compact);
@@ -236,6 +294,7 @@ mod tests {
         DisplayEntry {
             tone: Default::default(),
             power_state: None,
+            fan_rows: None,
             color_value: None,
             id,
             digits: digits.into(),

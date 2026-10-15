@@ -34,7 +34,15 @@ const dynamicKeyGroups = {
   // Native startup and recovery dialogs remain usable when Vue cannot mount.
   webviewRuntime: ['updateRequired', 'update', 'exit', 'openFailed', 'recoveryFailed'],
   // Native resident menus resolve these keys through Rust's Labels adapter.
-  systemStatus: ['openMain', 'settings', 'quit', 'batteryCharging', 'batteryDischarging', 'batteryIdle'],
+  systemStatus: [
+    'openMain',
+    'settings',
+    'quit',
+    'batteryCharging',
+    'batteryDischarging',
+    'batteryIdle',
+    'fanValidReadings',
+  ],
   navigation: [
     'system-optimization',
     'system-maintenance',

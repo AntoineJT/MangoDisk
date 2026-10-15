@@ -1,3 +1,4 @@
+mod fan;
 pub mod format;
 pub mod labels;
 #[cfg(target_os = "macos")]
@@ -43,6 +44,8 @@ pub struct DisplayState {
     color_gpu_adapter: Option<String>,
     color_gpu_temperature_adapter: Option<String>,
     color_matches: HashMap<DisplayId, Option<usize>>,
+    color_fan_source: Option<(super::preference_schema::FanDisplayMode, Vec<u8>)>,
+    color_fan_matches: HashMap<u8, Option<usize>>,
 }
 
 impl DisplayState {
@@ -61,6 +64,12 @@ impl DisplayState {
             preferences.usage_colors && preferences.enabled,
             preferences.color_rules.clone(),
         );
+        let fan_source = (preferences.fan_display, preferences.fan_ids.clone());
+        let same_fans = self.color_fan_source.as_ref() == Some(&fan_source);
+        let same_rules = self.color_rules.as_ref() == Some(&color_rules);
+        if !same_fans || !same_rules {
+            self.color_fan_matches.clear();
+        }
         for entry in entries.iter_mut() {
             let id = match entry.id {
                 DisplayId::Cpu => super::preference_schema::DisplayMetricId::Cpu,
@@ -79,6 +88,7 @@ impl DisplayState {
                 }
                 DisplayId::SystemPower => super::preference_schema::DisplayMetricId::SystemPower,
                 DisplayId::BatteryPower => super::preference_schema::DisplayMetricId::BatteryPower,
+                DisplayId::FanSpeed => super::preference_schema::DisplayMetricId::FanSpeed,
                 DisplayId::Memory => super::preference_schema::DisplayMetricId::Memory,
                 DisplayId::Disk => super::preference_schema::DisplayMetricId::Disk,
                 DisplayId::DiskTemperature => {
@@ -90,6 +100,7 @@ impl DisplayState {
                 }
             };
             let same_source = match entry.id {
+                DisplayId::FanSpeed => same_fans,
                 DisplayId::Disk => self.color_disk_volume.as_deref() == disk_volume,
                 DisplayId::DiskTemperature => {
                     self.color_disk_temperature_volume.as_deref() == disk_temperature_volume
@@ -100,7 +111,7 @@ impl DisplayState {
                 }
                 _ => true,
             };
-            let previous = if self.color_rules.as_ref() == Some(&color_rules) && same_source {
+            let previous = if same_rules && same_source {
                 self.color_matches.get(&entry.id).copied().flatten()
             } else {
                 None
@@ -113,10 +124,33 @@ impl DisplayState {
                 .and_then(|index| rule.map(|rule| rule.rules[index].color().into()))
                 .unwrap_or_default();
             self.color_matches.insert(entry.id, matched);
+            if let Some(rows) = &mut entry.fan_rows {
+                for row in rows {
+                    let previous = self.color_fan_matches.get(&row.id).copied().flatten();
+                    let matched = rule
+                        .filter(|_| color_rules.0)
+                        .and_then(|rule| usage_color::next_rule(previous, row.color_value, rule));
+                    row.tone = matched
+                        .and_then(|index| rule.map(|rule| rule.rules[index].color().into()))
+                        .unwrap_or_default();
+                    self.color_fan_matches.insert(row.id, matched);
+                }
+            }
         }
         // Unavailable or hidden entries must not retain an older match.
         self.color_matches
             .retain(|id, _| entries.iter().any(|entry| entry.id == *id));
+        self.color_fan_matches.retain(|id, _| {
+            entries
+                .iter()
+                .filter_map(|entry| entry.fan_rows.as_ref())
+                .flatten()
+                .any(|row| row.id == *id)
+        });
+        self.color_fan_source = entries
+            .iter()
+            .any(|entry| entry.id == DisplayId::FanSpeed)
+            .then_some(fan_source);
         self.color_rules = Some(color_rules);
         self.color_disk_volume = disk_volume.map(str::to_owned);
         self.color_disk_temperature_volume = disk_temperature_volume.map(str::to_owned);
@@ -585,6 +619,150 @@ mod tests {
     use usage_color::UsageTone;
 
     #[test]
+    fn fan_colors_keep_rows_independent_and_clear_history_for_missing_hidden_or_changed_sources() {
+        use crate::resident::preference_schema::{DisplayMetricId, FanDisplayMode};
+        use mangodisk_core::system_resources::{
+            metrics::MetricReading, readings::ResourceReadings,
+        };
+        use mangodisk_platform::system_resources::fans::{FanSample, FanSpeed};
+        let labels = labels::Labels::for_locale("en-US");
+        let mut state = DisplayState::default();
+        let mut preferences = ResidentPreferences::default();
+        let frame = |preferences: &ResidentPreferences, rpm: [Option<f64>; 2]| {
+            vec![fan::entry(
+                &ResourceReadings {
+                    observed_at_ms: 1000,
+                    fan_speed: MetricReading::ready(
+                        FanSample {
+                            fans: rpm
+                                .into_iter()
+                                .enumerate()
+                                .map(|(id, rpm)| FanSpeed { id: id as u8, rpm })
+                                .collect(),
+                        },
+                        1000,
+                    ),
+                    ..Default::default()
+                },
+                &labels,
+                preferences,
+            )]
+        };
+        let paint = |state: &mut DisplayState,
+                     preferences: &ResidentPreferences,
+                     entries: &mut [DisplayEntry]| {
+            state.apply_colors(entries, preferences, None, None, None, None)
+        };
+        let mut entries = frame(&preferences, [Some(4000.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Critical);
+        entries = frame(&preferences, [Some(3999.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Critical);
+        preferences.fan_display = FanDisplayMode::Average;
+        entries = frame(&preferences, [Some(3999.0), Some(3999.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Warning);
+        preferences.fan_display = FanDisplayMode::Selected;
+        preferences.fan_ids = vec![0, 1];
+        entries = frame(&preferences, [Some(4000.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(
+            entries[0]
+                .fan_rows
+                .as_ref()
+                .unwrap()
+                .each_ref()
+                .map(|row| row.tone),
+            [UsageTone::Critical, UsageTone::Green]
+        );
+        entries = frame(&preferences, [Some(3999.0), Some(2000.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(
+            entries[0]
+                .fan_rows
+                .as_ref()
+                .unwrap()
+                .each_ref()
+                .map(|row| row.tone),
+            [UsageTone::Critical, UsageTone::Warning]
+        );
+        entries = frame(&preferences, [None, Some(1900.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(
+            entries[0]
+                .fan_rows
+                .as_ref()
+                .unwrap()
+                .each_ref()
+                .map(|row| row.tone),
+            [UsageTone::Normal, UsageTone::Green]
+        );
+        entries = frame(&preferences, [Some(3999.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(
+            entries[0].fan_rows.as_ref().unwrap()[0].tone,
+            UsageTone::Warning
+        );
+        preferences.usage_colors = false;
+        paint(&mut state, &preferences, &mut entries);
+        assert!(entries[0]
+            .fan_rows
+            .as_ref()
+            .unwrap()
+            .iter()
+            .all(|row| row.tone == UsageTone::Normal));
+        preferences.usage_colors = true;
+        preferences
+            .color_rules
+            .iter_mut()
+            .find(|rule| rule.id == DisplayMetricId::FanSpeed)
+            .unwrap()
+            .enabled = false;
+        paint(&mut state, &preferences, &mut entries);
+        assert!(entries[0]
+            .fan_rows
+            .as_ref()
+            .unwrap()
+            .iter()
+            .all(|row| row.tone == UsageTone::Normal));
+        preferences
+            .color_rules
+            .iter_mut()
+            .find(|rule| rule.id == DisplayMetricId::FanSpeed)
+            .unwrap()
+            .enabled = true;
+        entries = frame(&preferences, [Some(4000.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        paint(&mut state, &preferences, &mut []);
+        entries = frame(&preferences, [Some(3999.0), Some(0.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(
+            entries[0].fan_rows.as_ref().unwrap()[0].tone,
+            UsageTone::Warning
+        );
+        preferences.fan_ids = vec![0];
+        entries = frame(&preferences, [Some(4000.0), Some(3999.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Critical);
+        preferences.fan_ids = vec![1];
+        entries = frame(&preferences, [Some(4000.0), Some(3999.0)]);
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Warning);
+        preferences
+            .color_rules
+            .iter_mut()
+            .find(|rule| rule.id == DisplayMetricId::FanSpeed)
+            .unwrap()
+            .rules = vec![crate::resident::color_rules::ColorRule::AtLeast {
+            value: 0,
+            color: crate::resident::color_rules::DisplayColor::Blue,
+        }];
+        paint(&mut state, &preferences, &mut entries);
+        assert_eq!(entries[0].tone, UsageTone::Blue);
+    }
+
+    #[test]
     fn battery_power_color_rules_apply_to_their_own_slot() {
         use crate::resident::color_rules::{ColorRule, DisplayColor};
         use crate::resident::preference_schema::DisplayMetricId;
@@ -603,6 +781,7 @@ mod tests {
             id: DisplayId::BatteryPower,
             tone: Default::default(),
             power_state: None,
+            fan_rows: None,
             color_value: Some(50),
             marker: "W".into(),
             digits: "50.0".into(),
@@ -627,6 +806,7 @@ mod tests {
             id,
             tone: Default::default(),
             power_state: None,
+            fan_rows: None,
             color_value: Some(65),
             marker: String::new(),
             digits: String::new(),
@@ -661,6 +841,7 @@ mod tests {
                 id,
                 tone: UsageTone::Normal,
                 power_state: None,
+                fan_rows: None,
                 color_value: Some(95),
                 marker: String::new(),
                 digits: String::new(),

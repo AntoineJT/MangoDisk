@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "風扇轉速",
+    "fanAutomatic": "最高轉速",
+    "fanAverage": "平均轉速",
+    "fanSelected": "指定風扇",
+    "fanSelectionLimit": "最多選擇兩個風扇",
+    "fanValidReadings": "有效讀數 {valid}/{total}",
+    "fanNumber": "風扇 {number}",
+    "noFans": "此裝置無風扇",
     "diskTemperature": "磁碟溫度",
     "cpuUsage": "CPU 使用率",
     "gpuUsage": "GPU 使用率",

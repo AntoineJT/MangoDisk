@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "Fan speed",
+    "fanAutomatic": "Highest speed",
+    "fanAverage": "Average speed",
+    "fanSelected": "Select fans",
+    "fanSelectionLimit": "Select up to two fans",
+    "fanValidReadings": "Valid readings {valid}/{total}",
+    "fanNumber": "Fan {number}",
+    "noFans": "This device has no fans",
     "diskTemperature": "Disk temperature",
     "cpuUsage": "CPU utilization",
     "gpuUsage": "GPU utilization",

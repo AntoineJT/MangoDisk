@@ -26,6 +26,11 @@ pub enum Observation {
     Unsupported,
     Cpu {
         battery_present: Option<bool>,
+        fan_speed: Option<
+            mangodisk_platform::PlatformResult<
+                mangodisk_platform::system_resources::fans::FanSample,
+            >,
+        >,
         system_power: Option<
             mangodisk_platform::PlatformResult<
                 mangodisk_platform::system_resources::power::SystemPower,
@@ -161,6 +166,7 @@ enum Sensor {
         reader: CpuReader,
         battery_presence: mangodisk_platform::system_resources::battery::BatteryPresenceReader,
         power: mangodisk_platform::system_resources::power::SystemPowerReader,
+        fans: Option<Box<mangodisk_platform::system_resources::fans::FanReader>>,
         battery: mangodisk_platform::system_resources::battery::BatteryReader,
         details: Box<CpuDetailsReader>,
     },
@@ -182,6 +188,7 @@ impl Sensor {
                 reader: CpuReader::default(),
                 battery_presence: Default::default(),
                 power: Default::default(),
+                fans: Default::default(),
                 battery: Default::default(),
                 details: Box::default(),
             },
@@ -190,6 +197,7 @@ impl Sensor {
                 reader: CpuReader,
                 battery_presence: Default::default(),
                 power: Default::default(),
+                fans: Default::default(),
                 battery: Default::default(),
                 details: Box::default(),
             },
@@ -224,6 +232,7 @@ impl Sensor {
                 battery,
                 power,
                 battery_presence,
+                fans,
             } => {
                 let sample = reader.read();
                 let details = details.read(demand.detailed, demand.temperature);
@@ -237,6 +246,12 @@ impl Sensor {
                 };
                 Observation::Cpu {
                     battery_present,
+                    fan_speed: if demand.fan_speed {
+                        Some(fans.get_or_insert_with(Box::default).read())
+                    } else {
+                        *fans = None;
+                        None
+                    },
                     system_power: if demand.system_power {
                         Some(power.read())
                     } else {

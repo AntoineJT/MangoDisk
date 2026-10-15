@@ -81,6 +81,112 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('status display interactions', () => {
+  it('limits selected fans to two, preserves missing identities and saves each display mode', async () => {
+    const reading = {
+      ...readingFixture(),
+      fanSpeed: {
+        status: 'ready' as const,
+        sampledAtMs: 1,
+        value: {
+          fans: [
+            { id: 0, rpm: 0 },
+            { id: 1, rpm: 2400 },
+            { id: 2, rpm: 3000 },
+          ],
+        },
+      },
+    };
+    vi.mocked(ResidentService.catalogue).mockResolvedValue(reading);
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const row = wrapper.get('[data-metric="fanSpeed"]');
+    expect(row.get('#status-fanSpeed').attributes('aria-checked')).toBe('false');
+    expect(row.find('.color-toggle').exists()).toBe(true);
+    expect(row.getComponent(Select).props('disabled')).toBe(true);
+    await row.get('#status-fanSpeed').trigger('click');
+    await flushPromises();
+    row.getComponent(Select).vm.$emit('update:modelValue', 'average');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({ fanDisplay: 'average' })
+    );
+    row.getComponent(Select).vm.$emit('update:modelValue', 'selected');
+    await flushPromises();
+    expect(row.get('#fan-choice-0').attributes('disabled')).toBeDefined();
+    await row.get('#fan-choice-1').trigger('click');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({ fanDisplay: 'selected', fanIds: [0, 1] })
+    );
+    expect(row.get('#fan-choice-2').attributes('disabled')).toBeDefined();
+    const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+    vi.mocked(ResidentService.savePreferences).mockClear();
+    accept({
+      ...reading,
+      revision: 10,
+      fanSpeed: {
+        ...reading.fanSpeed,
+        value: {
+          fans: [
+            { id: 1, rpm: 2500 },
+            { id: 2, rpm: 3000 },
+          ],
+        },
+      },
+    });
+    await flushPromises();
+    expect(row.get('#fan-choice-0').attributes('aria-checked')).toBe('true');
+    expect(row.text()).toContain('systemStatus.disconnected');
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+    await row.get('#fan-choice-0').trigger('click');
+    await flushPromises();
+    expect(row.get('#fan-choice-2').attributes('disabled')).toBeUndefined();
+    await row.get('#fan-choice-2').trigger('click');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ fanIds: [1, 2] }));
+    row.getComponent(Select).vm.$emit('update:modelValue', 'highest');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({ fanDisplay: 'highest', fanIds: [1, 2] })
+    );
+    expect(row.find('#fan-choice-1').exists()).toBe(false);
+    await row.get('#status-fanSpeed').trigger('click');
+    await flushPromises();
+    expect(row.getComponent(Select).props('disabled')).toBe(true);
+  });
+
+  it('distinguishes fanless hardware, unavailable sampling and a stopped fan', async () => {
+    const saved = preferencesFixture();
+    saved.metrics.find(row => row.id === 'fanSpeed')!.enabled = true;
+    vi.mocked(ResidentService.preferences).mockResolvedValue(saved);
+    const reading = {
+      ...readingFixture(),
+      fanSpeed: { status: 'ready' as const, sampledAtMs: 1, value: { fans: [] } },
+    };
+    vi.mocked(ResidentService.catalogue).mockResolvedValue(reading);
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const row = wrapper.get('[data-metric="fanSpeed"]');
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.noFans');
+    const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+    accept({ ...reading, revision: 2, fanSpeed: { status: 'unsupported', sampledAtMs: null, value: null } });
+    await flushPromises();
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
+    accept({
+      ...reading,
+      revision: 3,
+      fanSpeed: { status: 'ready', sampledAtMs: 3, value: { fans: [{ id: 0, rpm: 0 }] } },
+    });
+    await flushPromises();
+    expect(row.find('[role="status"]').exists()).toBe(false);
+    expect(row.getComponent(Select).props('modelValue')).toBe('highest');
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+  });
+
   it('opens the display dialog after a navigation request waits for preferences', async () => {
     let resolvePreferences!: (value: ReturnType<typeof preferencesFixture>) => void;
     vi.mocked(ResidentService.preferences).mockReturnValueOnce(
@@ -103,25 +209,65 @@ describe('status display interactions', () => {
     expect(ResidentService.savePreferences).not.toHaveBeenCalled();
   });
 
-  const localizedMessages = import.meta.glob<{ systemStatus: { diskTemperature: string } }>('../../../locales/*.json', {
+  const localizedMessages = import.meta.glob<{
+    systemStatus: {
+      diskTemperature: string;
+      fanSpeed: string;
+      fanAutomatic: string;
+      fanAverage: string;
+      fanSelected: string;
+      fanNumber: string;
+    };
+  }>('../../../locales/*.json', {
     eager: true,
     import: 'default',
   });
-  it.each(Object.entries(localizedMessages))('renders the disk temperature label in %s', async (_path, messages) => {
-    const options = global();
-    options.plugins[1] = createI18n({
-      legacy: false,
-      locale: 'en',
-      messages: { en: messages },
-      missingWarn: false,
-      fallbackWarn: false,
-    });
-    const wrapper = mount(Settings, { props: { isMacOs: true }, global: options });
-    wrappers.push(wrapper);
-    await flushPromises();
-    await openConfiguration(wrapper);
-    expect(wrapper.get('[data-metric="diskTemperature"] label').text()).toBe(messages.systemStatus.diskTemperature);
-  });
+  it.each(Object.entries(localizedMessages))(
+    'renders disk temperature and fan selection in %s',
+    async (_path, messages) => {
+      vi.mocked(ResidentService.catalogue).mockResolvedValue({
+        ...readingFixture(),
+        fanSpeed: {
+          status: 'ready',
+          sampledAtMs: 1,
+          value: {
+            fans: [
+              { id: 0, rpm: 0 },
+              { id: 1, rpm: 2400 },
+            ],
+          },
+        },
+      });
+      const options = global();
+      options.plugins[1] = createI18n({
+        legacy: false,
+        locale: 'en',
+        messages: { en: messages },
+        missingWarn: false,
+        fallbackWarn: false,
+      });
+      const wrapper = mount(Settings, { props: { isMacOs: true }, global: options });
+      wrappers.push(wrapper);
+      await flushPromises();
+      await openConfiguration(wrapper);
+      expect(wrapper.get('[data-metric="diskTemperature"] label').text()).toBe(messages.systemStatus.diskTemperature);
+      const fan = wrapper.get('[data-metric="fanSpeed"]');
+      expect(fan.get('label').text()).toBe(messages.systemStatus.fanSpeed);
+      expect(fan.get('.selection-toggle').text()).toBe(messages.systemStatus.fanAutomatic);
+      await fan.get('[role="checkbox"]').trigger('click');
+      await flushPromises();
+      fan.getComponent(Select).vm.$emit('update:modelValue', 'selected');
+      await flushPromises();
+      expect(fan.get('.selection-toggle').text()).toBe(messages.systemStatus.fanSelected);
+      expect(fan.text()).toContain(messages.systemStatus.fanNumber.replace('{number}', '1'));
+      await fan.get('#fan-choice-1').trigger('click');
+      await flushPromises();
+      expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(expect.objectContaining({ fanIds: [0, 1] }));
+      fan.getComponent(Select).vm.$emit('update:modelValue', 'average');
+      await flushPromises();
+      expect(fan.get('.selection-toggle').text()).toBe(messages.systemStatus.fanAverage);
+    }
+  );
   it.each([true, false])('offers disk temperature independently of disk usage on macOS=%s', async isMacOs => {
     const wrapper = mount(Settings, { props: { isMacOs }, global: global() });
     wrappers.push(wrapper);
@@ -209,8 +355,9 @@ describe('status display interactions', () => {
       expect(wrapper.find('[data-metric="chargingPower"]').exists()).toBe(isMacOs);
       expect(wrapper.find('[data-metric="batteryPower"]').exists()).toBe(isMacOs);
       expect(wrapper.find('[data-metric="systemPower"]').exists()).toBe(isMacOs);
+      expect(wrapper.find('[data-metric="fanSpeed"]').exists()).toBe(isMacOs);
       if (isMacOs) {
-        for (const id of ['batteryTemperature', 'chargingPower', 'batteryPower', 'systemPower']) {
+        for (const id of ['batteryTemperature', 'chargingPower', 'batteryPower', 'systemPower', 'fanSpeed']) {
           expect(wrapper.get(`[data-metric="${id}"] [role="checkbox"]`).attributes('aria-checked')).toBe('false');
         }
       }
@@ -431,7 +578,7 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     expect(wrapper.find('#menu-bar-cpu-temperature').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(12);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(13);
     expect(wrapper.get('[data-metric="cpuTemperature"] label').text()).toBe('cpuTemperature.label');
     const handle = wrapper.get('[data-metric="cpuTemperature"] .drag-handle');
     await handle.trigger('keydown', { key: ' ' });
@@ -702,7 +849,7 @@ describe('status display interactions', () => {
     await wrapper.get('input[name="taskbar-position"][value="auto"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
-      expect.objectContaining({ schemaVersion: 22, taskbarPosition: 'auto' })
+      expect.objectContaining({ schemaVersion: 25, taskbarPosition: 'auto' })
     );
   });
 
@@ -940,6 +1087,28 @@ describe('status display interactions', () => {
 });
 
 describe('per-item color configuration', () => {
+  it('saves fan colors without changing selected fans or other metric rules', async () => {
+    const saved = preferencesFixture();
+    saved.fanDisplay = 'selected';
+    saved.fanIds = [0, 1];
+    vi.mocked(ResidentService.preferences).mockResolvedValue(saved);
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    await wrapper.get('#color-configure-fanSpeed').trigger('click');
+    expect(wrapper.find('#color-editor-fanSpeed').exists()).toBe(true);
+    const rule = { id: 'fanSpeed', enabled: true, rules: [{ condition: 'atLeast', value: 2000, color: 'blue' }] };
+    wrapper.getComponent({ name: 'MdStatusColorRuleEditor' }).vm.$emit('save', rule);
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        fanDisplay: 'selected',
+        fanIds: [0, 1],
+        colorRules: saved.colorRules.map(existing => (existing.id === 'fanSpeed' ? rule : existing)),
+      })
+    );
+  });
   it('opens a separate dialog and keeps source choices independent', async () => {
     const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
     wrappers.push(wrapper);

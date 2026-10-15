@@ -7,6 +7,7 @@ pub mod cpu;
 pub mod disk;
 pub mod disk_io;
 pub mod disk_temperature;
+pub mod fans;
 pub mod gpu;
 pub mod memory;
 #[cfg(target_os = "macos")]

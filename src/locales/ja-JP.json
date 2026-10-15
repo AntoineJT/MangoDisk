@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "ファン回転数",
+    "fanAutomatic": "最高回転数",
+    "fanAverage": "平均回転数",
+    "fanSelected": "ファンを指定",
+    "fanSelectionLimit": "ファンは2基まで選択できます",
+    "fanValidReadings": "有効な測定値 {valid}/{total}",
+    "fanNumber": "ファン {number}",
+    "noFans": "ファン非搭載",
     "diskTemperature": "ディスク温度",
     "cpuUsage": "CPU 使用率",
     "gpuUsage": "GPU 使用率",

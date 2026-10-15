@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "Velocidade da ventoinha",
+    "fanAutomatic": "Maior rotação",
+    "fanAverage": "Rotação média",
+    "fanSelected": "Selecionar ventoinhas",
+    "fanSelectionLimit": "Selecione até duas ventoinhas",
+    "fanValidReadings": "Leituras válidas {valid}/{total}",
+    "fanNumber": "Ventoinha {number}",
+    "noFans": "Este dispositivo não tem ventoinhas",
     "diskTemperature": "Temperatura do disco",
     "cpuUsage": "Uso da CPU",
     "gpuUsage": "Uso da GPU",

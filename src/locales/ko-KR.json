@@ -4032,6 +4032,14 @@
     }
   },
   "systemStatus": {
+    "fanSpeed": "팬 속도",
+    "fanAutomatic": "최고 회전 속도",
+    "fanAverage": "평균 회전 속도",
+    "fanSelected": "팬 선택",
+    "fanSelectionLimit": "팬은 최대 2개까지 선택할 수 있습니다",
+    "fanValidReadings": "유효 측정값 {valid}/{total}",
+    "fanNumber": "팬 {number}",
+    "noFans": "이 기기에는 팬이 없습니다",
     "diskTemperature": "디스크 온도",
     "cpuUsage": "CPU 사용률",
     "gpuUsage": "GPU 사용률",

@@ -69,7 +69,7 @@ pub struct MetricColorRule {
 }
 
 pub const MAX_COLOR_RULES: usize = 16;
-pub const COLOR_METRICS: [DisplayMetricId; 11] = [
+pub const COLOR_METRICS: [DisplayMetricId; 12] = [
     DisplayMetricId::Cpu,
     DisplayMetricId::CpuTemperature,
     DisplayMetricId::Gpu,
@@ -81,6 +81,7 @@ pub const COLOR_METRICS: [DisplayMetricId; 11] = [
     DisplayMetricId::ChargingPower,
     DisplayMetricId::BatteryPower,
     DisplayMetricId::SystemPower,
+    DisplayMetricId::FanSpeed,
 ];
 
 pub fn temperature(id: DisplayMetricId) -> bool {
@@ -95,6 +96,7 @@ pub fn temperature(id: DisplayMetricId) -> bool {
 
 pub fn limit(id: DisplayMetricId) -> u16 {
     match id {
+        DisplayMetricId::FanSpeed => 30000,
         DisplayMetricId::SystemPower => 3000,
         DisplayMetricId::ChargingPower | DisplayMetricId::BatteryPower => 300,
         DisplayMetricId::BatteryTemperature => 100,
@@ -117,7 +119,9 @@ impl MetricColorRule {
                 rules: Vec::new(),
             };
         }
-        let (middle, high) = if id == DisplayMetricId::DiskTemperature {
+        let (middle, high) = if id == DisplayMetricId::FanSpeed {
+            (2000, 4000)
+        } else if id == DisplayMetricId::DiskTemperature {
             (50, 60)
         } else if id == DisplayMetricId::BatteryTemperature {
             (40, 45)
@@ -184,7 +188,8 @@ pub fn legacy(warning: u16, critical: u16) -> Vec<MetricColorRule> {
         .map(|mut rule| {
             if matches!(
                 rule.id,
-                DisplayMetricId::DiskTemperature
+                DisplayMetricId::FanSpeed
+                    | DisplayMetricId::DiskTemperature
                     | DisplayMetricId::BatteryTemperature
                     | DisplayMetricId::ChargingPower
                     | DisplayMetricId::BatteryPower
@@ -290,6 +295,13 @@ pub fn migrate_bands(value: serde_json::Value) -> Result<Vec<MetricColorRule>, &
     {
         migrated.push(MetricColorRule::defaults(DisplayMetricId::DiskTemperature));
     }
+    if migrated.len() == 11
+        && !migrated
+            .iter()
+            .any(|rule| rule.id == DisplayMetricId::FanSpeed)
+    {
+        migrated.push(MetricColorRule::defaults(DisplayMetricId::FanSpeed));
+    }
     if valid(&migrated) {
         Ok(migrated)
     } else {
@@ -300,6 +312,42 @@ pub fn migrate_bands(value: serde_json::Value) -> Result<Vec<MetricColorRule>, &
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fan_defaults_cover_all_supported_rpm_and_reject_out_of_range_thresholds() {
+        let mut rule = MetricColorRule::defaults(DisplayMetricId::FanSpeed);
+        assert!(rule.enabled && rule.valid());
+        for rpm in 0..=30000 {
+            let matches = rule
+                .rules
+                .iter()
+                .filter(|rule| rule.matches(rpm))
+                .collect::<Vec<_>>();
+            assert_eq!(matches.len(), 1, "rpm={rpm}");
+            assert_eq!(
+                matches[0].color(),
+                if rpm < 2000 {
+                    DisplayColor::Green
+                } else if rpm < 4000 {
+                    DisplayColor::Orange
+                } else {
+                    DisplayColor::Red
+                },
+                "rpm={rpm}"
+            );
+        }
+        assert_eq!(
+            legacy(70, 90)
+                .into_iter()
+                .find(|rule| rule.id == DisplayMetricId::FanSpeed),
+            Some(rule.clone())
+        );
+        rule.rules = vec![ColorRule::AtLeast {
+            value: 30001,
+            color: DisplayColor::Red,
+        }];
+        assert!(!rule.valid());
+    }
 
     #[test]
     fn disk_temperature_defaults_cover_every_celsius_without_overlaps_or_gaps() {

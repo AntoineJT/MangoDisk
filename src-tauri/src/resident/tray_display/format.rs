@@ -24,10 +24,11 @@ pub enum DisplayId {
     ChargingPower,
     BatteryPower,
     SystemPower,
+    FanSpeed,
 }
 
 impl DisplayId {
-    pub const ALL: [Self; 14] = [
+    pub const ALL: [Self; 15] = [
         Self::App,
         Self::Cpu,
         Self::CpuTemperature,
@@ -42,6 +43,7 @@ impl DisplayId {
         Self::ChargingPower,
         Self::BatteryPower,
         Self::SystemPower,
+        Self::FanSpeed,
     ];
     pub fn tray_id(self) -> &'static str {
         match self {
@@ -59,6 +61,7 @@ impl DisplayId {
             Self::ChargingPower => "resident-charging-power",
             Self::BatteryPower => "resident-battery-power",
             Self::SystemPower => "resident-system-power",
+            Self::FanSpeed => "resident-fan-speed",
         }
     }
     pub fn metric(self) -> Option<MetricId> {
@@ -67,7 +70,8 @@ impl DisplayId {
             | Self::BatteryTemperature
             | Self::ChargingPower
             | Self::BatteryPower
-            | Self::SystemPower => None,
+            | Self::SystemPower
+            | Self::FanSpeed => None,
             Self::Cpu | Self::CpuTemperature => Some(MetricId::Cpu),
             Self::Gpu | Self::GpuTemperature => Some(MetricId::Gpu),
             Self::Memory => Some(MetricId::Memory),
@@ -79,11 +83,22 @@ impl DisplayId {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct FanRow {
+    pub id: u8,
+    pub text: String,
+    pub color_value: Option<u16>,
+    pub tone: super::usage_color::UsageTone,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DisplayEntry {
     pub id: DisplayId,
     pub tone: super::usage_color::UsageTone,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub power_state: Option<mangodisk_platform::system_resources::battery::BatteryPowerState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fan_rows: Option<[FanRow; 2]>,
     pub color_value: Option<u16>,
     pub marker: String,
     pub digits: String,
@@ -115,7 +130,8 @@ pub fn indicator_title(entries: &[DisplayEntry], compact: bool) -> Option<String
                     | DisplayId::BatteryTemperature
                     | DisplayId::ChargingPower
                     | DisplayId::BatteryPower
-                    | DisplayId::SystemPower => return None,
+                    | DisplayId::SystemPower
+                    | DisplayId::FanSpeed => return None,
                 }
             } else {
                 entry.text.trim().to_string()
@@ -141,6 +157,7 @@ pub fn desired(preferences: &ResidentPreferences) -> Vec<DisplayId> {
                 preferences.shows_battery_item(DisplayMetricId::BatteryTemperature)
             }
             DisplayId::SystemPower => preferences.shows_system_power(),
+            DisplayId::FanSpeed => preferences.shows_fan_speed(),
             DisplayId::ChargingPower => {
                 preferences.shows_battery_item(DisplayMetricId::ChargingPower)
             }
@@ -258,6 +275,12 @@ pub fn entries(
             }
             continue;
         }
+        if metric.id == DisplayMetricId::FanSpeed {
+            if preferences.shows_fan_speed() {
+                entries.push(super::fan::entry(values, labels, preferences));
+            }
+            continue;
+        }
         if metric.id == DisplayMetricId::SystemPower {
             if preferences.shows_system_power() {
                 entries.push(system_power_entry(values, labels));
@@ -322,7 +345,8 @@ pub fn entries(
                 | DisplayId::BatteryTemperature
                 | DisplayId::ChargingPower
                 | DisplayId::BatteryPower
-                | DisplayId::SystemPower => {
+                | DisplayId::SystemPower
+                | DisplayId::FanSpeed => {
                     unreachable!()
                 }
             };
@@ -341,6 +365,7 @@ pub fn entries(
                 entries.push(DisplayEntry {
                     tone: Default::default(),
                     power_state: None,
+                    fan_rows: None,
                     color_value: None,
                     id,
                     marker: marker.into(),
@@ -372,6 +397,7 @@ pub fn entries(
                 DisplayEntry {
                     tone: Default::default(),
                     power_state: None,
+                    fan_rows: None,
                     color_value: None,
                     id,
                     marker: format!("{marker}{unit}"),
@@ -435,6 +461,7 @@ pub fn entries(
                 DisplayEntry {
                     tone: Default::default(),
                     power_state: None,
+                    fan_rows: None,
                     color_value: Some(u16::from(percent)),
                     id,
                     marker: marker.into(),
@@ -486,6 +513,7 @@ fn temperature_entry(values: &ResourceReadings, labels: &super::labels::Labels) 
         id: DisplayId::CpuTemperature,
         tone: Default::default(),
         power_state: None,
+        fan_rows: None,
         // Rules are selected by metric ID, so Celsius keeps its own thresholds.
         color_value: value.map(|value| value.celsius.round() as u16),
         marker: "°C".into(),
@@ -537,6 +565,7 @@ fn gpu_temperature_entry(
         id: DisplayId::GpuTemperature,
         tone: Default::default(),
         power_state: None,
+        fan_rows: None,
         color_value: value.map(|value| value.celsius.round() as u16),
         marker: "°C".into(),
         text: if value.is_some() {
@@ -605,6 +634,7 @@ fn disk_temperature_entry(
         id: DisplayId::DiskTemperature,
         tone: Default::default(),
         power_state: None,
+        fan_rows: None,
         color_value: value.map(|value| value.celsius.round() as u16),
         marker: "°C".into(),
         text: if value.is_some() {
@@ -677,6 +707,7 @@ fn system_power_entry(values: &ResourceReadings, labels: &super::labels::Labels)
         id: DisplayId::SystemPower,
         tone: Default::default(),
         power_state: None,
+        fan_rows: None,
         color_value: displayed.map(|value| value.floor() as u16),
         marker: "W".into(),
         digits,
@@ -803,6 +834,7 @@ fn battery_entry(
         },
         tone: Default::default(),
         power_state,
+        fan_rows: None,
         color_value: displayed.map(|value| value.floor() as u16),
         marker: unit.into(),
         digits,
@@ -1253,6 +1285,7 @@ mod tests {
             id,
             tone: Default::default(),
             power_state: None,
+            fan_rows: None,
             color_value: None,
             marker: String::new(),
             digits: String::new(),
@@ -1418,6 +1451,7 @@ mod tests {
                                     | DisplayId::ChargingPower
                                     | DisplayId::BatteryPower
                                     | DisplayId::SystemPower
+                                    | DisplayId::FanSpeed
                             ))
                 })
                 .collect::<Vec<_>>()

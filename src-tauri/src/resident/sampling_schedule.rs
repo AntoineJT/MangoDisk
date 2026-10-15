@@ -7,6 +7,7 @@ pub struct Demand {
     pub temperature: bool,
     pub battery: bool,
     pub system_power: bool,
+    pub fan_speed: bool,
     pub catalogue_only: bool,
     pub selection: Option<String>,
 }

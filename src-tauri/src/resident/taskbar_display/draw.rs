@@ -210,6 +210,7 @@ mod tests {
                         &[DisplayEntry {
                             tone: Default::default(),
                             power_state: None,
+                            fan_rows: None,
                             color_value: None,
                             id,
                             marker: String::new(),
