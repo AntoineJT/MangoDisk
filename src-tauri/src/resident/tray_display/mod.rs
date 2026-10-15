@@ -163,7 +163,6 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
     app.manage(Mutex::new(DisplayState::default()));
     #[cfg(target_os = "macos")]
     {
-        macos_interaction::install(app);
         macos_thread::call(app, |app, _mtm| {
             ensure(app, DisplayId::App, &labels::Labels::load(app))
         })
@@ -339,12 +338,9 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
                 });
             }
         });
-    // A resident NSMenu swallows left clicks on macOS 27 before tray-icon can
-    // route them. The macOS adapter attaches a menu only during presentation.
-    #[cfg(not(target_os = "macos"))]
+    // tray-icon 0.25 retains the menu and attaches it only during native
+    // tracking, preserving left-click delivery on macOS 27 (#365).
     let builder = builder.menu(&menu(app, labels)?);
-    #[cfg(target_os = "macos")]
-    let _ = labels;
     let tray = builder.build(app)?;
     tray.set_visible(false)?;
     Ok(())
@@ -480,7 +476,6 @@ fn render(
         gpu_temperature_adapter,
     } = request;
     let preferences = &preferences;
-    #[cfg(not(target_os = "macos"))]
     let changed_locale = state.locale != labels.locale;
     state.apply_colors(
         &mut entries,
@@ -522,7 +517,6 @@ fn render(
                     state.entries.remove(&id);
                 }
             }
-            #[cfg(not(target_os = "macos"))]
             if changed_locale {
                 tray.set_menu(Some(menu(app, &labels)?))?;
             }

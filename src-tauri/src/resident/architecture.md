@@ -150,16 +150,18 @@ origin so digit-count and unit changes cannot move neighboring text. Native colu
 from resizing the entry (220 pt for all metrics plus the brand). Native appearance
 and recreated buttons invalidate the image cache; accessibility retains the textual
 summary. The adapter
-uses Tauri 2.11 native tray access; its minor version is constrained so an upgrade
-receives native UI regression checks. On macOS, no menu remains attached to the
-status item: a secondary press creates a menu using the current locale, presents
-it on the main thread, and removes it even if presentation fails. This follows
+uses Tauri 2.12 native tray access; upgrades require native UI regression checks.
+On macOS, the adapter registers a menu with tray-icon 0.25 and updates it when
+the locale changes. tray-icon retains the menu, attaches it to the status item
+only during native secondary-click tracking, then detaches it on dismissal.
+This follows
 [tray-icon #365](https://github.com/tauri-apps/tray-icon/pull/365): macOS 27 swallows
 primary clicks while `NSStatusItem.menu` is non-null. Apple documents this
 [menu/action precedence](https://developer.apple.com/documentation/appkit/nsstatusitem/menu).
-The adapter leaves Tauri's event-listener callback before entering native menu
-tracking and holds no display-state or tray-icon borrow across that nested event
-loop. Primary presses toggle the panel once; releases do not toggle it again.
+The native library owns the menu event loop; the adapter does not manually
+invoke status-button actions. No display-state lock or tray-icon borrow spans
+that nested loop. Primary presses toggle the panel once; releases do not toggle
+it again. Secondary presses hide the panel while the native menu opens.
 The complete tray-handle lifetime stays on the main thread, including lookup,
 cloning, and destruction. Tauri's `Send` wrapper contains tray-icon's non-atomic
 `Rc`; dispatching only its native methods does not make background ownership
@@ -167,11 +169,11 @@ safe. Workers pass application handles, entry IDs, and prepared display data,
 without cloning detailed process lists for native rendering. The existing
 bounded presentation queue preserves snapshot order across preference commits;
 display locks are acquired only after main-thread dispatch. Diagnostic handle
-counts are queued without blocking sampling. A scoped tracking guard rejects
-secondary-menu reentry and resets after dismissal, failure, or cancellation.
+counts are queued without blocking sampling.
 Blur during a primary press over the entry is deferred to the toggle; keyboard
 switching and outside clicks still dismiss it. Preference and locale refreshes
-never reattach a macOS menu. The panel explicitly uses AppKit's
+update the retained menu without attaching it to the status item. The panel
+explicitly uses AppKit's
 [stationary collection behavior](https://developer.apple.com/documentation/appkit/nswindow/collectionbehavior-swift.struct/stationary)
 so Show Desktop cannot sweep a newly opened panel offscreen. This replaces only
 the mutually exclusive Mission Control flags and preserves workspace/fullscreen
