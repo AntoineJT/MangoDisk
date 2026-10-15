@@ -9,7 +9,7 @@ import MdIcon from '@/components/icons/md-icon.vue';
 import MdIconMangodisk from '@/components/icons/md-icon-mangodisk.vue';
 import MdSettingsRow from '@/components/custom/md-settings-row.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogTitle } from '@/components/ui/dialog';
 import MdDialogContent from '@/components/custom/md-dialog-content.vue';
 import MdDialogHeader from '@/components/custom/md-dialog-header.vue';
 import MdDialogFooter from '@/components/custom/md-dialog-footer.vue';
@@ -577,6 +577,7 @@ onBeforeUnmount(() => {
     <Dialog :open="settingsOpen && displayEnabled" @update:open="settingsOpen = $event">
       <MdDialogContent
         class="flex min-h-0 flex-col"
+        :aria-describedby="undefined"
         @interact-outside.prevent
         @escape-key-down="handleDialogEscape"
         @close-auto-focus="restoreConfigurationFocus"
@@ -842,10 +843,7 @@ onBeforeUnmount(() => {
             >
           </p>
         </div>
-        <MdDialogFooter align="between" class="flex-row flex-wrap">
-          <DialogDescription class="min-w-0 flex-1 text-content-secondary">{{
-            t('systemStatus.autoSaveHint')
-          }}</DialogDescription>
+        <MdDialogFooter>
           <Button :disabled="settings.saving" @click="settingsOpen = false">{{ t('systemStatus.done') }}</Button>
         </MdDialogFooter>
       </MdDialogContent>
