@@ -4,6 +4,7 @@ import { defaultRangeExtractor, observeElementRect, useVirtualizer, type Range }
 import { useI18n } from 'vue-i18n';
 import MdApplicationResourceRow from './md-application-resource-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
+import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { ICON_NAMES } from '@/lib/models/ui';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { resourceValue, sortResourceRows, updateResourceRows } from '@/lib/utils/application-resource-list';
@@ -28,6 +29,10 @@ const focusedId = ref<string | null>(null);
 const viewport = ref<HTMLElement | null>(null);
 const rows = shallowRef<ResourceListRow[]>([]);
 const hasHistory = computed(() => props.summary !== null);
+const sampleStatus = computed(
+  () =>
+    `${t('monitoring.previousSample')} · ${t(props.status === 'loading' || props.status === 'stale' ? 'monitoring.updatingApplications' : `systemStatus.${props.status}`)}`
+);
 const largestValue = computed(() =>
   Math.max(0, ...rows.value.filter(r => r.available).map(r => resourceValue(r.application)))
 );
@@ -120,45 +125,50 @@ function measure(element: Element | ComponentPublicInstance | null) {
 <template>
   <section class="application-resources" :aria-label="t('monitoring.applicationName')">
     <div class="sort-columns" role="group" :aria-label="t('monitoring.applicationName')">
-      <button
-        v-for="column in ['name', 'usage'] as const"
-        :key="column"
-        :aria-label="
-          t('monitoring.sortBy', {
-            column: t(
+      <div v-for="column in ['name', 'usage'] as const" :key="column" class="sort-column">
+        <button
+          :aria-label="
+            t('monitoring.sortBy', {
+              column: t(
+                column === 'name'
+                  ? 'monitoring.applicationName'
+                  : metric === 'cpu'
+                    ? 'systemStatus.cpu'
+                    : 'systemStatus.memory'
+              ),
+              direction: t(
+                sort.column === column && sort.direction === 'ascending'
+                  ? 'monitoring.sortDescending'
+                  : column === 'name' || sort.column === column
+                    ? 'monitoring.sortAscending'
+                    : 'monitoring.sortDescending'
+              ),
+            })
+          "
+          :aria-pressed="sort.column === column"
+          @click="chooseSort(column)"
+        >
+          {{
+            t(
               column === 'name'
                 ? 'monitoring.applicationName'
                 : metric === 'cpu'
                   ? 'systemStatus.cpu'
                   : 'systemStatus.memory'
-            ),
-            direction: t(
-              sort.column === column && sort.direction === 'ascending'
-                ? 'monitoring.sortDescending'
-                : column === 'name' || sort.column === column
-                  ? 'monitoring.sortAscending'
-                  : 'monitoring.sortDescending'
-            ),
-          })
-        "
-        :aria-pressed="sort.column === column"
-        @click="chooseSort(column)"
-      >
-        {{
-          t(
-            column === 'name'
-              ? 'monitoring.applicationName'
-              : metric === 'cpu'
-                ? 'systemStatus.cpu'
-                : 'systemStatus.memory'
-          )
-        }}
-        <MdIcon
-          :class="{ 'inactive-arrow': sort.column !== column }"
-          :name="sort.direction === 'ascending' ? ICON_NAMES.chevronUp : ICON_NAMES.chevronDown"
-          :size="12"
-        />
-      </button>
+            )
+          }}
+          <MdIcon
+            :class="{ 'inactive-arrow': sort.column !== column }"
+            :name="sort.direction === 'ascending' ? ICON_NAMES.chevronUp : ICON_NAMES.chevronDown"
+            :size="12"
+          />
+        </button>
+        <MdTooltip v-if="column === 'name' && hasHistory && status !== 'ready'" :text="sampleStatus">
+          <span class="cache-notice" tabindex="0" role="status" :aria-label="sampleStatus">{{
+            t('cpuDetails.cached')
+          }}</span>
+        </MdTooltip>
+      </div>
     </div>
     <p v-if="status !== 'ready' && !hasHistory" class="list-empty" role="status">
       {{ t(status === 'loading' ? 'monitoring.loadingApplications' : `systemStatus.${status}`) }}
@@ -193,10 +203,6 @@ function measure(element: Element | ComponentPublicInstance | null) {
         />
       </ol>
     </div>
-    <p v-if="hasHistory && status !== 'ready'" class="coverage-note" role="status">
-      {{ t('monitoring.previousSample') }} ·
-      {{ t(status === 'loading' || status === 'stale' ? 'monitoring.updatingApplications' : `systemStatus.${status}`) }}
-    </p>
   </section>
 </template>
 
@@ -214,6 +220,12 @@ function measure(element: Element | ComponentPublicInstance | null) {
   justify-content: space-between;
   flex: none;
   margin: 0 12px 4px 0;
+}
+.sort-column {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
 }
 .sort-columns button {
   @apply text-muted-foreground;
@@ -257,12 +269,20 @@ button:focus-visible,
   padding: 20px 0;
   text-align: center;
   font-size: 12px;
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-height: 0;
 }
-.coverage-note {
-  font-size: 10px;
-  line-height: 1.5;
-  opacity: 0.7;
-  margin: 6px 12px 0 0;
+.cache-notice {
+  @apply rounded bg-muted text-muted-foreground;
+  font-size: 9px;
+  padding: 0 4px;
   flex: none;
+  cursor: help;
+}
+.cache-notice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 </style>

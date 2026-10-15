@@ -428,6 +428,7 @@ onBeforeUnmount(() => {
   align-items: center;
   flex-wrap: wrap;
   gap: 4px 12px;
+  flex: none;
 }
 .resource-tabs {
   display: flex;
@@ -470,9 +471,9 @@ onBeforeUnmount(() => {
   --resource-summary-height: 104px;
   --resource-card-gap: 8px;
   @apply bg-background text-foreground;
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 100%;
   border: 1px solid var(--border);
   overflow: hidden;
 }
@@ -514,6 +515,7 @@ button:disabled {
 .monitor-processes {
   /* Extend the scroll viewport through the body's right inset to the window edge. */
   margin-right: -12px;
+  min-height: 100px;
 }
 .resource-details {
   display: flex;
@@ -521,6 +523,10 @@ button:disabled {
   gap: var(--resource-card-gap);
   min-height: 0;
   flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-right: -12px;
+  padding-right: 12px;
 }
 .monitor-panel .detail-summary {
   /* Keep summary geometry consistent across overview and detail tabs. */

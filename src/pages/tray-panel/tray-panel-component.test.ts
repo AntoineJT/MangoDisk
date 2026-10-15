@@ -352,7 +352,10 @@ describe('monitoring panel interactions', () => {
         await wrapper.get('#metric-tab-cpu').trigger('click');
         expect(wrapper.get('.application-row strong').text()).toBe('12.3%');
         expect(wrapper.find('.list-empty').exists()).toBe(false);
-        expect(wrapper.get('.coverage-note').text()).toContain(messages.monitoring.previousSample);
+        expect(wrapper.get('.sort-columns .cache-notice').attributes('aria-label')).toContain(
+          messages.monitoring.previousSample
+        );
+        expect(wrapper.find('.coverage-note').exists()).toBe(false);
       }
       store.accept({
         ...store.reading,
