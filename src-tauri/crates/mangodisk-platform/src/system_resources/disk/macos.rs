@@ -124,6 +124,11 @@ pub fn list() -> PlatformResult<Vec<ResourceVolume>> {
                 })
             };
             result.push(ResourceVolume {
+                file_system: Some(
+                    unsafe { CStr::from_ptr(mount.f_fstypename.as_ptr()) }
+                        .to_string_lossy()
+                        .to_uppercase(),
+                ),
                 id,
                 name,
                 system,

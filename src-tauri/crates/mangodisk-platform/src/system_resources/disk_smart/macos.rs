@@ -5,7 +5,7 @@ use crate::{
 use core_foundation::{
     base::{CFType, CFTypeRef, TCFType},
     boolean::CFBoolean,
-    dictionary::CFMutableDictionaryRef,
+    dictionary::{CFDictionary, CFMutableDictionaryRef},
     string::{CFString, CFStringRef},
     uuid::{CFUUIDBytes, CFUUIDCreateFromUUIDBytes, CFUUIDRef, CFUUID},
 };
@@ -74,7 +74,7 @@ struct AtaInterface {
     revision: u16,
     enable: *const c_void,
     autosave: *const c_void,
-    status: *const c_void,
+    status: Option<unsafe extern "C" fn(*mut c_void, *mut u8) -> i32>,
     offline: *const c_void,
     read: Option<ReadData>,
 }
@@ -108,6 +108,35 @@ fn capable(service: u32, property: &str) -> bool {
         && unsafe { CFType::wrap_under_create_rule(raw) }
             .downcast_into::<CFBoolean>()
             .is_some_and(bool::from)
+}
+
+fn ata_identity(service: u32) -> super::super::disk_health::ata::AtaIdentity {
+    use super::super::disk_health::ata::AtaIdentity;
+    let key = CFString::new("Device Characteristics");
+    let raw = unsafe {
+        IORegistryEntryCreateCFProperty(service, key.as_concrete_TypeRef(), ptr::null(), 0)
+    };
+    if raw.is_null() {
+        return AtaIdentity::default();
+    }
+    let value = unsafe { CFType::wrap_under_create_rule(raw) };
+    let Some(dictionary) = value.downcast_into::<CFDictionary>() else {
+        return AtaIdentity::default();
+    };
+    let text = |name| {
+        let value = dictionary.find(CFString::new(name).as_CFTypeRef())?;
+        let value = unsafe { CFType::wrap_under_get_rule(*value) }
+            .downcast_into::<CFString>()?
+            .to_string();
+        let value = value.trim();
+        (!value.is_empty() && value.len() <= 128 && !value.chars().any(char::is_control))
+            .then(|| value.to_owned())
+    };
+    AtaIdentity {
+        model: text("Product Name"),
+        firmware: text("Product Revision Level"),
+        logical_sector_bytes: None,
+    }
 }
 fn native_error(stage: &str, code: i32) -> PlatformError {
     PlatformError::new(
@@ -184,7 +213,15 @@ fn storage_device(volume: &ResourceVolume) -> PlatformResult<Object> {
     Ok(devices.pop().unwrap())
 }
 
-pub(super) fn read(volume: &ResourceVolume) -> PlatformResult<(f64, DiskTemperatureSource)> {
+fn read_smart(
+    volume: &ResourceVolume,
+    include_health: bool,
+) -> PlatformResult<(
+    [u8; 512],
+    bool,
+    Option<bool>,
+    super::super::disk_health::ata::AtaIdentity,
+)> {
     let service = storage_device(volume)?;
     let nvme = capable(service.0, "NVMe SMART Capable");
     if !nvme && !capable(service.0, "SMART Capable") {
@@ -270,9 +307,44 @@ pub(super) fn read(volume: &ResourceVolume) -> PlatformResult<(f64, DiskTemperat
             "disk_temperature stage=volume_verify outcome=changed",
         ));
     }
+    let prediction = if nvme || !include_health {
+        None
+    } else {
+        let status = unsafe { (**interface.0.cast::<*mut AtaInterface>()).status };
+        status.and_then(|status| {
+            let mut exceeded = 0u8;
+            (unsafe { status(interface.0.cast(), &mut exceeded) } == 0).then_some(exceeded != 0)
+        })
+    };
+    let identity = if !nvme && include_health {
+        ata_identity(service.0)
+    } else {
+        Default::default()
+    };
+    Ok((bytes, nvme, prediction, identity))
+}
+
+pub(super) fn read(volume: &ResourceVolume) -> PlatformResult<(f64, DiskTemperatureSource)> {
+    let (bytes, nvme, _, _) = read_smart(volume, false)?;
     if nvme {
         Ok((nvme_temperature(&bytes)?, DiskTemperatureSource::NvmeSmart))
     } else {
         Ok((ata_temperature(&bytes)?, DiskTemperatureSource::AtaSmart))
     }
+}
+
+pub(super) fn read_health(
+    volume: &ResourceVolume,
+) -> PlatformResult<super::super::disk_health::DiskHealth> {
+    use super::super::disk_health::{self, DiskHealthStatus};
+    let (bytes, nvme, prediction, identity) = read_smart(volume, true)?;
+    if nvme {
+        return disk_health::nvme(volume, &bytes);
+    }
+    let status = match prediction {
+        Some(true) => DiskHealthStatus::Warning,
+        Some(false) => DiskHealthStatus::Healthy,
+        None => DiskHealthStatus::Unknown,
+    };
+    disk_health::ata::read(volume, &bytes, status, identity)
 }

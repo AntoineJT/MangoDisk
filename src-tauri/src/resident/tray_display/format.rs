@@ -856,6 +856,7 @@ mod tests {
         let mut readings = ResourceReadings {
             observed_at_ms: 1000,
             volumes: vec![mangodisk_platform::system_resources::disk::ResourceVolume {
+                file_system: None,
                 id: "disk".into(),
                 name: "System".into(),
                 system: true,
@@ -1371,6 +1372,7 @@ mod tests {
         use mangodisk_platform::system_resources::disk::{ResourceVolume, VolumeCapacity};
         let value = disk::usage(
             ResourceVolume {
+                file_system: None,
                 id: "test".into(),
                 name: "Test".into(),
                 system: true,

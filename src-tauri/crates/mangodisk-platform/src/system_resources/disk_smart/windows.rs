@@ -142,7 +142,7 @@ fn storage_temperature(bytes: &[u8]) -> PlatformResult<f64> {
     for sensor in bytes[header..size].as_chunks::<16>().0.iter().take(count) {
         let index = u16::from_le_bytes(sensor[..2].try_into().unwrap());
         let value = f64::from(i16::from_le_bytes(sensor[2..4].try_into().unwrap()));
-        if !super::valid_celsius(value) {
+        if !super::super::disk_temperature::valid_celsius(value) {
             continue;
         }
         if index == 0 {
@@ -151,6 +151,67 @@ fn storage_temperature(bytes: &[u8]) -> PlatformResult<f64> {
         maximum = Some(maximum.map_or(value, |previous| previous.max(value)));
     }
     maximum.ok_or_else(|| unsupported("temperature_sensor"))
+}
+
+fn ata_identity(bytes: &[u8]) -> super::super::disk_health::ata::AtaIdentity {
+    use super::super::disk_health::ata::AtaIdentity;
+    // Descriptor strings may start at the flexible array, before C tail padding.
+    let minimum = offset_of!(STORAGE_DEVICE_DESCRIPTOR, RawDeviceProperties);
+    if bytes.len() < minimum {
+        return AtaIdentity::default();
+    }
+    let size = u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize;
+    let version = u32::from_le_bytes(bytes[..4].try_into().unwrap()) as usize;
+    if version < minimum || size < minimum || size > bytes.len() {
+        return AtaIdentity::default();
+    }
+    let text = |field| {
+        let offset = u32::from_le_bytes(bytes[field..field + 4].try_into().unwrap()) as usize;
+        if offset < minimum || offset >= size {
+            return None;
+        }
+        let value = &bytes[offset..size];
+        let end = value.iter().position(|byte| *byte == 0)?;
+        if end > 128
+            || value[..end]
+                .iter()
+                .any(|byte| !byte.is_ascii() || byte.is_ascii_control())
+        {
+            return None;
+        }
+        let value = std::str::from_utf8(&value[..end]).ok()?.trim();
+        (!value.is_empty()).then(|| value.to_owned())
+    };
+    AtaIdentity {
+        model: text(offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset)),
+        firmware: text(offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductRevisionOffset)),
+        logical_sector_bytes: None,
+    }
+}
+
+fn logical_sector_bytes(handle: &Handle) -> Option<u32> {
+    let mut query = [0u8; 12];
+    query[..4].copy_from_slice(&StorageAccessAlignmentProperty.to_le_bytes());
+    let bytes = ioctl(
+        handle,
+        IOCTL_STORAGE_QUERY_PROPERTY,
+        &query,
+        "health_sector_size",
+    )
+    .ok()?;
+    let minimum = size_of::<STORAGE_ACCESS_ALIGNMENT_DESCRIPTOR>();
+    if bytes.len() < minimum {
+        return None;
+    }
+    let size = u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize;
+    let version = u32::from_le_bytes(bytes[..4].try_into().unwrap()) as usize;
+    if version < minimum || size < minimum || size > bytes.len() {
+        return None;
+    }
+    let offset = offset_of!(STORAGE_ACCESS_ALIGNMENT_DESCRIPTOR, BytesPerLogicalSector);
+    Some(u32::from_le_bytes(
+        bytes[offset..offset + 4].try_into().unwrap(),
+    ))
 }
 pub(super) fn read(volume: &ResourceVolume) -> PlatformResult<(f64, DiskTemperatureSource)> {
     let number = device_number(volume)?;
@@ -221,6 +282,11 @@ fn read_device(handle: &Handle, number: u32) -> PlatformResult<(f64, DiskTempera
     if bus != BusTypeNvme {
         return Err(unsupported("storage_bus"));
     }
+    let bytes = read_nvme_log(handle)?;
+    Ok((nvme_temperature(&bytes)?, DiskTemperatureSource::NvmeSmart))
+}
+
+fn read_nvme_log(handle: &Handle) -> PlatformResult<Vec<u8>> {
     let mut input = vec![
         0u8;
         offset_of!(STORAGE_PROPERTY_QUERY, AdditionalParameters)
@@ -245,10 +311,7 @@ fn read_device(handle: &Handle, number: u32) -> PlatformResult<(f64, DiskTempera
     };
     input[8..8 + protocol_bytes.len()].copy_from_slice(protocol_bytes);
     let bytes = ioctl(handle, IOCTL_STORAGE_QUERY_PROPERTY, &input, "nvme_log")?;
-    Ok((
-        nvme_log_temperature(&bytes)?,
-        DiskTemperatureSource::NvmeSmart,
-    ))
+    Ok(nvme_log(&bytes)?.to_vec())
 }
 
 fn prediction_temperature(bytes: &[u8]) -> PlatformResult<f64> {
@@ -264,7 +327,116 @@ fn prediction_temperature(bytes: &[u8]) -> PlatformResult<f64> {
     ata_temperature(&bytes[start..start + 512])
 }
 
-fn nvme_log_temperature(bytes: &[u8]) -> PlatformResult<f64> {
+pub(super) fn read_health(
+    volume: &ResourceVolume,
+) -> PlatformResult<super::super::disk_health::DiskHealth> {
+    use super::super::disk_health::{self, DiskHealth, DiskHealthStatus};
+    let number = device_number(volume)?;
+    let handle = open(&format!("\\\\.\\PhysicalDrive{number}"), 0, "health_open")?;
+    let mut query = [0u8; 12];
+    query[..4].copy_from_slice(&StorageDeviceProperty.to_le_bytes());
+    let descriptor = ioctl(&handle, IOCTL_STORAGE_QUERY_PROPERTY, &query, "health_bus")?;
+    let offset = offset_of!(STORAGE_DEVICE_DESCRIPTOR, BusType);
+    let bus = descriptor
+        .get(offset..offset + 4)
+        .map(|bytes| i32::from_le_bytes(bytes.try_into().unwrap()))
+        .ok_or_else(|| unsupported("health_bus_length"))?;
+    let detailed = if bus == BusTypeNvme {
+        read_nvme_log(&handle).and_then(|bytes| disk_health::nvme(volume, &bytes))
+    } else {
+        ioctl(
+            &handle,
+            IOCTL_STORAGE_PREDICT_FAILURE,
+            &[],
+            "health_prediction",
+        )
+        .and_then(|bytes| {
+            if bytes.len() != size_of::<STORAGE_PREDICT_FAILURE>() {
+                return Err(PlatformError::new(
+                    PlatformErrorCode::InvalidData,
+                    "disk_health stage=prediction invalid_length",
+                ));
+            }
+            let status = if u32::from_le_bytes(bytes[..4].try_into().unwrap()) == 0 {
+                DiskHealthStatus::Healthy
+            } else {
+                DiskHealthStatus::Warning
+            };
+            // SCSI failure-prediction payloads are vendor data, not ATA attribute tables.
+            if bus != BusTypeAta && bus != BusTypeSata {
+                return Ok(DiskHealth::basic(
+                    volume,
+                    status,
+                    DiskTemperatureSource::WindowsStorage,
+                ));
+            }
+            let mut identity = ata_identity(&descriptor);
+            identity.logical_sector_bytes = logical_sector_bytes(&handle);
+            let start = offset_of!(STORAGE_PREDICT_FAILURE, VendorSpecific);
+            disk_health::ata::read(volume, &bytes[start..start + 512], status, identity)
+        })
+    };
+    let result = match detailed {
+        Ok(value) => value,
+        Err(error) if error.code() == PlatformErrorCode::InvalidData => return Err(error),
+        Err(_) => {
+            query[..4].copy_from_slice(&StorageDeviceManagementStatus.to_le_bytes());
+            let bytes = ioctl(
+                &handle,
+                IOCTL_STORAGE_QUERY_PROPERTY,
+                &query,
+                "health_management",
+            )?;
+            management_health(volume, &bytes)?
+        }
+    };
+    if device_number(volume)? != number {
+        return Err(PlatformError::item_changed(
+            "disk_health stage=volume_verify physical_device_changed",
+        ));
+    }
+    Ok(result)
+}
+
+fn management_health(
+    volume: &ResourceVolume,
+    bytes: &[u8],
+) -> PlatformResult<super::super::disk_health::DiskHealth> {
+    use super::super::disk_health::{DiskHealth, DiskHealthStatus};
+    let invalid = || {
+        PlatformError::new(
+            PlatformErrorCode::InvalidData,
+            "disk_health stage=management invalid_descriptor",
+        )
+    };
+    let minimum = offset_of!(STORAGE_DEVICE_MANAGEMENT_STATUS, AdditionalReasons);
+    if bytes.len() < minimum {
+        return Err(invalid());
+    }
+    let word = |offset| u32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap());
+    let size = word(4) as usize;
+    if word(0) < minimum as u32 || size < minimum || size > bytes.len() || word(12) > 16 {
+        return Err(invalid());
+    }
+    let reasons = word(16) as usize;
+    if reasons > (size - minimum) / size_of::<STORAGE_OPERATIONAL_REASON>() {
+        return Err(invalid());
+    }
+    let status = match word(8) as i32 {
+        value if value == DiskHealthHealthy => DiskHealthStatus::Healthy,
+        value if value == DiskHealthWarning => DiskHealthStatus::Warning,
+        value if value == DiskHealthUnhealthy => DiskHealthStatus::Unhealthy,
+        value if value == DiskHealthUnknown => DiskHealthStatus::Unknown,
+        _ => return Err(invalid()),
+    };
+    Ok(DiskHealth::basic(
+        volume,
+        status,
+        DiskTemperatureSource::WindowsStorage,
+    ))
+}
+
+fn nvme_log(bytes: &[u8]) -> PlatformResult<&[u8]> {
     let invalid = || {
         PlatformError::new(
             PlatformErrorCode::InvalidData,
@@ -294,7 +466,12 @@ fn nvme_log_temperature(bytes: &[u8]) -> PlatformResult<f64> {
     let log = bytes
         .get(offset..offset.checked_add(512).ok_or_else(invalid)?)
         .ok_or_else(invalid)?;
-    nvme_temperature(log)
+    Ok(log)
+}
+
+#[cfg(test)]
+fn nvme_log_temperature(bytes: &[u8]) -> PlatformResult<f64> {
+    nvme_temperature(nvme_log(bytes)?)
 }
 
 fn read_ata(number: u32) -> PlatformResult<f64> {
@@ -332,6 +509,79 @@ fn read_ata(number: u32) -> PlatformResult<f64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn identity_strings_are_bounded_and_never_read_serial_or_unterminated_data() {
+        let minimum = size_of::<STORAGE_DEVICE_DESCRIPTOR>();
+        let mut bytes = vec![0; minimum + 48];
+        bytes[..4].copy_from_slice(&(minimum as u32).to_le_bytes());
+        let size = bytes.len() as u32;
+        bytes[4..8].copy_from_slice(&size.to_le_bytes());
+        let product = offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset);
+        let firmware = offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductRevisionOffset);
+        bytes[product..product + 4].copy_from_slice(&(minimum as u32).to_le_bytes());
+        bytes[firmware..firmware + 4].copy_from_slice(&((minimum + 24) as u32).to_le_bytes());
+        bytes[minimum..minimum + 17].copy_from_slice(b"Acer AS500A 128G ");
+        bytes[minimum + 24..minimum + 31].copy_from_slice(b"Q1115A0");
+        let identity = ata_identity(&bytes);
+        assert_eq!(identity.model.as_deref(), Some("Acer AS500A 128G"));
+        assert_eq!(identity.firmware.as_deref(), Some("Q1115A0"));
+        assert!(ata_identity(&bytes[..minimum - 1]).model.is_none());
+        bytes[minimum] = b'\n';
+        assert!(ata_identity(&bytes).model.is_none());
+        bytes[minimum..].fill(b'A');
+        assert!(ata_identity(&bytes).model.is_none());
+        bytes[product..product + 4].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(ata_identity(&bytes).model.is_none());
+        bytes[4..8].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(ata_identity(&bytes).firmware.is_none());
+    }
+    #[test]
+    fn identity_accepts_strings_immediately_after_the_flexible_array_header() {
+        let header = offset_of!(STORAGE_DEVICE_DESCRIPTOR, RawDeviceProperties);
+        let model = b"Acer AS500A 128G\0";
+        let mut bytes = vec![0; header + model.len()];
+        bytes[..4].copy_from_slice(&(size_of::<STORAGE_DEVICE_DESCRIPTOR>() as u32).to_le_bytes());
+        let size = bytes.len() as u32;
+        bytes[4..8].copy_from_slice(&size.to_le_bytes());
+        let product = offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset);
+        bytes[product..product + 4].copy_from_slice(&(header as u32).to_le_bytes());
+        bytes[header..].copy_from_slice(model);
+        assert_eq!(
+            ata_identity(&bytes).model.as_deref(),
+            Some("Acer AS500A 128G")
+        );
+    }
+    #[test]
+    fn management_only_health_validates_bounds_and_keeps_unknown_distinct_from_healthy() {
+        use super::super::super::disk_health::DiskHealthStatus;
+        let volume = ResourceVolume {
+            file_system: None,
+            id: "volume".into(),
+            name: "Disk".into(),
+            system: true,
+            mount_point: "C:\\".into(),
+        };
+        let minimum = offset_of!(STORAGE_DEVICE_MANAGEMENT_STATUS, AdditionalReasons);
+        let mut bytes = vec![0u8; minimum];
+        bytes[..4].copy_from_slice(&(minimum as u32).to_le_bytes());
+        bytes[4..8].copy_from_slice(&(minimum as u32).to_le_bytes());
+        assert_eq!(
+            management_health(&volume, &bytes).unwrap().status,
+            DiskHealthStatus::Unknown
+        );
+        bytes[8..12].copy_from_slice(&(DiskHealthHealthy as u32).to_le_bytes());
+        let result = management_health(&volume, &bytes).unwrap();
+        assert_eq!(result.status, DiskHealthStatus::Healthy);
+        assert_eq!(result.source, DiskTemperatureSource::WindowsStorage);
+        assert!(result.percentage_used.is_none());
+        assert!(result.total_written_bytes.is_none());
+        for (offset, value) in [(0, 0), (4, u32::MAX), (8, 99), (12, 17), (16, u32::MAX)] {
+            let mut invalid = bytes.clone();
+            invalid[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
+            assert!(management_health(&volume, &invalid).is_err());
+        }
+        assert!(management_health(&volume, &bytes[..minimum - 1]).is_err());
+    }
     #[test]
     fn storage_prediction_reads_valid_smart_without_data_access_and_keeps_integrity_checks() {
         assert_eq!((IOCTL_STORAGE_PREDICT_FAILURE >> 14) & 3, 0);

@@ -76,15 +76,16 @@ pub fn list() -> PlatformResult<Vec<ResourceVolume>> {
                 // DRIVE_REMOVABLE and DRIVE_FIXED only; never query an SMB share.
                 if matches!(GetDriveTypeW(paths.as_ptr()), 2 | 3) {
                     let mut label = [0u16; 261];
-                    GetVolumeInformationW(
+                    let mut file_system = [0u16; 32];
+                    let metadata_valid = GetVolumeInformationW(
                         identity.as_ptr(),
                         label.as_mut_ptr(),
                         label.len() as _,
                         ptr::null_mut(),
                         ptr::null_mut(),
                         ptr::null_mut(),
-                        ptr::null_mut(),
-                        0,
+                        file_system.as_mut_ptr(),
+                        file_system.len() as _,
                     );
                     let label = text(&label);
                     let name = if label.is_empty() {
@@ -93,6 +94,8 @@ pub fn list() -> PlatformResult<Vec<ResourceVolume>> {
                         format!("{label} ({mount_point})")
                     };
                     volumes.push(ResourceVolume {
+                        file_system: (metadata_valid != 0 && !text(&file_system).is_empty())
+                            .then(|| text(&file_system)),
                         system: id.eq_ignore_ascii_case(&system),
                         id,
                         name,

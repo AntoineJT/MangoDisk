@@ -18,6 +18,7 @@ pub struct ResourceVolume {
     pub id: String,
     pub name: String,
     pub system: bool,
+    pub file_system: Option<String>,
     #[serde(skip)]
     pub mount_point: String,
 }

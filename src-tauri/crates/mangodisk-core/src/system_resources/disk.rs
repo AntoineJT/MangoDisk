@@ -39,6 +39,7 @@ mod tests {
     use super::*;
     fn volume(id: &str, system: bool) -> ResourceVolume {
         ResourceVolume {
+            file_system: None,
             id: id.into(),
             name: "Disk".into(),
             system,
