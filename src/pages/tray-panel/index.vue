@@ -11,6 +11,8 @@ import { OperatingSystemService } from '@/lib/services/operating-system-service'
 import { type MetricId } from '@/lib/models/system-resources';
 import MdResourceOverview from './components/md-resource-overview.vue';
 import MdCpuDetails from './components/md-cpu-details.vue';
+import MdDiskDetails from './components/md-disk-details.vue';
+import MdNetworkDetails from './components/md-network-details.vue';
 import MdGpuDetails from './components/md-gpu-details.vue';
 import MdMemoryOverview from './components/md-memory-overview.vue';
 import MdApplicationResourceList from './components/md-application-resource-list.vue';
@@ -33,8 +35,9 @@ const temperatureEnabled = computed(
 );
 const temperatureSupported = computed(
   () =>
-    !OperatingSystemService.isWindows() ||
-    (windowsMonitoring.observation !== null && windowsMonitoring.observation.state !== 'unsupportedHardware')
+    !OperatingSystemService.isLinux() &&
+    (!OperatingSystemService.isWindows() ||
+      (windowsMonitoring.observation !== null && windowsMonitoring.observation.state !== 'unsupportedHardware'))
 );
 const appStore = useAppStore();
 const memorySettings = useMemoryReleaseStore();
@@ -65,19 +68,17 @@ const panel = ref<HTMLElement | null>(null);
 // Native visibility controls rendering: Windows can reveal an unfocused popup,
 // and hiding it does not consistently update document.hidden in WebView2.
 const panelVisible = ref(false);
-// Native metric entries select the same detail tabs as the overview cards.
+// Overview is a panel page, not another sampled metric.
+const overviewSelected = ref(false);
 const selectedTab = computed(() =>
-  store.selectedMetric === 'memory'
-    ? 'memory'
-    : store.selectedMetric === 'cpu'
-      ? 'cpu'
-      : store.selectedMetric === 'gpu' && !OperatingSystemService.isLinux()
-        ? 'gpu'
-        : 'overview'
+  overviewSelected.value ||
+  (OperatingSystemService.isLinux() && store.selectedMetric !== 'cpu' && store.selectedMetric !== 'memory')
+    ? 'overview'
+    : store.selectedMetric
 );
-const tabs: readonly ('overview' | 'cpu' | 'gpu' | 'memory')[] = OperatingSystemService.isLinux()
+const tabs: readonly ('overview' | MetricId)[] = OperatingSystemService.isLinux()
   ? ['overview', 'cpu', 'memory']
-  : ['overview', 'cpu', 'gpu', 'memory'];
+  : ['overview', 'cpu', 'gpu', 'memory', 'disk', 'network'];
 // Group activity trends before capacity readings without changing native display order.
 const overviewMetrics = OperatingSystemService.isLinux()
   ? (['cpu', 'memory', 'disk', 'network'] as const)
@@ -97,6 +98,7 @@ watch(
 );
 let disposed = false;
 const disposers: (() => void)[] = [];
+
 function retain(dispose: () => void) {
   if (disposed) dispose();
   else disposers.push(dispose);
@@ -112,11 +114,13 @@ async function act(action: () => Promise<void>) {
 let metricRevision = 0;
 function selectMetric(metric: MetricId) {
   metricRevision += 1;
+  overviewSelected.value = false;
   store.selectedMetric = metric;
   void act(() => ResidentService.selectMetric(metric));
 }
 function selectTab(tab: (typeof tabs)[number]) {
   selectMetric(tab === 'overview' ? 'network' : tab);
+  overviewSelected.value = tab === 'overview';
 }
 function moveTab(direction: number) {
   const next = tabs[(tabs.indexOf(selectedTab.value) + direction + tabs.length) % tabs.length]!;
@@ -155,6 +159,7 @@ async function connect() {
         await ResidentService.onPanelMetric(metric => {
           if (!disposed) {
             metricRevision += 1;
+            overviewSelected.value = false;
             store.selectedMetric = metric;
           }
         })
@@ -246,7 +251,7 @@ onBeforeUnmount(() => {
   <main ref="panel" class="monitor-panel" tabindex="-1" :aria-label="t('monitoring.title')">
     <div class="monitor-body">
       <div class="resource-header">
-        <div class="resource-tabs" role="tablist" :aria-label="t('systemStatus.details')">
+        <div class="resource-tabs scrollbar-hidden" role="tablist" :aria-label="t('systemStatus.details')">
           <button
             v-for="tab in tabs"
             :id="`metric-tab-${tab}`"
@@ -267,7 +272,11 @@ onBeforeUnmount(() => {
                     ? 'systemStatus.cpu'
                     : tab === 'gpu'
                       ? 'systemStatus.gpu'
-                      : 'systemStatus.memoryManagement'
+                      : tab === 'memory'
+                        ? 'systemStatus.memory'
+                        : tab === 'disk'
+                          ? 'systemStatus.disk'
+                          : 'systemStatus.network'
               )
             }}
           </button>
@@ -287,12 +296,14 @@ onBeforeUnmount(() => {
           class="detail-summary"
           :active="panelVisible"
           :metric="metric"
-          :interactive="metric === 'cpu' || metric === 'gpu' || metric === 'memory'"
+          :interactive="!OperatingSystemService.isLinux() || metric === 'cpu' || metric === 'memory'"
           :reading="store.reading"
           @cleanup="navigate('cleanup')"
           @memory="selectTab('memory')"
           @cpu="selectTab('cpu')"
           @gpu="selectTab('gpu')"
+          @disk="selectTab('disk')"
+          @network="selectTab('network')"
         />
       </section>
       <section
@@ -303,6 +314,21 @@ onBeforeUnmount(() => {
         aria-labelledby="metric-tab-gpu"
       >
         <MdGpuDetails :reading="store.reading" :active="panelVisible" />
+      </section>
+      <section
+        v-if="selectedTab === 'disk' || selectedTab === 'network'"
+        id="metric-details"
+        class="resource-details"
+        role="tabpanel"
+        :aria-labelledby="`metric-tab-${selectedTab}`"
+      >
+        <MdDiskDetails
+          v-if="selectedTab === 'disk'"
+          :reading="store.reading"
+          :active="panelVisible"
+          @cleanup="navigate('cleanup')"
+        />
+        <MdNetworkDetails v-else :reading="store.reading" :active="panelVisible" />
       </section>
       <div v-if="store.error" class="monitor-notice" role="alert">
         {{ t('monitoring.unavailable') }} <button @click="refresh()">{{ t('monitoring.refresh') }}</button>
@@ -433,14 +459,18 @@ onBeforeUnmount(() => {
 .resource-tabs {
   display: flex;
   justify-content: flex-start;
-  gap: 20px;
-  flex: none;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
   height: 28px;
 }
 .resource-tabs button {
   @apply text-muted-foreground;
   position: relative;
   padding: 0 0 4px;
+  flex: none;
+  white-space: nowrap;
   font-size: 12px;
   font-weight: 500;
   background: transparent;
@@ -548,7 +578,7 @@ button:disabled {
   grid-column: 1 / -1;
 }
 .detail-summary :deep(.resource-trend) {
-  height: 28px;
+  height: var(--resource-trend-height, 28px);
 }
 .monitor-loading {
   @apply text-muted-foreground;

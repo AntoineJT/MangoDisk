@@ -322,6 +322,9 @@ describe('resource details', () => {
         global: { plugins: [createI18n({ legacy: false, locale: 'test', messages: { test: messages } })] },
       });
       expect(wrapper.get('.cleanup-link').text()).toContain(messages.navigation.cleanup);
+      expect(wrapper.find('.cleanup-button').exists()).toBe(false);
+      await wrapper.setProps({ cleanupVariant: 'button' });
+      expect(wrapper.find('.cleanup-button').exists()).toBe(true);
       expect(wrapper.get('.resource-meta').text()).toContain('75 B / 100 B');
       expect(wrapper.get('[role="meter"]').attributes('aria-valuenow')).toBe('25');
       await wrapper.get('.cleanup-link').trigger('click');

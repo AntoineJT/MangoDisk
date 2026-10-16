@@ -4101,8 +4101,6 @@
     "displayHint": "Veja uso e temperaturas da CPU e GPU, memória, disco e rede",
     "linuxDisplayHint": "Veja dados de CPU, memória, velocidade de rede e disco",
     "overview": "Visão geral",
-    "memoryManagement": "Memória",
-    "memoryDetails": "Ver aplicativos",
     "write": "Gravação",
     "read": "Leitura",
     "allDisks": "Todos os discos",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "Autor: {author}"
+  },
+  "diskHealth": {
+    "title": "Saúde do disco",
+    "healthy": "Nenhum problema relatado",
+    "warning": "Aviso",
+    "unhealthy": "Anormal",
+    "unknown": "Desconhecido",
+    "unavailable": "Indisponível",
+    "written": "Total gravado",
+    "powerOnHours": "Tempo ligado",
+    "hoursUnit": "h",
+    "smartHint": "O estado vem dos dados SMART do dispositivo e não garante ausência de falhas",
+    "systemHint": "Estado informado pelo Windows. Os dados SMART detalhados estão indisponíveis",
+    "basicHint": "Não há um percentual de vida útil restante reconhecido",
+    "unavailableHint": "O dispositivo ou a conexão não fornece dados de saúde legíveis",
+    "wearHint": "100 menos o desgaste estimado pelo fabricante, com mínimo de 0%. Não prevê falhas",
+    "read": "Total lido",
+    "powerCycles": "Ciclos de energia",
+    "spare": "Reserva disponível",
+    "criticalWarning": "Avisos críticos",
+    "none": "Nenhum",
+    "mediaErrors": "Erros de mídia",
+    "temperature": "Temperatura",
+    "healthPercent": "Saúde",
+    "cachedHint": "Exibindo a última leitura de saúde enquanto ela é atualizada em segundo plano"
+  },
+  "networkDetails": {
+    "title": "Detalhes da conexão",
+    "received": "Baixado nesta sessão",
+    "transmitted": "Enviado nesta sessão",
+    "sessionHint": "Tráfego durante o monitoramento desta interface. A troca de interface reinicia o total; pausas e intervalos sem dados são excluídos",
+    "linkHint": "A velocidade de conexão é a taxa do link informada pelo sistema, não a velocidade da internet",
+    "status": "Status",
+    "connected": "Conectado",
+    "hardwareAddress": "Endereço MAC atual",
+    "standard": "Padrão Wi-Fi",
+    "channel": "Canal",
+    "wifiLinkHint": "Taxa de transmissão Wi-Fi negociada, não a velocidade da internet"
+  },
+  "diskDetails": {
+    "activity": "Atividade do disco",
+    "systemRead": "Leitura do sistema",
+    "systemWritten": "Gravação do sistema",
+    "systemHint": "Contadores de dispositivos do sistema para todos os discos, distintos dos totais de vida útil SMART"
   }
 }

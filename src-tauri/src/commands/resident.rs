@@ -58,7 +58,7 @@ pub fn resident_get_panel_metric(
 
 #[tauri::command]
 pub fn resident_select_metric(app: tauri::AppHandle, metric: MetricId) {
-    resident::panel::select_metric(&app, metric);
+    resident::panel::set_metric(&app, metric);
 }
 
 #[tauri::command]

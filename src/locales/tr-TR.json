@@ -4101,8 +4101,6 @@
     "displayHint": "CPU ve GPU kullanımı ve sıcaklıkları, bellek, disk ve ağ hızını görüntüleyin",
     "linuxDisplayHint": "CPU, bellek, ağ hızı ve disk verilerini görüntüleyin",
     "overview": "Genel bakış",
-    "memoryManagement": "Bellek",
-    "memoryDetails": "Uygulamaları görüntüle",
     "write": "Yazma",
     "read": "Okuma",
     "allDisks": "Tüm diskler",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "Yazar: {author}"
+  },
+  "diskHealth": {
+    "title": "Disk sağlığı",
+    "healthy": "Sorun bildirilmedi",
+    "warning": "Uyarı",
+    "unhealthy": "Anormal",
+    "unknown": "Bilinmiyor",
+    "unavailable": "Kullanılamıyor",
+    "written": "Toplam yazılan",
+    "powerOnHours": "Çalışma süresi",
+    "hoursUnit": "sa",
+    "smartHint": "Bu durum aygıtın SMART verilerinden gelir ve arıza olmayacağını garanti etmez",
+    "systemHint": "Windows tarafından bildirilen aygıt durumu. Ayrıntılı SMART verileri kullanılamıyor",
+    "basicHint": "Tanınan bir kalan ömür yüzdesi mevcut değil",
+    "unavailableHint": "Aygıt veya bağlantı okunabilir sağlık verileri sağlamıyor",
+    "wearHint": "100 eksi üreticinin tahmini yıpranma oranı; en az %0. Arıza tahmini değildir",
+    "read": "Toplam okunan",
+    "powerCycles": "Güç döngüleri",
+    "spare": "Kullanılabilir yedek",
+    "criticalWarning": "Kritik uyarılar",
+    "none": "Yok",
+    "mediaErrors": "Ortam hataları",
+    "temperature": "Sıcaklık",
+    "healthPercent": "Sağlık",
+    "cachedHint": "Arka planda güncellenirken son sağlık verileri gösteriliyor"
+  },
+  "networkDetails": {
+    "title": "Bağlantı ayrıntıları",
+    "received": "Bu oturumda indirilen",
+    "transmitted": "Bu oturumda yüklenen",
+    "sessionHint": "Bu arayüz izlenirken biriken trafik. Arayüz değişince toplam sıfırlanır; duraklamalar ve veri alınamayan aralıklar sayılmaz",
+    "linkHint": "Bağlantı hızı sistemin bildirdiği hat hızıdır, gerçek internet hızı değildir",
+    "status": "Durum",
+    "connected": "Bağlı",
+    "hardwareAddress": "Geçerli MAC adresi",
+    "standard": "Wi-Fi standardı",
+    "channel": "Kanal",
+    "wifiLinkHint": "Geçerli Wi-Fi gönderim bağlantı hızı, internet hızı değildir"
+  },
+  "diskDetails": {
+    "activity": "Disk etkinliği",
+    "systemRead": "Sistem okuması",
+    "systemWritten": "Sistem yazması",
+    "systemHint": "Tüm disklerin işletim sistemi sayaçlarıdır; SMART kullanım ömrü toplamlarından ayrıdır"
   }
 }

@@ -4101,8 +4101,6 @@
     "displayHint": "查看 CPU、GPU 使用率與溫度，以及記憶體、磁碟和網速",
     "linuxDisplayHint": "查看 CPU、記憶體、網速與磁碟使用情況",
     "overview": "概覽",
-    "memoryManagement": "記憶體",
-    "memoryDetails": "查看應用程式",
     "write": "寫入",
     "read": "讀取",
     "allDisks": "全部磁碟",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "作者：{author}"
+  },
+  "diskHealth": {
+    "title": "磁碟健康",
+    "healthy": "未回報異常",
+    "warning": "警告",
+    "unhealthy": "異常",
+    "unknown": "未知",
+    "unavailable": "無法取得",
+    "written": "累計寫入",
+    "powerOnHours": "通電時間",
+    "hoursUnit": "小時",
+    "smartHint": "此狀態來自裝置 SMART 資料，不保證磁碟不會故障",
+    "systemHint": "僅為 Windows 回報的裝置狀態，無法取得詳細 SMART 資料",
+    "basicHint": "目前沒有可辨識的壽命百分比",
+    "unavailableHint": "裝置或連線方式未提供可讀取的健康資料",
+    "wearHint": "健康度為 100 減去廠商估算的壽命消耗，最低為 0%；不代表故障預測",
+    "read": "累計讀取",
+    "powerCycles": "電源循環",
+    "spare": "可用備用空間",
+    "criticalWarning": "嚴重警告",
+    "none": "無",
+    "mediaErrors": "媒體錯誤",
+    "temperature": "溫度",
+    "healthPercent": "健康度",
+    "cachedHint": "顯示上次讀取的健康資料，正在背景更新"
+  },
+  "networkDetails": {
+    "title": "連線詳細資訊",
+    "received": "本次下載",
+    "transmitted": "本次上傳",
+    "sessionHint": "累計目前介面的監測流量；切換介面重新累計，暫停及資料無法取得期間不計入",
+    "linkHint": "連線速率由系統回報，不代表實際網際網路速度",
+    "status": "狀態",
+    "connected": "已連線",
+    "hardwareAddress": "目前 MAC 位址",
+    "standard": "Wi-Fi 標準",
+    "channel": "頻道",
+    "wifiLinkHint": "目前協商的 Wi-Fi 傳送速率，不代表網際網路速度"
+  },
+  "diskDetails": {
+    "activity": "磁碟活動",
+    "systemRead": "系統累計讀取",
+    "systemWritten": "系統累計寫入",
+    "systemHint": "作業系統回報的所有磁碟裝置計數，與 SMART 壽命累計值不同"
   }
 }

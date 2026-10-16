@@ -1,19 +1,24 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import MdCopyButton from '@/components/custom/md-copy-button.vue';
 defineProps<{
-  facts: { key: string; label: string; value: string; unit: string; cached?: boolean }[];
+  layout?: 'tiles' | 'rows';
+  facts: { key: string; label: string; value: string; unit: string; cached?: boolean; copy?: boolean }[];
 }>();
 const { t } = useI18n({ useScope: 'global' });
 </script>
 <template>
-  <dl v-if="facts.length" class="resource-facts" :class="{ compact: facts.length === 1 }">
+  <dl v-if="facts.length" class="resource-facts" :class="{ compact: facts.length === 1, rows: layout === 'rows' }">
     <div v-for="fact in facts" :key="fact.key" class="resource-fact">
       <dt>
         <span>{{ fact.label }}</span>
         <span v-if="fact.cached" class="cached">{{ t('cpuDetails.cached') }}</span>
       </dt>
       <dd>
-        {{ fact.value }}<small v-if="fact.unit">{{ fact.unit }}</small>
+        <MdCopyButton v-if="fact.copy && fact.value !== '—'" :text="fact.value" :label="fact.label" show-text />
+        <template v-else
+          >{{ fact.value }}<small v-if="fact.unit">{{ fact.unit }}</small></template
+        >
       </dd>
     </div>
   </dl>
@@ -69,5 +74,31 @@ small {
 .compact dd {
   margin-top: 0;
   flex: none;
+}
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.rows .resource-fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+  border-radius: 0;
+  background: transparent;
+}
+.rows dt {
+  font-size: 11px;
+  flex: none;
+}
+.rows dd {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  max-width: 72%;
+  overflow-wrap: anywhere;
 }
 </style>

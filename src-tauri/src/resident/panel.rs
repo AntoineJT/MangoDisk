@@ -12,12 +12,17 @@ pub const METRIC_EVENT: &str = "resident-panel-metric";
 pub const VISIBILITY_EVENT: &str = "resident-panel-visibility";
 
 pub fn select_metric(app: &tauri::AppHandle, metric: MetricId) {
+    set_metric(app, metric);
+    let _ = app.emit_to(PANEL_LABEL, METRIC_EVENT, metric);
+}
+
+/// A frontend selection already updates that panel; native shortcuts also notify it.
+pub fn set_metric(app: &tauri::AppHandle, metric: MetricId) {
     let state = app.state::<Arc<ResidentState>>();
     *state
         .panel_metric
         .lock()
         .unwrap_or_else(|error| error.into_inner()) = metric;
-    let _ = app.emit_to(PANEL_LABEL, METRIC_EVENT, metric);
     if metric == MetricId::Cpu && state.panel_open.load(Ordering::Relaxed) {
         state.refresh_cpu_processes();
     } else {
@@ -56,7 +61,7 @@ pub fn toggle_from(
         .lock()
         .unwrap_or_else(|error| error.into_inner());
     let selected = entry_selection(previous, metric, was_open);
-    if selected != previous {
+    if selected != previous || (was_open && metric.is_some()) {
         select_metric(app, selected);
     }
     log::info!("resident_panel_entry source={source} switching={was_open} metric={selected:?}");

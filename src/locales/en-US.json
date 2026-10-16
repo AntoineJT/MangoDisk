@@ -4101,8 +4101,6 @@
     "displayHint": "View CPU and GPU usage and temperatures, memory, disk, and network",
     "linuxDisplayHint": "View CPU, memory, network speed and disk stats",
     "overview": "Overview",
-    "memoryManagement": "Memory",
-    "memoryDetails": "View apps",
     "write": "Write",
     "read": "Read",
     "allDisks": "All disks",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "Author: {author}"
+  },
+  "diskHealth": {
+    "title": "Disk health",
+    "healthy": "No issues reported",
+    "warning": "Warning",
+    "unhealthy": "Abnormal",
+    "unknown": "Unknown",
+    "unavailable": "Unavailable",
+    "written": "Total written",
+    "powerOnHours": "Power-on time",
+    "hoursUnit": "h",
+    "smartHint": "The device reports this SMART status; it is not a guarantee against failure",
+    "systemHint": "Windows reports the device status. Detailed SMART data is unavailable",
+    "basicHint": "No recognized remaining-life percentage is available",
+    "unavailableHint": "The device or connection does not provide readable health data",
+    "wearHint": "Health is 100 minus the manufacturer’s life-used estimate, with a minimum of 0%; it does not predict failure",
+    "read": "Total read",
+    "powerCycles": "Power cycles",
+    "spare": "Available spare",
+    "criticalWarning": "Critical warnings",
+    "none": "None",
+    "mediaErrors": "Media errors",
+    "temperature": "Temperature",
+    "healthPercent": "Health",
+    "cachedHint": "Showing the last health reading while it refreshes in the background"
+  },
+  "networkDetails": {
+    "title": "Connection details",
+    "received": "Downloaded this run",
+    "transmitted": "Uploaded this run",
+    "sessionHint": "Accumulated while monitoring this interface. Switching interfaces starts a new total; pauses and unavailable intervals are excluded",
+    "linkHint": "Connection speed is the reported link rate, not your internet speed",
+    "status": "Status",
+    "connected": "Connected",
+    "hardwareAddress": "Current MAC address",
+    "standard": "Wi-Fi standard",
+    "channel": "Channel",
+    "wifiLinkHint": "Current negotiated Wi-Fi transmit rate, not internet speed"
+  },
+  "diskDetails": {
+    "activity": "Disk activity",
+    "systemRead": "System read",
+    "systemWritten": "System written",
+    "systemHint": "Operating-system device counters for all disks, separate from SMART lifetime totals"
   }
 }

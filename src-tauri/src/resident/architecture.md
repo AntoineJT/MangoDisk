@@ -65,8 +65,19 @@ the same worker after demand stops and any in-flight query finishes. This releas
 memory-process metadata, Windows network-change subscriptions, and CPU counters.
 Re-enabling reacquires readers; hiding the panel preserves demanded readers and cached
 rankings, releasing GPU resources when its native display is unselected. Resource acquisition/release logs record transitions rather than samples.
-The panel has an overview of all five base readings on macOS/Windows (four on Linux) and separate CPU and memory pages.
-Disk health is
+The panel has an overview of all five base readings on macOS/Windows (four on Linux),
+with CPU, GPU, memory, disk and network detail pages on macOS/Windows. All pages retain
+a uniform 610 logical-pixel height.
+Explanatory health and network text is available through tooltips. SMART details
+include cumulative reads, power cycles, spare capacity and warnings where supported;
+filesystem names reuse mounted-volume enumeration. The visible Disk page also
+demands the existing thirty-second temperature reading; the menu-bar choice still
+controls background demand. Cached health temperatures never replace that live reading. System I/O totals are separate
+from SMART lifetime counters. Interface IP/MAC metadata remains local display data,
+never diagnostic or external-service payloads. macOS reuses its existing address
+enumeration; Windows caches the local unicast table for ten seconds and invalidates
+it on native topology changes. No per-process I/O/network tracking is added. Resource
+version 25 adds disk health and network session totals/link rates; version 26 adds optional Wi-Fi metadata; version 27 adds lossless ATA attributes and additional standardized NVMe counters. Disk health is
 read only on its visible detail page, cached for five minutes, and expires after
 ten minutes. Reopening the same disk preserves the last health fields while stale
 results refresh in the background; cached status remains explicit. Unavailable
@@ -79,13 +90,12 @@ Health queries do not enable SMART, run self-tests, install drivers, or elevate.
 NVMe lifetime counters retain their 128-bit decimal representation across JSON;
 ATA attributes retain their IDs, flags, normalized/current/worst values and all seven vendor bytes. Only verified model/firmware profiles decode units and life percentages; unknown profiles keep raw attributes without guessed summaries. See [SMART decoding](../../crates/mangodisk-platform/src/system_resources/disk_health/decoding.md). Windows
 management-only status is explicitly distinguished from detailed SMART data.
-
 Network totals count valid observed intervals for the selected interface. Source
 changes start a new total, while pauses and counter resets prime a new baseline
 without counting the unobserved interval. Link rates are reported by the native
 interface and never described as internet bandwidth. No active traffic probes or
 average disk response-time display are added.
-Network metadata uses a bounded ten-second CoreWLAN cache on macOS for negotiated transmit rate, PHY mode, channel and signal/noise. Generic IFMIB Wi-Fi baud rates are not displayed as negotiated rates; receive link rate stays absent when the native API supplies only transmit rate. Current interface MAC addresses can differ from factory addresses under private addressing. Traffic totals cover the monitored interface in this process; the UI labels them as session totals. Health percentage is max(0, 100 - NVMe percentage used).
+Network metadata uses a bounded ten-second CoreWLAN cache on macOS for negotiated transmit rate, PHY mode, channel and signal/noise. Generic IFMIB Wi-Fi baud rates are not displayed as negotiated rates; receive link rate stays absent when the native API supplies only transmit rate. Current interface MAC addresses can differ from factory addresses under private addressing. Traffic totals cover the monitored interface in this process; the UI labels them as session totals. Health percentage is max(0, 100 - NVMe percentage used). Every available health reading retains its temperature metadata slot while a live sample is unavailable, including Windows management-only health, preventing field reordering on tab switches.
 
 Memory process details are requested only by its selected page or startup icon
 warming. CPU application counters stay warm while resident mode is enabled, every 4 seconds in the background and every 2 seconds on the CPU page. Opening or explicitly refreshing that page requests a sample immediately while reusing any in-flight query and displaying cached rows. Baseline-only results receive at most two 250 ms retries. Reopening preserves the last

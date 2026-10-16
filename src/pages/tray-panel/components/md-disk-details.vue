@@ -1,0 +1,297 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import type { ResourceReadings } from '@/lib/models/system-resources';
+import { ByteSizeService } from '@/lib/services/byte-size-service';
+import MdTooltip from '@/components/custom/md-tooltip.vue';
+import MdResourceOverview from './md-resource-overview.vue';
+import MdResourceFacts from './md-resource-facts.vue';
+import MdResourceTrend from './md-resource-trend.vue';
+
+const HEALTH_LABEL_KEYS = {
+  healthy: 'diskHealth.healthy',
+  warning: 'diskHealth.warning',
+  unhealthy: 'diskHealth.unhealthy',
+  unknown: 'diskHealth.unknown',
+} as const;
+const props = defineProps<{ reading: ResourceReadings; active: boolean }>();
+defineEmits<{ cleanup: [] }>();
+const { t, n } = useI18n({ useScope: 'global' });
+const health = computed(() => {
+  const current = props.reading.diskHealth;
+  const usable =
+    current.status === 'ready' ||
+    (current.status === 'stale' && current.sampledAtMs !== null && current.sampledAtMs <= props.reading.observedAtMs);
+  return usable && current.value?.volumeId === props.reading.disk.value?.volume.id ? current.value : null;
+});
+const healthCached = computed(() => health.value !== null && props.reading.diskHealth.status === 'stale');
+const healthHint = computed(() => {
+  const value = health.value;
+  if (!value) return t('diskHealth.unavailableHint');
+  if (healthCached.value) return t('diskHealth.cachedHint');
+  if (value.source === 'windowsStorage') return t('diskHealth.systemHint');
+  return t(value.percentageUsed !== null ? 'diskHealth.wearHint' : 'diskHealth.basicHint');
+});
+const facts = computed(() => {
+  const value = health.value;
+  if (!value) return [];
+  const rows = [];
+  if (value.percentageUsed !== null)
+    rows.push({
+      key: 'health',
+      label: t('diskHealth.healthPercent'),
+      value: n(Math.max(0, 100 - value.percentageUsed)),
+      unit: '%',
+    });
+  if (value.totalWrittenBytes !== null) {
+    const bytes = Number(value.totalWrittenBytes);
+    if (Number.isFinite(bytes) && bytes >= 0)
+      rows.push({ key: 'written', label: t('diskHealth.written'), value: ByteSizeService.bytes(bytes), unit: '' });
+  }
+  if (value.powerOnHours !== null)
+    rows.push({
+      key: 'hours',
+      label: t('diskHealth.powerOnHours'),
+      value: n(value.powerOnHours),
+      unit: t('diskHealth.hoursUnit'),
+    });
+  return rows;
+});
+const detailFacts = computed(() => {
+  const value = health.value;
+  if (!value) return [];
+  const rows = [];
+  if (value.totalReadBytes !== null)
+    rows.push({
+      key: 'read',
+      label: t('diskHealth.read'),
+      value: ByteSizeService.bytes(Number(value.totalReadBytes)),
+      unit: '',
+    });
+  const temperature = props.reading.diskTemperature;
+  rows.push({
+    key: 'temperature',
+    label: t('diskHealth.temperature'),
+    value:
+      temperature.status === 'ready' && temperature.value?.volumeId === value.volumeId
+        ? n(temperature.value.celsius, { maximumFractionDigits: 0 })
+        : '—',
+    unit: temperature.status === 'ready' && temperature.value?.volumeId === value.volumeId ? '°C' : '',
+  });
+  if (value.powerCycles !== null)
+    rows.push({ key: 'cycles', label: t('diskHealth.powerCycles'), value: n(value.powerCycles), unit: '' });
+  if (value.availableSpare !== null)
+    rows.push({ key: 'spare', label: t('diskHealth.spare'), value: n(value.availableSpare), unit: '%' });
+  if (value.criticalWarning !== null)
+    rows.push({
+      key: 'warnings',
+      label: t('diskHealth.criticalWarning'),
+      value: t(value.criticalWarning === 0 ? 'diskHealth.none' : 'diskHealth.warning'),
+      unit: '',
+    });
+  if (value.mediaErrors !== null)
+    rows.push({ key: 'errors', label: t('diskHealth.mediaErrors'), value: value.mediaErrors, unit: '' });
+  return rows;
+});
+const activities = computed(() => {
+  const value = props.reading.diskIo.status === 'ready' ? props.reading.diskIo.value : null;
+  return [
+    {
+      key: 'read',
+      label: t('systemStatus.read'),
+      direction: 'download',
+      rate: value ? `${ByteSizeService.bytes(value.readBytesPerSecond)}/s` : '—',
+      totalLabel: t('diskDetails.systemRead'),
+      value: value ? ByteSizeService.bytes(Number(value.totalReadBytes)) : '—',
+    },
+    {
+      key: 'written',
+      label: t('systemStatus.write'),
+      direction: 'upload',
+      rate: value ? `${ByteSizeService.bytes(value.writtenBytesPerSecond)}/s` : '—',
+      totalLabel: t('diskDetails.systemWritten'),
+      value: value ? ByteSizeService.bytes(Number(value.totalWrittenBytes)) : '—',
+    },
+  ];
+});
+</script>
+
+<template>
+  <MdResourceOverview
+    metric="disk"
+    cleanup-variant="button"
+    :reading="reading"
+    :active="active"
+    class="detail-summary"
+    @cleanup="$emit('cleanup')"
+  />
+  <section class="disk-activity" :aria-label="t('diskDetails.activity')">
+    <header>
+      <MdTooltip :text="t('diskDetails.systemHint')"
+        ><h2 tabindex="0">{{ t('diskDetails.activity') }}</h2></MdTooltip
+      >
+      <span class="health-unavailable">{{ t('systemStatus.allDisks') }} · {{ t('systemStatus.lastMinute') }}</span>
+    </header>
+    <div class="activity-columns">
+      <dl v-for="activity in activities" :key="activity.key" class="activity-column">
+        <div class="activity-rate">
+          <dt :class="activity.direction">{{ activity.label }}</dt>
+          <dd>{{ activity.rate }}</dd>
+        </div>
+        <div class="activity-total">
+          <dt>{{ activity.totalLabel }}</dt>
+          <dd>{{ activity.value }}</dd>
+        </div>
+      </dl>
+    </div>
+    <MdResourceTrend
+      metric="disk"
+      :history="reading.diskIoHistory"
+      :observed-at-ms="reading.observedAtMs"
+      :label="t('diskDetails.activity')"
+      :active="active"
+    />
+  </section>
+  <section class="disk-health" :aria-label="t('diskHealth.title')">
+    <header>
+      <MdTooltip :text="healthHint">
+        <h2 tabindex="0">{{ t('diskHealth.title') }}</h2>
+      </MdTooltip>
+      <MdTooltip
+        :text="
+          healthCached
+            ? t('diskHealth.cachedHint')
+            : health?.source === 'windowsStorage'
+              ? t('diskHealth.systemHint')
+              : t('diskHealth.smartHint')
+        "
+      >
+        <span v-if="health" class="health-status" :data-status="health.status"
+          >{{ t(HEALTH_LABEL_KEYS[health.status])
+          }}<span v-if="healthCached"> · {{ t('cpuDetails.cached') }}</span></span
+        >
+        <span v-else class="health-unavailable" role="status">{{
+          t(reading.diskHealth.status === 'loading' ? 'systemStatus.loading' : 'diskHealth.unavailable')
+        }}</span>
+      </MdTooltip>
+    </header>
+    <MdTooltip
+      v-if="reading.disk.value"
+      :text="[health?.ata?.model, health?.ata?.firmware].filter(Boolean).join(' · ') || reading.disk.value.volume.name"
+    >
+      <div class="volume-identity">
+        {{ reading.disk.value.volume.name
+        }}<span v-if="reading.disk.value.volume.fileSystem"> · {{ reading.disk.value.volume.fileSystem }}</span>
+      </div>
+    </MdTooltip>
+    <MdResourceFacts :facts="facts" />
+    <MdResourceFacts :facts="detailFacts" layout="rows" class="health-metadata" />
+  </section>
+</template>
+
+<style scoped>
+@reference "@assets/main.css";
+.disk-health,
+.disk-activity {
+  @apply rounded-xl border border-border bg-card;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+h2 {
+  font-size: 12px;
+  font-weight: 600;
+}
+.health-status,
+.health-unavailable {
+  @apply text-muted-foreground;
+  font-size: 11px;
+}
+.health-status[data-status='warning'],
+.health-status[data-status='unhealthy'] {
+  @apply text-destructive-text;
+}
+.disk-activity :deep(.resource-trend) {
+  height: 28px;
+}
+.activity-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.activity-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.activity-rate {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.activity-rate dt {
+  font-size: 11px;
+  line-height: 16px;
+}
+.activity-rate dd {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+}
+.activity-total {
+  @apply text-muted-foreground;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 10px;
+  line-height: 15px;
+}
+.activity-total dt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.activity-column dd {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+.volume-identity {
+  @apply text-muted-foreground;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.disk-activity {
+  padding: 12px;
+  gap: 8px;
+}
+.disk-health .health-metadata {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 16px;
+}
+.disk-health .health-metadata.compact {
+  grid-template-columns: minmax(0, 1fr);
+}
+.upload {
+  color: var(--status-upload);
+}
+.download {
+  color: var(--status-download);
+}
+.health-metadata :deep(dt) {
+  min-width: 0;
+  flex: 1;
+}
+</style>

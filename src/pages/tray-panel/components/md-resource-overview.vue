@@ -24,17 +24,19 @@ const props = withDefaults(
     reading: ResourceReadings;
     active?: boolean;
     interactive?: boolean;
+    cleanupVariant?: 'link' | 'button';
     showCpuTemperature?: boolean;
     heading?: string;
   }>(),
   {
     active: true,
     interactive: false,
+    cleanupVariant: 'link',
     showCpuTemperature: true,
     heading: undefined,
   }
 );
-defineEmits<{ cleanup: []; memory: []; cpu: []; gpu: [] }>();
+defineEmits<{ cleanup: []; memory: []; cpu: []; gpu: []; disk: []; network: [] }>();
 const { t } = useI18n({ useScope: 'global' });
 const isMacOs = OperatingSystemService.isMacOs();
 const cpuLabel = computed(() => cpuIdentityLabel(props.reading.cpuIdentity));
@@ -107,13 +109,21 @@ const rates = computed(() =>
 <template>
   <section class="resource-overview" :data-metric="metric" :aria-label="heading ?? t(METRIC_LABEL_KEYS[metric])">
     <button
-      v-if="interactive && (metric === 'cpu' || metric === 'gpu' || metric === 'memory')"
+      v-if="interactive"
       type="button"
       class="card-navigation"
-      :aria-label="
-        t(metric === 'cpu' ? 'systemStatus.cpu' : metric === 'gpu' ? 'systemStatus.gpu' : 'systemStatus.memoryDetails')
+      :aria-label="t(METRIC_LABEL_KEYS[metric])"
+      @click="
+        metric === 'cpu'
+          ? $emit('cpu')
+          : metric === 'gpu'
+            ? $emit('gpu')
+            : metric === 'disk'
+              ? $emit('disk')
+              : metric === 'network'
+                ? $emit('network')
+                : $emit('memory')
       "
-      @click="metric === 'cpu' ? $emit('cpu') : metric === 'gpu' ? $emit('gpu') : $emit('memory')"
     />
     <header>
       <span class="resource-label">
@@ -216,8 +226,13 @@ const rates = computed(() =>
           </span>
         </MdTooltip>
         <span v-else role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
-        <button type="button" class="cleanup-link" @click="$emit('cleanup')">
-          {{ t('navigation.cleanup') }} <span aria-hidden="true">›</span>
+        <button
+          type="button"
+          :class="['cleanup-link', { 'cleanup-button': cleanupVariant === 'button' }]"
+          @click="$emit('cleanup')"
+        >
+          <MdIcon v-if="cleanupVariant === 'button'" :name="ICON_NAMES.cleanup" :size="12" aria-hidden="true" />
+          {{ t('navigation.cleanup') }}<span v-if="cleanupVariant === 'link'" aria-hidden="true">›</span>
         </button>
       </template>
       <template v-else>
@@ -227,19 +242,6 @@ const rates = computed(() =>
         <span v-if="!ready" role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
         <span v-else>{{ t('systemStatus.lastMinute') }}</span>
       </template>
-    </div>
-    <div v-if="metric === 'disk'" class="disk-activity">
-      <span class="disk-scope">{{ t('systemStatus.allDisks') }}</span>
-      <span v-for="rate in rates" :key="rate.direction" class="disk-rate">
-        <span :class="rate.direction">{{
-          t(rate.direction === 'upload' ? 'systemStatus.write' : 'systemStatus.read')
-        }}</span>
-        <strong>{{ rate.value }}</strong
-        ><small>{{ rate.unit }}</small>
-      </span>
-      <span v-if="!activityReady" class="sr-only" role="status">{{
-        t(METRIC_STATUS_KEYS[reading.diskIo.status])
-      }}</span>
     </div>
   </section>
 </template>
@@ -314,7 +316,12 @@ small {
 }
 .resource-meta .cleanup-link {
   @apply text-primary-text;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex: none;
+  position: relative;
+  z-index: 2;
   font-size: 10px;
   min-height: 20px;
   padding: 0 4px;
@@ -323,6 +330,15 @@ small {
 }
 .resource-meta .cleanup-link:hover {
   @apply bg-accent;
+}
+.resource-meta .cleanup-button {
+  @apply bg-primary text-primary-foreground;
+  min-height: 26px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.resource-meta .cleanup-button:hover {
+  background: color-mix(in srgb, var(--primary) 88%, var(--primary-foreground));
 }
 .resource-meta .cleanup-link:focus-visible {
   outline: 2px solid var(--ring);
@@ -369,33 +385,6 @@ small {
 }
 .download {
   color: var(--status-download);
-}
-.disk-activity {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: space-between;
-  margin-top: 4px;
-}
-.disk-rate {
-  display: grid;
-  grid-template-columns: auto auto auto;
-  gap: 3px;
-  align-items: baseline;
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-.disk-scope {
-  @apply text-muted-foreground;
-  font-size: 10px;
-  flex: none;
-}
-.disk-rate strong {
-  text-align: right;
-  font-weight: 500;
-}
-.disk-rate > span {
-  font-size: 10px;
 }
 .capacity-track {
   @apply bg-muted rounded-full;

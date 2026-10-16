@@ -386,6 +386,7 @@ describe('monitoring panel interactions', () => {
     vi.mocked(ResidentService.panelMetric).mockResolvedValue('network');
     const { wrapper } = render();
     await flushPromises();
+    await wrapper.get('#metric-tab-overview').trigger('click');
     expect(wrapper.findAllComponents(ResourceOverview)).toHaveLength(5);
     const visibility = vi.mocked(ResidentService.onPanelVisibility).mock.calls[0]![0];
     expect(wrapper.findAllComponents(ResourceOverview).every(card => card.props('active') === false)).toBe(true);
@@ -410,6 +411,7 @@ describe('monitoring panel interactions', () => {
       });
       const { wrapper } = render(TrayPanelPage, {}, false, enUS);
       await flushPromises();
+      if (metric === 'network') await wrapper.get('#metric-tab-overview').trigger('click');
       const visibility = vi.mocked(ResidentService.onPanelVisibility).mock.calls[0]![0];
       await wrapper.get('.memory-pressure').trigger('pointermove', { pointerType: 'mouse' });
       await vi.waitFor(() =>
@@ -443,20 +445,28 @@ describe('monitoring panel interactions', () => {
     expect(wrapper.find('.application-row').exists()).toBe(true);
   });
 
-  it('moves keyboard focus with the selected resource tab', async () => {
+  it('moves keyboard focus through disk and network before returning to overview', async () => {
     const { wrapper, store } = render();
     await flushPromises();
-    expect(wrapper.get('[role="tabpanel"]').attributes('id')).toBe(
-      wrapper.get('#metric-tab-memory').attributes('aria-controls')
-    );
     expect(wrapper.get('[role="tabpanel"]').attributes('aria-labelledby')).toBe('metric-tab-memory');
     await wrapper.get('#metric-tab-memory').trigger('keydown', { key: 'ArrowRight' });
-    expect(wrapper.findAll('[role=tab]')).toHaveLength(4);
-    expect(wrapper.findAll('.resource-overview')).toHaveLength(5);
+    expect(wrapper.findAll('[role=tab]')).toHaveLength(6);
+    expect(store.selectedMetric).toBe('disk');
+    expect(document.activeElement?.id).toBe('metric-tab-disk');
+    expect(wrapper.find('.disk-health').exists()).toBe(true);
+    await wrapper.get('#metric-tab-disk').trigger('keydown', { key: 'ArrowRight' });
     expect(store.selectedMetric).toBe('network');
+    expect(wrapper.find('.network-details').exists()).toBe(true);
+    await wrapper.get('#metric-tab-network').trigger('keydown', { key: 'ArrowRight' });
     expect(document.activeElement?.id).toBe('metric-tab-overview');
+    expect(wrapper.findAll('.resource-overview')).toHaveLength(5);
     expect(ResidentService.selectMetric).toHaveBeenCalledWith('network');
     expect(wrapper.get('[role="tabpanel"]').attributes('aria-labelledby')).toBe('metric-tab-overview');
+    const visibility = vi.mocked(ResidentService.onPanelVisibility).mock.calls[0]![0];
+    visibility(false);
+    visibility(true);
+    await flushPromises();
+    expect(wrapper.get('#metric-tab-overview').attributes('aria-selected')).toBe('true');
   });
 
   it('retains the selected memory tab when the prewarmed panel is opened again', async () => {
@@ -513,6 +523,17 @@ describe('monitoring panel interactions', () => {
     expect(wrapper.find('.memory-overview').exists()).toBe(true);
     expect(wrapper.find('.release-button').exists()).toBe(false);
     expect(wrapper.find('.release-settings-entry').exists()).toBe(false);
+  });
+
+  it('hides the unsampled Linux CPU temperature instead of showing a permanent loading card', async () => {
+    vi.mocked(OperatingSystemService.isLinux).mockReturnValue(true);
+    vi.mocked(ResidentService.panelMetric).mockResolvedValue('cpu');
+    const { wrapper } = render();
+    await flushPromises();
+
+    expect(wrapper.find('.cpu-summary').exists()).toBe(true);
+    expect(wrapper.find('.temperature-details').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('cpuTemperature.label');
   });
 
   it('cancels the old feedback timeout when another release starts', async () => {

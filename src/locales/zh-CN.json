@@ -4101,8 +4101,6 @@
     "displayHint": "查看 CPU、GPU 使用率与温度，以及内存、磁盘和网速",
     "linuxDisplayHint": "查看 CPU、内存、网速与磁盘使用情况",
     "overview": "概览",
-    "memoryManagement": "内存",
-    "memoryDetails": "查看应用",
     "write": "写入",
     "read": "读取",
     "allDisks": "全部磁盘",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "作者：{author}"
+  },
+  "diskHealth": {
+    "title": "磁盘健康",
+    "healthy": "未报告异常",
+    "warning": "警告",
+    "unhealthy": "异常",
+    "unknown": "未知",
+    "unavailable": "不可用",
+    "written": "累计写入",
+    "powerOnHours": "通电时间",
+    "hoursUnit": "小时",
+    "smartHint": "此状态由设备 SMART 数据提供，不代表磁盘一定不会发生故障",
+    "systemHint": "仅为 Windows 报告的设备状态，详细 SMART 数据不可用",
+    "basicHint": "当前没有可识别的寿命百分比",
+    "unavailableHint": "设备或连接方式未提供可读取的健康数据",
+    "wearHint": "健康度为 100 减去厂商估算的寿命消耗，最低为 0%；不代表故障预测",
+    "read": "累计读取",
+    "powerCycles": "电源循环",
+    "spare": "可用备用空间",
+    "criticalWarning": "严重警告",
+    "none": "无",
+    "mediaErrors": "介质错误",
+    "temperature": "温度",
+    "healthPercent": "健康度",
+    "cachedHint": "显示上次读取的健康数据，后台更新中"
+  },
+  "networkDetails": {
+    "title": "连接详情",
+    "received": "本次下载",
+    "transmitted": "本次上传",
+    "sessionHint": "累计当前接口的监测流量；切换接口重新累计，暂停及数据不可用期间不计入",
+    "linkHint": "连接速率由系统上报，不代表实际互联网速度",
+    "status": "状态",
+    "connected": "已连接",
+    "hardwareAddress": "当前 MAC 地址",
+    "standard": "Wi-Fi 标准",
+    "channel": "信道",
+    "wifiLinkHint": "当前协商的 Wi-Fi 发送速率，不代表互联网速度"
+  },
+  "diskDetails": {
+    "activity": "磁盘活动",
+    "systemRead": "系统累计读取",
+    "systemWritten": "系统累计写入",
+    "systemHint": "操作系统报告的全部磁盘设备计数，与 SMART 寿命累计值不同"
   }
 }

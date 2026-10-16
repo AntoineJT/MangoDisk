@@ -4101,8 +4101,6 @@
     "displayHint": "CPU・GPU の使用率と温度、メモリ、ディスク、通信速度を表示",
     "linuxDisplayHint": "CPU・メモリ・通信速度・ディスクの使用状況を確認",
     "overview": "概要",
-    "memoryManagement": "メモリ",
-    "memoryDetails": "アプリを表示",
     "write": "書込",
     "read": "読込",
     "allDisks": "全ディスク",
@@ -4317,5 +4315,49 @@
       }
     },
     "author": "作者：{author}"
+  },
+  "diskHealth": {
+    "title": "ディスクの状態",
+    "healthy": "異常報告なし",
+    "warning": "警告",
+    "unhealthy": "異常",
+    "unknown": "不明",
+    "unavailable": "取得不可",
+    "written": "累計書き込み",
+    "powerOnHours": "通電時間",
+    "hoursUnit": "時間",
+    "smartHint": "デバイスの SMART データが示す状態です。故障しないことを保証するものではありません",
+    "systemHint": "Windows が報告したデバイス状態です。詳細な SMART データは取得できません",
+    "basicHint": "認識可能な残り寿命の割合は取得できません",
+    "unavailableHint": "デバイスまたは接続方式が読み取り可能な状態データを提供していません",
+    "wearHint": "メーカー推定の寿命消費率を 100 から引いた値です（下限 0%）。故障を予測するものではありません",
+    "read": "総読み取り量",
+    "powerCycles": "電源投入回数",
+    "spare": "利用可能な予備領域",
+    "criticalWarning": "重大な警告",
+    "none": "なし",
+    "mediaErrors": "メディアエラー",
+    "temperature": "温度",
+    "healthPercent": "健全度",
+    "cachedHint": "前回の健全性データを表示し、バックグラウンドで更新しています"
+  },
+  "networkDetails": {
+    "title": "接続情報",
+    "received": "今回の受信",
+    "transmitted": "今回の送信",
+    "sessionHint": "このインターフェースの監視中の通信量です。切り替えるとリセットされ、一時停止や取得不能の期間は含まれません",
+    "linkHint": "接続速度はシステムが報告するリンク速度で、インターネットの実測速度ではありません",
+    "status": "状態",
+    "connected": "接続済み",
+    "hardwareAddress": "現在の MAC アドレス",
+    "standard": "Wi-Fi 規格",
+    "channel": "チャンネル",
+    "wifiLinkHint": "現在の Wi-Fi 送信リンク速度です。インターネット速度ではありません"
+  },
+  "diskDetails": {
+    "activity": "ディスク動作",
+    "systemRead": "システム総読み取り",
+    "systemWritten": "システム総書き込み",
+    "systemHint": "全ディスクの OS デバイスカウンターです。SMART の生涯累計とは異なります"
   }
 }
