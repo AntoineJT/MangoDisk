@@ -164,7 +164,7 @@ onMounted(() => {
           :label="t('systemStatus.lastMinute')"
         />
         <p v-if="value" class="detail-note device-caption">
-          <MdTooltip :text="deviceTooltip">
+          <MdTooltip :active="active" :text="deviceTooltip">
             <span class="device-name">{{ value.adapterName }}</span>
           </MdTooltip>
           <span
@@ -191,7 +191,7 @@ onMounted(() => {
     >
       <MdResourceTemperature metric="gpu" :reading="reading.gpuTemperature" :observed-at-ms="reading.observedAtMs" />
     </MdTemperatureDetails>
-    <MdResourceFacts v-if="value" :facts="facts" class="gpu-facts" />
+    <MdResourceFacts v-if="value" :active="active" :facts="facts" class="gpu-facts" />
     <div class="gpu-details-body scrollbar-stable-end">
       <div v-if="settings.error" class="detail-note" role="alert">
         {{ t('monitoring.unavailable') }} <button @click="settings.load()">{{ t('monitoring.refresh') }}</button>
@@ -200,7 +200,12 @@ onMounted(() => {
         <section v-if="memoryRows.length || details.memoryStatus === 'failed'" class="memory-section">
           <h3>
             <span>{{ t('systemStatus.memory') }}</span>
-            <MdTooltip v-if="allocatableCapacity" :text="t('gpuDetails.allocatableMemoryHint')">
+            <MdTooltip
+              v-if="allocatableCapacity"
+              :active="active"
+              :text="t('gpuDetails.allocatableMemoryHint')"
+              multiline
+            >
               <button type="button" class="activity-help memory-help" :aria-label="t('systemStatus.memory')">
                 <MdIcon :name="ICON_NAMES.info" :size="12" />
               </button>
@@ -236,7 +241,7 @@ onMounted(() => {
           <div class="activity-heading">
             <h3>
               <span>{{ t('gpuDetails.activities') }}</span>
-              <MdTooltip :text="t('gpuDetails.activitiesHint')">
+              <MdTooltip :active="active" :text="t('gpuDetails.activitiesHint')">
                 <button type="button" class="activity-help" :aria-label="t('gpuDetails.activities')">
                   <MdIcon :name="ICON_NAMES.info" :size="12" />
                 </button>
@@ -273,7 +278,7 @@ onMounted(() => {
           </div>
         </section>
         <details v-if="custom.length" class="custom-activities">
-          <MdTooltip :text="t('gpuDetails.customHint')">
+          <MdTooltip :active="active" :text="t('gpuDetails.customHint')">
             <summary>
               {{ t('gpuDetails.customActivities') }} <span>{{ custom.length }}</span>
             </summary>

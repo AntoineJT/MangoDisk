@@ -25,13 +25,6 @@ const health = computed(() => {
   return usable && current.value?.volumeId === props.reading.disk.value?.volume.id ? current.value : null;
 });
 const healthCached = computed(() => health.value !== null && props.reading.diskHealth.status === 'stale');
-const healthHint = computed(() => {
-  const value = health.value;
-  if (!value) return t('diskHealth.unavailableHint');
-  if (healthCached.value) return t('diskHealth.cachedHint');
-  if (value.source === 'windowsStorage') return t('diskHealth.systemHint');
-  return t(value.percentageUsed !== null ? 'diskHealth.wearHint' : 'diskHealth.basicHint');
-});
 const facts = computed(() => {
   const value = health.value;
   if (!value) return [];
@@ -40,6 +33,7 @@ const facts = computed(() => {
     rows.push({
       key: 'health',
       label: t('diskHealth.healthPercent'),
+      hint: t('diskHealth.wearHint'),
       value: n(Math.max(0, 100 - value.percentageUsed)),
       unit: '%',
     });
@@ -127,7 +121,7 @@ const activities = computed(() => {
   />
   <section class="disk-activity" :aria-label="t('diskDetails.activity')">
     <header>
-      <MdTooltip :text="t('diskDetails.systemHint')"
+      <MdTooltip :active="active" :text="t('diskDetails.systemHint')" multiline
         ><h2 tabindex="0">{{ t('diskDetails.activity') }}</h2></MdTooltip
       >
       <span class="health-unavailable">{{ t('systemStatus.allDisks') }} · {{ t('systemStatus.lastMinute') }}</span>
@@ -154,38 +148,43 @@ const activities = computed(() => {
   </section>
   <section class="disk-health" :aria-label="t('diskHealth.title')">
     <header>
-      <MdTooltip :text="healthHint">
-        <h2 tabindex="0">{{ t('diskHealth.title') }}</h2>
-      </MdTooltip>
+      <h2>{{ t('diskHealth.title') }}</h2>
       <MdTooltip
+        :active="active"
+        multiline
         :text="
-          healthCached
-            ? t('diskHealth.cachedHint')
-            : health?.source === 'windowsStorage'
-              ? t('diskHealth.systemHint')
-              : t('diskHealth.smartHint')
+          !health
+            ? t('diskHealth.unavailableHint')
+            : healthCached
+              ? t('diskHealth.cachedHint')
+              : health.source === 'windowsStorage'
+                ? t('diskHealth.systemHint')
+                : t('diskHealth.smartHint')
         "
       >
-        <span v-if="health" class="health-status" :data-status="health.status"
-          >{{ t(HEALTH_LABEL_KEYS[health.status])
-          }}<span v-if="healthCached"> · {{ t('cpuDetails.cached') }}</span></span
+        <!-- Keep one DOM anchor while asynchronous health readings change state. -->
+        <span
+          :class="health ? 'health-status' : 'health-unavailable'"
+          :data-status="health?.status"
+          :role="health ? undefined : 'status'"
+          tabindex="0"
         >
-        <span v-else class="health-unavailable" role="status">{{
-          t(reading.diskHealth.status === 'loading' ? 'systemStatus.loading' : 'diskHealth.unavailable')
-        }}</span>
+          <template v-if="health"
+            >{{ t(HEALTH_LABEL_KEYS[health.status])
+            }}<span v-if="healthCached"> · {{ t('cpuDetails.cached') }}</span></template
+          >
+          <template v-else>{{
+            t(reading.diskHealth.status === 'loading' ? 'systemStatus.loading' : 'diskHealth.unavailable')
+          }}</template>
+        </span>
       </MdTooltip>
     </header>
-    <MdTooltip
-      v-if="reading.disk.value"
-      :text="[health?.ata?.model, health?.ata?.firmware].filter(Boolean).join(' · ') || reading.disk.value.volume.name"
-    >
-      <div class="volume-identity">
-        {{ reading.disk.value.volume.name
-        }}<span v-if="reading.disk.value.volume.fileSystem"> · {{ reading.disk.value.volume.fileSystem }}</span>
-      </div>
-    </MdTooltip>
-    <MdResourceFacts :facts="facts" />
-    <MdResourceFacts :facts="detailFacts" layout="rows" class="health-metadata" />
+    <div v-if="reading.disk.value" class="volume-identity">
+      {{ reading.disk.value.volume.name
+      }}<span v-if="reading.disk.value.volume.fileSystem"> · {{ reading.disk.value.volume.fileSystem }}</span>
+    </div>
+    <MdResourceFacts :active="active" :facts="facts" />
+    <MdResourceFacts :active="active" :facts="detailFacts" layout="rows" class="health-metadata" />
   </section>
 </template>
 

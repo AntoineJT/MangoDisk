@@ -4024,7 +4024,7 @@
       "critical": "負荷が高い",
       "unavailable": "負荷取得不可",
       "stale": "負荷未更新",
-      "normalHint": "メモリプレッシャー：正常\n通常、メモリの解放は不要です",
+      "normalHint": "メモリプレッシャー：正常\n通常はメモリ解放の必要はありません",
       "warningHint": "メモリプレッシャー：上昇\n使っていないアプリを閉じてください",
       "criticalHint": "メモリプレッシャー：高い\n応答が遅くなる場合があります。不要なアプリを閉じてください",
       "unavailableHint": "メモリプレッシャー：取得不可\n一時的に取得できません。右側は使用率です",
@@ -4055,7 +4055,7 @@
     "displayItems": "表示項目",
     "dragToReorder": "ドラッグで並べ替え",
     "gpu": "GPU",
-    "gpuUsageHint": "最も使用率の高い GPU を自動表示します。設定で固定できます。Windows は標準システムエンジンの最大使用率を表示し、ドライバー独自のエンジンを除外します",
+    "gpuUsageHint": "最も使用率の高い GPU を表示。設定で固定選択も可能です\nWindows は標準エンジンの最大値を使用し、ドライバー独自のエンジンは除外します",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "メモリ",
@@ -4077,7 +4077,7 @@
     "automatic": "自動選択",
     "volume": "ボリューム",
     "systemDisk": "システムディスク",
-    "diskCapacityHint": "空き容量はシステムによる推定値です。macOS では、必要に応じてシステムが解放できる容量も含まれます",
+    "diskCapacityHint": "空き容量はシステムの推定値です\nmacOS では必要に応じて回収できる領域を含みます",
     "savedDisconnected": "選択済みデバイス · 未接続",
     "saveFailed": "保存できませんでした。再試行してください",
     "catalogueFailed": "デバイス一覧を取得できません",
@@ -4196,7 +4196,7 @@
     "quitAction": "終了"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "専用容量は割り当て可能量で、ハードウェア予約分を含まない場合があります。GPU合計容量にも影響します",
+    "allocatableMemoryHint": "専用容量はシステムが割り当て可能な量で、ハードウェア予約分を除く場合があります\nGPU の合計容量にも影響します",
     "cachedLabel": "キャッシュ",
     "cached": "前回のデータを表示中。更新待ち",
     "activities": "エンジン稼働状況",
@@ -4326,11 +4326,10 @@
     "written": "累計書き込み",
     "powerOnHours": "通電時間",
     "hoursUnit": "時間",
-    "smartHint": "デバイスの SMART データが示す状態です。故障しないことを保証するものではありません",
-    "systemHint": "Windows が報告したデバイス状態です。詳細な SMART データは取得できません",
-    "basicHint": "認識可能な残り寿命の割合は取得できません",
-    "unavailableHint": "デバイスまたは接続方式が読み取り可能な状態データを提供していません",
-    "wearHint": "メーカー推定の寿命消費率を 100 から引いた値です（下限 0%）。故障を予測するものではありません",
+    "smartHint": "デバイスの SMART が報告する状態\n異常の報告がなくても故障しない保証はありません",
+    "systemHint": "Windows が報告するデバイスの状態\n詳細な SMART データを読み取れませんでした",
+    "unavailableHint": "現在このディスクの健康データを読み取れません",
+    "wearHint": "健康度 = 100% − メーカー推定の寿命消費率\n下限は 0%。故障の予測値ではありません",
     "read": "総読み取り量",
     "powerCycles": "電源投入回数",
     "spare": "利用可能な予備領域",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "メディアエラー",
     "temperature": "温度",
     "healthPercent": "健全度",
-    "cachedHint": "前回の健全性データを表示し、バックグラウンドで更新しています"
+    "cachedHint": "前回の健康データを表示中\nバックグラウンドで更新しています"
   },
   "networkDetails": {
     "title": "接続情報",
     "received": "今回の受信",
     "transmitted": "今回の送信",
-    "sessionHint": "このインターフェースの監視中の通信量です。切り替えるとリセットされ、一時停止や取得不能の期間は含まれません",
-    "linkHint": "接続速度はシステムが報告するリンク速度で、インターネットの実測速度ではありません",
+    "sessionHint": "今回の実行中にこのインターフェースで計測した通信量\nアプリの再起動やインターフェースの切替でリセット\n一時停止など未計測の時間は含みません",
+    "linkHint": "システムが報告するリンク速度\nインターネットの実効速度ではありません",
     "status": "状態",
     "connected": "接続済み",
     "hardwareAddress": "現在の MAC アドレス",
     "standard": "Wi-Fi 規格",
     "channel": "チャンネル",
-    "wifiLinkHint": "現在の Wi-Fi 送信リンク速度です。インターネット速度ではありません"
+    "wifiLinkHint": "現在の Wi-Fi ネゴシエーション送信速度\nインターネットの実効速度ではありません"
   },
   "diskDetails": {
     "activity": "ディスク動作",
     "systemRead": "システム総読み取り",
     "systemWritten": "システム総書き込み",
-    "systemHint": "全ディスクの OS デバイスカウンターです。SMART の生涯累計とは異なります"
+    "systemHint": "システムが報告する全ディスクの累積読み書き量\nMangoDisk の再起動ではリセットされません\n起点は OS とドライバーによります。SMART の生涯累積値とは異なります"
   }
 }

@@ -163,7 +163,7 @@ function measure(element: Element | ComponentPublicInstance | null) {
             :size="12"
           />
         </button>
-        <MdTooltip v-if="column === 'name' && hasHistory && status !== 'ready'" :text="sampleStatus">
+        <MdTooltip v-if="column === 'name' && hasHistory && status !== 'ready'" :active="active" :text="sampleStatus">
           <span class="cache-notice" tabindex="0" role="status" :aria-label="sampleStatus">{{
             t('cpuDetails.cached')
           }}</span>

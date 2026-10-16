@@ -100,6 +100,7 @@ describe('GPU detail capabilities and selection', () => {
     const value = reading();
     value.gpuDetails.value!.details!.memory!.dedicatedTotalSource = 'allocatable';
     const { wrapper } = render(value, locale);
+    await wrapper.setProps({ active: true });
     await flushPromises();
     const hint = messages[locale as keyof typeof messages].gpuDetails.allocatableMemoryHint;
     const tooltip = wrapper.findAllComponents({ name: 'MdTooltip' }).find(item => item.find('.memory-help').exists());

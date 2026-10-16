@@ -154,7 +154,7 @@ async function reveal() {
       <span class="application-name"
         >{{ application.name }}<span v-if="grouped" class="process-count"> ({{ application.processCount }})</span></span
       >
-      <MdTooltip v-if="memoryActions && excluded" :text="t('memoryRelease.exclusionsHint')"
+      <MdTooltip v-if="memoryActions && excluded" :active="active" :text="t('memoryRelease.exclusionsHint')"
         ><span class="excluded-badge">{{ t('memoryRelease.excluded') }}</span></MdTooltip
       >
       <span v-if="partialMemory" class="excluded-badge">{{ t('monitoring.partialData') }}</span>
@@ -185,13 +185,16 @@ async function reveal() {
         </li>
       </ol>
       <div class="application-actions">
-        <MdTooltip v-if="application.iconPath" :text="t('common.showInFileManager')"
+        <MdTooltip v-if="application.iconPath" :active="active" :text="t('common.showInFileManager')"
           ><button class="reveal-button" :disabled="!available || revealing" @click="reveal">
             <MdIcon :name="ICON_NAMES.folderOpen" :size="13" />
             {{ t('memoryRelease.revealAction') }}
           </button></MdTooltip
         >
-        <MdTooltip v-if="memoryActions && application.iconPath" :text="t('memoryRelease.exclusionsHint')"
+        <MdTooltip
+          v-if="memoryActions && application.iconPath"
+          :active="active"
+          :text="t('memoryRelease.exclusionsHint')"
           ><button
             class="reveal-button"
             :disabled="!available || !memorySettings.preferences || memorySettings.saving"
@@ -210,6 +213,7 @@ async function reveal() {
         >
         <MdTooltip
           v-if="application.canQuit"
+          :active="active"
           :text="quitStatus ? t(quitMessages[quitStatus]) : t('monitoring.quitApplication')"
           ><button
             class="quit-application-button"

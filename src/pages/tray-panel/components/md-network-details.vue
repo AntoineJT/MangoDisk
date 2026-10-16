@@ -93,16 +93,18 @@ const interfaceFacts = computed(() => {
   <MdResourceOverview metric="network" :reading="reading" :active="active" class="detail-summary network-summary" />
   <section class="network-details" :aria-label="t('networkDetails.title')">
     <header>
-      <MdTooltip :text="t('networkDetails.sessionHint')">
+      <MdTooltip :active="active" :text="t('networkDetails.sessionHint')" multiline>
         <h2 tabindex="0">{{ t('networkDetails.title') }}</h2>
       </MdTooltip>
     </header>
-    <MdResourceFacts :facts="facts" />
+    <MdResourceFacts :active="active" :facts="facts" />
   </section>
   <section class="network-details" :aria-label="t('systemStatus.interface')">
     <header>
       <h2>{{ t('systemStatus.interface') }}</h2>
       <MdTooltip
+        :active="active"
+        multiline
         :text="
           t(
             network?.interface.kind === 'wifi' && network.receiveLinkBps === null
@@ -113,7 +115,7 @@ const interfaceFacts = computed(() => {
         ><span tabindex="0">{{ connection }}</span></MdTooltip
       >
     </header>
-    <MdResourceFacts :facts="interfaceFacts" layout="rows" />
+    <MdResourceFacts :active="active" :facts="interfaceFacts" layout="rows" />
   </section>
 </template>
 

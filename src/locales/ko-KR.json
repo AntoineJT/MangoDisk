@@ -4024,7 +4024,7 @@
       "critical": "압력 높음",
       "unavailable": "압력 확인 불가",
       "stale": "압력 업데이트 안 됨",
-      "normalHint": "메모리 압력: 정상\n대개 메모리를 비울 필요가 없습니다",
+      "normalHint": "메모리 압력: 정상\n일반적으로 메모리를 해제할 필요가 없습니다",
       "warningHint": "메모리 압력: 상승\n사용하지 않는 앱을 닫는 것을 고려하세요",
       "criticalHint": "메모리 압력: 높음\n응답이 느려질 수 있으니 필요 없는 앱을 닫으세요",
       "unavailableHint": "메모리 압력: 확인 불가\n일시적으로 읽을 수 없습니다; 오른쪽은 사용률입니다",
@@ -4055,7 +4055,7 @@
     "displayItems": "표시 항목",
     "dragToReorder": "드래그하여 순서 변경",
     "gpu": "GPU",
-    "gpuUsageHint": "가장 사용량이 많은 GPU를 자동으로 표시하며 설정에서 고정할 수 있습니다. Windows는 표준 시스템 엔진의 최대 사용률을 사용하며 드라이버 전용 엔진은 제외합니다",
+    "gpuUsageHint": "가장 바쁜 GPU를 표시하며 설정에서 고정할 수 있습니다\nWindows는 표준 엔진의 최댓값을 사용하며 드라이버 전용 엔진은 제외합니다",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "메모리",
@@ -4077,7 +4077,7 @@
     "automatic": "자동 선택",
     "volume": "볼륨",
     "systemDisk": "시스템 디스크",
-    "diskCapacityHint": "사용 가능한 공간은 시스템의 추정치입니다. macOS에서는 시스템이 필요에 따라 확보할 수 있는 공간도 포함됩니다",
+    "diskCapacityHint": "사용 가능 공간은 시스템 추정값입니다\nmacOS에서는 필요에 따라 회수할 수 있는 공간을 포함합니다",
     "savedDisconnected": "선택한 기기 · 연결 끊김",
     "saveFailed": "저장하지 못했습니다. 다시 시도하세요",
     "catalogueFailed": "기기 목록을 읽을 수 없습니다",
@@ -4196,7 +4196,7 @@
     "quitAction": "종료"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "전용 용량은 시스템에서 할당 가능한 메모리로, 하드웨어 예약분이 제외될 수 있습니다. 총 GPU 용량에도 영향을 줍니다",
+    "allocatableMemoryHint": "전용 용량은 시스템이 할당할 수 있는 양이며 하드웨어 예약분이 제외될 수 있습니다\n전체 GPU 용량에도 영향을 줍니다",
     "cachedLabel": "캐시",
     "cached": "마지막 데이터를 표시하고 있습니다. 업데이트를 기다리는 중입니다",
     "activities": "엔진 활동",
@@ -4326,11 +4326,10 @@
     "written": "누적 쓰기",
     "powerOnHours": "작동 시간",
     "hoursUnit": "시간",
-    "smartHint": "장치의 SMART 데이터가 보고한 상태이며 고장이 없음을 보장하지 않습니다",
-    "systemHint": "Windows가 보고한 장치 상태입니다. 상세 SMART 데이터는 사용할 수 없습니다",
-    "basicHint": "인식 가능한 잔여 수명 비율을 사용할 수 없습니다",
-    "unavailableHint": "장치 또는 연결 방식에서 읽을 수 있는 상태 데이터를 제공하지 않습니다",
-    "wearHint": "제조사의 예상 수명 소모율을 100에서 뺀 값이며 최솟값은 0%입니다. 고장을 예측하지 않습니다",
+    "smartHint": "장치의 SMART 데이터가 보고한 상태\n이상 보고가 없어도 고장이 없음을 보장하지 않습니다",
+    "systemHint": "Windows가 보고한 장치 상태\n상세 SMART 데이터를 읽지 못했습니다",
+    "unavailableHint": "현재 이 디스크의 건강 데이터를 읽을 수 없습니다",
+    "wearHint": "건강도 = 100% − 제조사가 추정한 수명 소모율\n최소 0%이며 고장 예측값이 아닙니다",
     "read": "누적 읽기",
     "powerCycles": "전원 주기",
     "spare": "사용 가능한 예비 공간",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "미디어 오류",
     "temperature": "온도",
     "healthPercent": "건강도",
-    "cachedHint": "마지막 상태 데이터를 표시하며 백그라운드에서 업데이트 중입니다"
+    "cachedHint": "이전 건강 데이터를 표시 중입니다\n백그라운드에서 갱신합니다"
   },
   "networkDetails": {
     "title": "연결 정보",
     "received": "이번 실행 다운로드",
     "transmitted": "이번 실행 업로드",
-    "sessionHint": "현재 인터페이스를 모니터링하는 동안의 트래픽입니다. 인터페이스를 바꾸면 초기화되며 일시 중지와 데이터 누락 구간은 제외됩니다",
-    "linkHint": "연결 속도는 시스템이 보고한 링크 속도로 실제 인터넷 속도가 아닙니다",
+    "sessionHint": "이번 실행 중 현재 인터페이스에서 측정한 트래픽\n앱을 다시 시작하거나 인터페이스를 바꾸면 초기화됩니다\n일시 중지 등 측정하지 않은 구간은 제외됩니다",
+    "linkHint": "시스템이 보고한 연결 속도\n실제 인터넷 속도가 아닙니다",
     "status": "상태",
     "connected": "연결됨",
     "hardwareAddress": "현재 MAC 주소",
     "standard": "Wi-Fi 표준",
     "channel": "채널",
-    "wifiLinkHint": "현재 협상된 Wi-Fi 송신 속도이며 인터넷 속도가 아닙니다"
+    "wifiLinkHint": "현재 Wi-Fi에서 협상된 송신 속도\n실제 인터넷 속도가 아닙니다"
   },
   "diskDetails": {
     "activity": "디스크 활동",
     "systemRead": "시스템 누적 읽기",
     "systemWritten": "시스템 누적 쓰기",
-    "systemHint": "모든 디스크의 운영체제 장치 카운터이며 SMART 수명 누계와 다릅니다"
+    "systemHint": "시스템이 보고한 모든 디스크의 누적 읽기·쓰기 양\nMangoDisk를 다시 시작해도 초기화되지 않습니다\n시작 시점은 OS와 드라이버에 따르며 SMART 수명 누적값과 다릅니다"
   }
 }

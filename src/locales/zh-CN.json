@@ -4024,7 +4024,7 @@
       "critical": "压力过高",
       "unavailable": "压力不可用",
       "stale": "压力未更新",
-      "normalHint": "内存压力：正常\n系统能够满足当前内存需求，通常无需释放内存",
+      "normalHint": "内存压力：正常\n通常无需释放内存",
       "warningHint": "内存压力：偏高\n内存资源较紧张，可关闭暂时不用的应用",
       "criticalHint": "内存压力：过高\n可能影响响应速度，建议关闭不需要的应用",
       "unavailableHint": "内存压力：不可用\n暂时无法读取，右侧百分比表示内存使用率",
@@ -4055,7 +4055,7 @@
     "displayItems": "显示内容",
     "dragToReorder": "拖动排序",
     "gpu": "GPU",
-    "gpuUsageHint": "自动显示最忙显卡，也可在设置中固定选择。Windows 使用系统标准引擎的峰值，不包含驱动自定义引擎",
+    "gpuUsageHint": "自动显示最忙显卡，可在设置中固定选择\nWindows 取标准引擎峰值，不含驱动自定义引擎",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "内存",
@@ -4077,7 +4077,7 @@
     "automatic": "自动选择",
     "volume": "磁盘",
     "systemDisk": "系统磁盘",
-    "diskCapacityHint": "可用空间是系统估算值，macOS 会包含系统可按需回收的空间",
+    "diskCapacityHint": "可用空间为系统估算值\nmacOS 包含可按需回收的空间",
     "savedDisconnected": "已选设备 · 未连接",
     "saveFailed": "未能保存，请重试",
     "catalogueFailed": "无法获取设备列表",
@@ -4196,7 +4196,7 @@
     "quitAction": "退出"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "专用容量来自系统可分配内存，可能不含硬件预留；GPU 总容量也会受影响",
+    "allocatableMemoryHint": "专用容量为系统可分配量，可能不含硬件预留\nGPU 总容量也受此影响",
     "cachedLabel": "缓存",
     "cached": "正在显示上次数据，等待更新",
     "activities": "引擎活动",
@@ -4326,11 +4326,10 @@
     "written": "累计写入",
     "powerOnHours": "通电时间",
     "hoursUnit": "小时",
-    "smartHint": "此状态由设备 SMART 数据提供，不代表磁盘一定不会发生故障",
-    "systemHint": "仅为 Windows 报告的设备状态，详细 SMART 数据不可用",
-    "basicHint": "当前没有可识别的寿命百分比",
-    "unavailableHint": "设备或连接方式未提供可读取的健康数据",
-    "wearHint": "健康度为 100 减去厂商估算的寿命消耗，最低为 0%；不代表故障预测",
+    "smartHint": "设备 SMART 报告的状态\n未报告异常不代表一定不会故障",
+    "systemHint": "Windows 报告的设备状态\n未能读取详细 SMART 数据",
+    "unavailableHint": "暂时无法读取此磁盘的健康数据",
+    "wearHint": "健康度 = 100% − 厂商估算的寿命消耗\n最低为 0%，不用于预测故障",
     "read": "累计读取",
     "powerCycles": "电源循环",
     "spare": "可用备用空间",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "介质错误",
     "temperature": "温度",
     "healthPercent": "健康度",
-    "cachedHint": "显示上次读取的健康数据，后台更新中"
+    "cachedHint": "显示上次读取的健康数据\n正在后台更新"
   },
   "networkDetails": {
     "title": "连接详情",
     "received": "本次下载",
     "transmitted": "本次上传",
-    "sessionHint": "累计当前接口的监测流量；切换接口重新累计，暂停及数据不可用期间不计入",
-    "linkHint": "连接速率由系统上报，不代表实际互联网速度",
+    "sessionHint": "本轮运行中，当前接口的监测流量\n重启应用或切换接口后重新累计\n暂停、断网等未监测时段不计入",
+    "linkHint": "系统报告的网卡连接速率\n不代表实际互联网速度",
     "status": "状态",
     "connected": "已连接",
     "hardwareAddress": "当前 MAC 地址",
     "standard": "Wi-Fi 标准",
     "channel": "信道",
-    "wifiLinkHint": "当前协商的 Wi-Fi 发送速率，不代表互联网速度"
+    "wifiLinkHint": "当前 Wi-Fi 协商的发送速率\n不代表实际互联网速度"
   },
   "diskDetails": {
     "activity": "磁盘活动",
     "systemRead": "系统累计读取",
     "systemWritten": "系统累计写入",
-    "systemHint": "操作系统报告的全部磁盘设备计数，与 SMART 寿命累计值不同"
+    "systemHint": "系统提供的全部磁盘累计读写量\n重启 MangoDisk 不清零，起点由系统和驱动决定\n与 SMART 寿命累计量不同"
   }
 }

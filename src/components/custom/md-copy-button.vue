@@ -9,7 +9,10 @@ import { ICON_NAMES } from '@/lib/models/ui';
 import { ClipboardService } from '@/lib/services/clipboard-service';
 import { LoggerService } from '@/lib/services/logger-service';
 
-const props = defineProps<{ text: string; showText?: boolean; label?: string }>();
+const props = withDefaults(defineProps<{ text: string; showText?: boolean; label?: string; active?: boolean }>(), {
+  active: true,
+  label: undefined,
+});
 const { t } = useI18n();
 const copied = ref(false);
 const pending = ref(false);
@@ -43,7 +46,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <MdTooltip v-if="showText" :text="t('common.copy')">
+  <MdTooltip v-if="showText" :active="active" :text="t('common.copy')">
     <button
       type="button"
       class="copy-value"

@@ -172,18 +172,19 @@ const rates = computed(() =>
     <div class="resource-meta">
       <template v-if="metric === 'cpu' || metric === 'gpu'">
         <template v-if="metric === 'cpu' && cpuLabel">
-          <MdTooltip :text="cpuLabel">
+          <MdTooltip :active="active" :text="cpuLabel">
             <span class="gpu-source">{{ cpuLabel }}</span>
           </MdTooltip>
           <span v-if="!ready" class="resource-status" role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
         </template>
         <span v-else-if="!ready" role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>
-        <MdTooltip v-else-if="metric === 'gpu'" :text="t('systemStatus.gpuUsageHint')">
+        <MdTooltip v-else-if="metric === 'gpu'" :active="active" :text="t('systemStatus.gpuUsageHint')" multiline>
           <span class="gpu-source">{{ reading.gpu.value?.adapterName }}</span>
         </MdTooltip>
         <span v-else>{{ t('systemStatus.lastMinute') }}</span>
         <MdCpuTemperature
           v-if="metric === 'cpu' && showCpuTemperature"
+          :active="active"
           compact
           :interactive="interactive"
           :reading="reading.cpuTemperature"
@@ -196,6 +197,7 @@ const rates = computed(() =>
             reading.gpuTemperature.status !== 'unsupported' &&
             (!reading.gpu.value || reading.gpu.value.adapterId === reading.gpuTemperature.value?.adapterId)
           "
+          :active="active"
           metric="gpu"
           compact
           :interactive="interactive"
@@ -219,7 +221,12 @@ const rates = computed(() =>
         </span>
       </template>
       <template v-else-if="metric === 'disk'">
-        <MdTooltip v-if="ready && reading.disk.value" :text="isMacOs ? t('systemStatus.diskCapacityHint') : null">
+        <MdTooltip
+          v-if="ready && reading.disk.value"
+          :active="active"
+          :text="isMacOs ? t('systemStatus.diskCapacityHint') : null"
+          multiline
+        >
           <span>
             {{ t('systemStatus.available') }} {{ ByteSizeService.diskCapacity(reading.disk.value.availableBytes) }} /
             {{ ByteSizeService.diskCapacity(reading.disk.value.totalBytes) }}
@@ -236,7 +243,7 @@ const rates = computed(() =>
         </button>
       </template>
       <template v-else>
-        <MdTooltip :text="t('systemStatus.networkScope')">
+        <MdTooltip :active="active" :text="t('systemStatus.networkScope')">
           <span class="resource-source">{{ source || t('systemStatus.automatic') }}</span>
         </MdTooltip>
         <span v-if="!ready" role="status">{{ t(METRIC_STATUS_KEYS[current.status]) }}</span>

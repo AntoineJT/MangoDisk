@@ -18,12 +18,13 @@ const props = withDefaults(
     reading: MetricReading<CpuTemperature> | MetricReading<GpuTemperature>;
     metric: 'cpu' | 'gpu';
     observedAtMs: number;
+    active?: boolean;
     compact?: boolean;
     interactive?: boolean;
     heading?: string;
     showStatus?: boolean;
   }>(),
-  { compact: false, interactive: false, heading: undefined, showStatus: true }
+  { active: true, compact: false, interactive: false, heading: undefined, showStatus: true }
 );
 defineEmits<{ activate: [] }>();
 const { t } = useI18n({ useScope: 'global' });
@@ -63,7 +64,7 @@ const hint = computed(() =>
 
 <template>
   <div v-if="!compact || reading.status !== 'unsupported'" class="resource-temperature" :class="{ compact }">
-    <MdTooltip v-if="compact" :text="hint">
+    <MdTooltip v-if="compact" :active="active" :text="hint">
       <component
         :is="interactive ? 'button' : 'span'"
         :type="interactive ? 'button' : undefined"
@@ -79,7 +80,7 @@ const hint = computed(() =>
       <div class="temperature-heading">
         <div class="temperature-label">
           <span>{{ heading ?? label }}</span>
-          <MdTooltip :text="hint">
+          <MdTooltip :active="active" :text="hint">
             <button type="button" class="temperature-help" :aria-label="label">
               <MdIcon :name="ICON_NAMES.info" :size="12" />
             </button>

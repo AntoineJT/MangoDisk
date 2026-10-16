@@ -30,3 +30,23 @@ it('preserves a standalone trigger and shows a dismissible hint without a native
     wrapper.unmount();
   }
 });
+
+it('closes hints and resets pointer state when the resident panel becomes inactive', async () => {
+  const wrapper = mount(MdTooltip, {
+    attachTo: document.body,
+    props: { text: 'Health explanation', active: true, delayDuration: 0 },
+    slots: { default: () => h('button', 'Health') },
+  });
+  try {
+    await wrapper.get('button').trigger('pointermove', { pointerType: 'mouse' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+    await wrapper.setProps({ active: false });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+    await wrapper.setProps({ active: true });
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    await wrapper.get('button').trigger('pointermove', { pointerType: 'mouse' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+  } finally {
+    wrapper.unmount();
+  }
+});

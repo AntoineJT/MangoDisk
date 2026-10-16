@@ -4024,7 +4024,7 @@
       "critical": "Baskı yüksek",
       "unavailable": "Baskı okunamıyor",
       "stale": "Baskı güncel değil",
-      "normalHint": "Bellek baskısı: normal\nGenellikle belleği boşaltmak gerekmez",
+      "normalHint": "Bellek baskısı: normal\nGenellikle bellek boşaltmak gerekmez",
       "warningHint": "Bellek baskısı: artmış\nKullanmadığınız uygulamaları kapatmayı düşünün",
       "criticalHint": "Bellek baskısı: yüksek\nYanıtlar yavaşlayabilir; gereksiz uygulamaları kapatın",
       "unavailableHint": "Bellek baskısı: okunamıyor\nGeçici olarak okunamıyor; sağdaki yüzde kullanımdır",
@@ -4055,7 +4055,7 @@
     "displayItems": "Görüntülenecek öğeler",
     "dragToReorder": "Sıralamak için sürükleyin",
     "gpu": "GPU",
-    "gpuUsageHint": "En yoğun GPU otomatik gösterilir; ayarlardan sabit bir GPU seçilebilir. Windows en yoğun standart sistem motorunu kullanır, sürücüye özel motorları hariç tutar",
+    "gpuUsageHint": "En yoğun GPU gösterilir; ayarlardan sabit bir GPU seçebilirsiniz\nWindows standart motorların en yüksek değerini kullanır; özel sürücü motorları hariçtir",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "Bellek",
@@ -4077,7 +4077,7 @@
     "automatic": "Otomatik",
     "volume": "Birim",
     "systemDisk": "Sistem diski",
-    "diskCapacityHint": "Kullanılabilir alan sistem tarafından tahmin edilir. macOS’ta sistemin gerektiğinde boşaltabileceği alan da buna dahildir",
+    "diskCapacityHint": "Kullanılabilir alan sistemin tahminidir\nmacOS’te geri kazanılabilir alanı da içerir",
     "savedDisconnected": "Kayıtlı cihaz · bağlı değil",
     "saveFailed": "Kaydedilemedi. Tekrar deneyin",
     "catalogueFailed": "Cihazlar okunamadı",
@@ -4196,7 +4196,7 @@
     "quitAction": "Çık"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "Ayrılmış kapasite, sistemin ayırabildiği bellektir ve donanım rezervlerini içermeyebilir. Toplam GPU kapasitesi de etkilenir",
+    "allocatableMemoryHint": "Ayrılmış kapasite sistemin ayırabildiği miktardır; donanım rezervleri hariç olabilir\nBu, toplam GPU kapasitesini de etkiler",
     "cachedLabel": "Önbellek",
     "cached": "Son kullanılabilir veriler gösteriliyor; güncelleme bekleniyor",
     "activities": "Motor etkinliği",
@@ -4326,11 +4326,10 @@
     "written": "Toplam yazılan",
     "powerOnHours": "Çalışma süresi",
     "hoursUnit": "sa",
-    "smartHint": "Bu durum aygıtın SMART verilerinden gelir ve arıza olmayacağını garanti etmez",
-    "systemHint": "Windows tarafından bildirilen aygıt durumu. Ayrıntılı SMART verileri kullanılamıyor",
-    "basicHint": "Tanınan bir kalan ömür yüzdesi mevcut değil",
-    "unavailableHint": "Aygıt veya bağlantı okunabilir sağlık verileri sağlamıyor",
-    "wearHint": "100 eksi üreticinin tahmini yıpranma oranı; en az %0. Arıza tahmini değildir",
+    "smartHint": "Aygıtın SMART verilerinin bildirdiği durum\nUyarı olmaması arıza olmayacağını garanti etmez",
+    "systemHint": "Windows’un bildirdiği aygıt durumu\nAyrıntılı SMART verileri okunamadı",
+    "unavailableHint": "Bu diskin sağlık verileri şu anda okunamıyor",
+    "wearHint": "Sağlık = %100 − üreticinin tahmini ömür tüketimi\nEn az %0; arızayı öngörmez",
     "read": "Toplam okunan",
     "powerCycles": "Güç döngüleri",
     "spare": "Kullanılabilir yedek",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "Ortam hataları",
     "temperature": "Sıcaklık",
     "healthPercent": "Sağlık",
-    "cachedHint": "Arka planda güncellenirken son sağlık verileri gösteriliyor"
+    "cachedHint": "Son sağlık okuması gösteriliyor\nArka planda yenileniyor"
   },
   "networkDetails": {
     "title": "Bağlantı ayrıntıları",
     "received": "Bu oturumda indirilen",
     "transmitted": "Bu oturumda yüklenen",
-    "sessionHint": "Bu arayüz izlenirken biriken trafik. Arayüz değişince toplam sıfırlanır; duraklamalar ve veri alınamayan aralıklar sayılmaz",
-    "linkHint": "Bağlantı hızı sistemin bildirdiği hat hızıdır, gerçek internet hızı değildir",
+    "sessionHint": "Bu çalıştırmada geçerli arayüzde izlenen trafik\nUygulamayı yeniden başlatmak veya arayüzü değiştirmek toplamı sıfırlar\nDuraklamalar ve izlenmeyen süreler sayılmaz",
+    "linkHint": "Sistemin bildirdiği bağlantı hızı\nİnternet hızınız değildir",
     "status": "Durum",
     "connected": "Bağlı",
     "hardwareAddress": "Geçerli MAC adresi",
     "standard": "Wi-Fi standardı",
     "channel": "Kanal",
-    "wifiLinkHint": "Geçerli Wi-Fi gönderim bağlantı hızı, internet hızı değildir"
+    "wifiLinkHint": "Geçerli Wi-Fi bağlantısının anlaşmalı gönderim hızı\nİnternet hızınız değildir"
   },
   "diskDetails": {
     "activity": "Disk etkinliği",
     "systemRead": "Sistem okuması",
     "systemWritten": "Sistem yazması",
-    "systemHint": "Tüm disklerin işletim sistemi sayaçlarıdır; SMART kullanım ömrü toplamlarından ayrıdır"
+    "systemHint": "Sistemin bildirdiği tüm disklerin birikimli G/Ç miktarı\nMangoDisk’i yeniden başlatmak sayaçları sıfırlamaz\nBaşlangıç OS ve sürücüye bağlıdır; SMART ömür boyu toplamından farklıdır"
   }
 }

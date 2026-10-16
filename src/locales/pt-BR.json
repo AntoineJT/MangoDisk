@@ -4055,7 +4055,7 @@
     "displayItems": "Itens exibidos",
     "dragToReorder": "Arraste para reordenar",
     "gpu": "GPU",
-    "gpuUsageHint": "Mostra automaticamente a GPU mais ocupada; fixe uma GPU nas configurações. No Windows, usa o mecanismo padrão do sistema mais ocupado e exclui mecanismos definidos pelo driver",
+    "gpuUsageHint": "Mostra a GPU mais ocupada; fixe uma GPU nos ajustes\nO Windows usa o pico dos motores padrão, sem motores próprios do driver",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "Memória",
@@ -4077,7 +4077,7 @@
     "automatic": "Automático",
     "volume": "Volume",
     "systemDisk": "Disco do sistema",
-    "diskCapacityHint": "O espaço disponível é uma estimativa do sistema. No macOS, inclui espaço que o sistema pode liberar",
+    "diskCapacityHint": "O espaço disponível é uma estimativa do sistema\nNo macOS, inclui espaço recuperável",
     "savedDisconnected": "Dispositivo salvo · desconectado",
     "saveFailed": "Não foi possível salvar. Tente novamente",
     "catalogueFailed": "Não foi possível listar os dispositivos",
@@ -4196,7 +4196,7 @@
     "quitAction": "Encerrar"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "A capacidade dedicada usa a memória alocável pelo sistema e pode excluir reservas de hardware. Isso também afeta a capacidade total da GPU",
+    "allocatableMemoryHint": "A capacidade dedicada é alocável pelo sistema e pode excluir reservas de hardware\nIsso também afeta a capacidade total da GPU",
     "cachedLabel": "Em cache",
     "cached": "Exibindo os últimos dados disponíveis; aguardando atualização",
     "activities": "Atividade dos motores",
@@ -4326,11 +4326,10 @@
     "written": "Total gravado",
     "powerOnHours": "Tempo ligado",
     "hoursUnit": "h",
-    "smartHint": "O estado vem dos dados SMART do dispositivo e não garante ausência de falhas",
-    "systemHint": "Estado informado pelo Windows. Os dados SMART detalhados estão indisponíveis",
-    "basicHint": "Não há um percentual de vida útil restante reconhecido",
-    "unavailableHint": "O dispositivo ou a conexão não fornece dados de saúde legíveis",
-    "wearHint": "100 menos o desgaste estimado pelo fabricante, com mínimo de 0%. Não prevê falhas",
+    "smartHint": "Estado informado pelo SMART do dispositivo\nA ausência de alertas não garante que não haverá falhas",
+    "systemHint": "Estado do dispositivo informado pelo Windows\nNão foi possível ler os dados SMART detalhados",
+    "unavailableHint": "Não é possível ler a saúde deste disco no momento",
+    "wearHint": "Saúde = 100% − desgaste estimado pelo fabricante\nMínimo de 0%; não prevê falhas",
     "read": "Total lido",
     "powerCycles": "Ciclos de energia",
     "spare": "Reserva disponível",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "Erros de mídia",
     "temperature": "Temperatura",
     "healthPercent": "Saúde",
-    "cachedHint": "Exibindo a última leitura de saúde enquanto ela é atualizada em segundo plano"
+    "cachedHint": "Exibindo a última leitura de saúde\nAtualizando em segundo plano"
   },
   "networkDetails": {
     "title": "Detalhes da conexão",
     "received": "Baixado nesta sessão",
     "transmitted": "Enviado nesta sessão",
-    "sessionHint": "Tráfego durante o monitoramento desta interface. A troca de interface reinicia o total; pausas e intervalos sem dados são excluídos",
-    "linkHint": "A velocidade de conexão é a taxa do link informada pelo sistema, não a velocidade da internet",
+    "sessionHint": "Tráfego monitorado nesta interface durante esta execução\nReiniciar o app ou trocar a interface reinicia o total\nPausas e períodos sem monitoramento são excluídos",
+    "linkHint": "Taxa de conexão informada pelo sistema\nNão é a velocidade da internet",
     "status": "Status",
     "connected": "Conectado",
     "hardwareAddress": "Endereço MAC atual",
     "standard": "Padrão Wi-Fi",
     "channel": "Canal",
-    "wifiLinkHint": "Taxa de transmissão Wi-Fi negociada, não a velocidade da internet"
+    "wifiLinkHint": "Taxa de transmissão Wi-Fi negociada no momento\nNão é a velocidade da internet"
   },
   "diskDetails": {
     "activity": "Atividade do disco",
     "systemRead": "Leitura do sistema",
     "systemWritten": "Gravação do sistema",
-    "systemHint": "Contadores de dispositivos do sistema para todos os discos, distintos dos totais de vida útil SMART"
+    "systemHint": "E/S acumulada de todos os discos, informada pelo sistema\nReiniciar o MangoDisk não zera esses contadores\nO início depende do SO e do driver; difere do total vitalício SMART"
   }
 }

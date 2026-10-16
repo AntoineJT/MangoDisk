@@ -4055,7 +4055,7 @@
     "displayItems": "Display items",
     "dragToReorder": "Drag to reorder",
     "gpu": "GPU",
-    "gpuUsageHint": "Automatically shows the busiest GPU; choose a fixed GPU in settings. Windows uses the busiest standard system engine, excluding driver-defined engines",
+    "gpuUsageHint": "Shows the busiest GPU; choose a fixed GPU in settings\nWindows uses the busiest standard engine, excluding custom driver engines",
     "cpuShort": "CPU",
     "cpu": "CPU",
     "memory": "Memory",
@@ -4077,7 +4077,7 @@
     "automatic": "Automatic",
     "volume": "Volume",
     "systemDisk": "System disk",
-    "diskCapacityHint": "Available space is a system estimate. On macOS, it includes space the system can reclaim",
+    "diskCapacityHint": "Available space is a system estimate\nOn macOS, it includes reclaimable space",
     "savedDisconnected": "Saved device · disconnected",
     "saveFailed": "Could not save. Retry",
     "catalogueFailed": "Could not read devices",
@@ -4196,7 +4196,7 @@
     "quitAction": "Quit"
   },
   "gpuDetails": {
-    "allocatableMemoryHint": "Dedicated capacity uses system-allocatable memory and may exclude hardware reservations. This also affects total GPU capacity",
+    "allocatableMemoryHint": "Dedicated capacity is system-allocatable and may exclude hardware reservations\nThis also affects total GPU capacity",
     "cachedLabel": "Cached",
     "cached": "Showing the last available data; waiting for an update",
     "activities": "Engine activity",
@@ -4326,11 +4326,10 @@
     "written": "Total written",
     "powerOnHours": "Power-on time",
     "hoursUnit": "h",
-    "smartHint": "The device reports this SMART status; it is not a guarantee against failure",
-    "systemHint": "Windows reports the device status. Detailed SMART data is unavailable",
-    "basicHint": "No recognized remaining-life percentage is available",
-    "unavailableHint": "The device or connection does not provide readable health data",
-    "wearHint": "Health is 100 minus the manufacturer’s life-used estimate, with a minimum of 0%; it does not predict failure",
+    "smartHint": "Status reported by the device’s SMART data\nNo issues reported does not guarantee against failure",
+    "systemHint": "Device status reported by Windows\nDetailed SMART data could not be read",
+    "unavailableHint": "Health data for this disk is currently unreadable",
+    "wearHint": "Health = 100% − the manufacturer’s estimated life used\nMinimum 0%; not a prediction of failure",
     "read": "Total read",
     "powerCycles": "Power cycles",
     "spare": "Available spare",
@@ -4339,25 +4338,25 @@
     "mediaErrors": "Media errors",
     "temperature": "Temperature",
     "healthPercent": "Health",
-    "cachedHint": "Showing the last health reading while it refreshes in the background"
+    "cachedHint": "Showing the last health reading\nRefreshing in the background"
   },
   "networkDetails": {
     "title": "Connection details",
     "received": "Downloaded this run",
     "transmitted": "Uploaded this run",
-    "sessionHint": "Accumulated while monitoring this interface. Switching interfaces starts a new total; pauses and unavailable intervals are excluded",
-    "linkHint": "Connection speed is the reported link rate, not your internet speed",
+    "sessionHint": "Traffic monitored on this interface during this run\nRestarting the app or switching interfaces resets the total\nPauses and unmonitored intervals are excluded",
+    "linkHint": "Link rate reported by the system\nNot your internet speed",
     "status": "Status",
     "connected": "Connected",
     "hardwareAddress": "Current MAC address",
     "standard": "Wi-Fi standard",
     "channel": "Channel",
-    "wifiLinkHint": "Current negotiated Wi-Fi transmit rate, not internet speed"
+    "wifiLinkHint": "Current negotiated Wi-Fi transmit rate\nNot your internet speed"
   },
   "diskDetails": {
     "activity": "Disk activity",
     "systemRead": "System read",
     "systemWritten": "System written",
-    "systemHint": "Operating-system device counters for all disks, separate from SMART lifetime totals"
+    "systemHint": "System-reported cumulative I/O for all disks\nRestarting MangoDisk does not reset these counters\nThe start point depends on the OS and driver\nSeparate from SMART lifetime totals"
   }
 }

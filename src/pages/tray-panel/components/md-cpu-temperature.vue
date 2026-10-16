@@ -5,12 +5,13 @@ withDefaults(
   defineProps<{
     reading: MetricReading<CpuTemperature>;
     observedAtMs: number;
+    active?: boolean;
     compact?: boolean;
     interactive?: boolean;
     heading?: string;
     showStatus?: boolean;
   }>(),
-  { compact: false, interactive: false, heading: undefined, showStatus: true }
+  { active: true, compact: false, interactive: false, heading: undefined, showStatus: true }
 );
 defineEmits<{ activate: [] }>();
 </script>
@@ -18,6 +19,7 @@ defineEmits<{ activate: [] }>();
   <MdResourceTemperature
     class="cpu-temperature"
     metric="cpu"
+    :active="active"
     :reading="reading"
     :observed-at-ms="observedAtMs"
     :compact="compact"

@@ -91,6 +91,7 @@ const facts = computed(() => {
     </div>
     <MdCpuTemperature
       v-else
+      :active="active"
       :reading="reading.cpuTemperature"
       :observed-at-ms="reading.observedAtMs"
       :show-status="false"
@@ -110,7 +111,7 @@ const facts = computed(() => {
       </div>
     </template>
   </MdTemperatureDetails>
-  <MdResourceFacts :facts="facts" class="cpu-details" :aria-label="t('cpuDetails.summary')" />
+  <MdResourceFacts :active="active" :facts="facts" class="cpu-details" :aria-label="t('cpuDetails.summary')" />
 </template>
 <style scoped>
 @reference "@assets/main.css";

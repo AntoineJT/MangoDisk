@@ -122,7 +122,7 @@ const shortLabel = computed(() => {
         })
       }}</span>
       <div class="release-actions" :class="{ 'release-supported': releaseAvailable }">
-        <MdTooltip v-if="releaseAvailable" :text="resultMessage || undefined">
+        <MdTooltip v-if="releaseAvailable" :active="active" :text="resultMessage || undefined">
           <button
             class="release-button"
             :disabled="releasing"

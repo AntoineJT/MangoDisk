@@ -25,11 +25,7 @@ const pressureHint = computed(() => (pressureState.value ? t(PRESSURE_KEYS[press
 </script>
 
 <template>
-  <!-- Native hide may not dispatch pointerleave; reset the trigger's hover state as well as its content. -->
-  <MdTooltip v-if="pressureState" :key="active ? 'active' : 'inactive'" :text="active ? pressureHint : undefined">
-    <template #content>
-      <span class="whitespace-pre-line">{{ pressureHint }}</span>
-    </template>
+  <MdTooltip v-if="pressureState" :active="active" :text="pressureHint" multiline>
     <button
       v-bind="$attrs"
       type="button"

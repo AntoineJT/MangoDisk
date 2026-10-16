@@ -107,8 +107,34 @@ describe('disk health and network detail presentation', () => {
       wrapper
         .findAllComponents({ name: 'MdTooltip' })
         .some(component => component.props('text') === 'Acer AS500A 128G · Q1115A0')
-    ).toBe(true);
+    ).toBe(false);
+    expect(wrapper.find('.volume-identity').attributes('data-slot')).toBeUndefined();
     expect(wrapper.text()).not.toContain('Q1115A0');
+  });
+  it('anchors the health calculation hint to its field instead of the section title', () => {
+    const wrapper = render(DiskDetails, disk());
+    expect(wrapper.get('.disk-health h2').attributes('data-slot')).toBeUndefined();
+    const field = wrapper.get('.disk-health .resource-fact dt [data-slot="tooltip-trigger"]');
+    expect(field.text()).toBe(en.diskHealth.healthPercent);
+    expect(
+      wrapper
+        .findAllComponents({ name: 'MdTooltip' })
+        .find(tip => tip.props('text') === en.diskHealth.wearHint)
+        ?.text()
+    ).toBe(en.diskHealth.healthPercent);
+  });
+  it('keeps one tooltip anchor while disk health loads and becomes unavailable', async () => {
+    const reading = disk();
+    const loading: ResourceReadings = {
+      ...reading,
+      diskHealth: { status: 'loading', sampledAtMs: null, value: null },
+    };
+    const wrapper = render(DiskDetails, loading);
+    const anchor = wrapper.get('.disk-health header [data-slot="tooltip-trigger"]:last-child').element;
+    for (const current of [reading, loading, reading]) {
+      await wrapper.setProps({ reading: { ...current } });
+      expect(wrapper.get('.disk-health header [data-slot="tooltip-trigger"]:last-child').element).toBe(anchor);
+    }
   });
   it.each([en, zh, tw, ja, ko, pt, ru, tr])('shows supported zero readings and health in every locale', messages => {
     const reading = disk();
