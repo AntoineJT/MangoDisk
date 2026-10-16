@@ -4341,9 +4341,7 @@
     "cachedHint": "前回の健康データを表示中\nバックグラウンドで更新しています"
   },
   "networkDetails": {
-    "title": "接続情報",
-    "received": "今回の受信",
-    "transmitted": "今回の送信",
+    "title": "通信量",
     "sessionHint": "今回の実行中にこのインターフェースで計測した通信量\nアプリの再起動やインターフェースの切替でリセット\n一時停止など未計測の時間は含みません",
     "linkHint": "システムが報告するリンク速度\nインターネットの実効速度ではありません",
     "status": "状態",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "現在の MAC アドレス",
     "standard": "Wi-Fi 規格",
     "channel": "チャンネル",
-    "wifiLinkHint": "現在の Wi-Fi ネゴシエーション送信速度\nインターネットの実効速度ではありません"
+    "wifiLinkHint": "現在の Wi-Fi ネゴシエーション送信速度\nインターネットの実効速度ではありません",
+    "totalReceived": "累計ダウンロード",
+    "totalTransmitted": "累計アップロード",
+    "sessionValue": "今回 {value}",
+    "reset": "リセット",
+    "resetHint": "このインターフェイスの累計をリセット\n今回の通信量は保持します",
+    "resetTitle": "累計通信量をリセットしますか？",
+    "resetDescription": "{name} の保存済み累計をリセットします。今回の通信量は保持されます",
+    "resetFailed": "リセットを保存できませんでした。累計は変更されていません",
+    "cumulativeHint": "開始：{since}\n監視した通信量をインターフェイスごとに保存\nLAN 内の通信を含み、未監視の期間は含みません",
+    "cumulativeUnavailable": "保存済みの累計は現在取得できません\n今回の通信量は引き続き記録されます"
   },
   "diskDetails": {
     "activity": "ディスク動作",

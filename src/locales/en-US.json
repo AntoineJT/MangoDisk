@@ -4341,9 +4341,7 @@
     "cachedHint": "Showing the last health reading\nRefreshing in the background"
   },
   "networkDetails": {
-    "title": "Connection details",
-    "received": "Downloaded this run",
-    "transmitted": "Uploaded this run",
+    "title": "Traffic",
     "sessionHint": "Traffic monitored on this interface during this run\nRestarting the app or switching interfaces resets the total\nPauses and unmonitored intervals are excluded",
     "linkHint": "Link rate reported by the system\nNot your internet speed",
     "status": "Status",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "Current MAC address",
     "standard": "Wi-Fi standard",
     "channel": "Channel",
-    "wifiLinkHint": "Current negotiated Wi-Fi transmit rate\nNot your internet speed"
+    "wifiLinkHint": "Current negotiated Wi-Fi transmit rate\nNot your internet speed",
+    "totalReceived": "Total download",
+    "totalTransmitted": "Total upload",
+    "sessionValue": "This session: {value}",
+    "reset": "Reset",
+    "resetHint": "Reset totals for this interface\nSession traffic is kept",
+    "resetTitle": "Reset traffic totals?",
+    "resetDescription": "Reset the saved totals for {name}. Session traffic is kept",
+    "resetFailed": "Could not save the reset. Totals are unchanged",
+    "cumulativeHint": "Since {since}\nSaved separately for each monitored interface\nIncludes local-network traffic; unmonitored periods are excluded",
+    "cumulativeUnavailable": "Saved totals are temporarily unavailable\nSession traffic is still recorded"
   },
   "diskDetails": {
     "activity": "Disk activity",

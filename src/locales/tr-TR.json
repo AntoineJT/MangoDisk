@@ -4341,9 +4341,7 @@
     "cachedHint": "Son sağlık okuması gösteriliyor\nArka planda yenileniyor"
   },
   "networkDetails": {
-    "title": "Bağlantı ayrıntıları",
-    "received": "Bu oturumda indirilen",
-    "transmitted": "Bu oturumda yüklenen",
+    "title": "Trafik",
     "sessionHint": "Bu çalıştırmada geçerli arayüzde izlenen trafik\nUygulamayı yeniden başlatmak veya arayüzü değiştirmek toplamı sıfırlar\nDuraklamalar ve izlenmeyen süreler sayılmaz",
     "linkHint": "Sistemin bildirdiği bağlantı hızı\nİnternet hızınız değildir",
     "status": "Durum",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "Geçerli MAC adresi",
     "standard": "Wi-Fi standardı",
     "channel": "Kanal",
-    "wifiLinkHint": "Geçerli Wi-Fi bağlantısının anlaşmalı gönderim hızı\nİnternet hızınız değildir"
+    "wifiLinkHint": "Geçerli Wi-Fi bağlantısının anlaşmalı gönderim hızı\nİnternet hızınız değildir",
+    "totalReceived": "Toplam indirme",
+    "totalTransmitted": "Toplam yükleme",
+    "sessionValue": "Bu oturum: {value}",
+    "reset": "Sıfırla",
+    "resetHint": "Bu arayüzün toplamlarını sıfırla\nOturum trafiği korunur",
+    "resetTitle": "Trafik toplamları sıfırlansın mı?",
+    "resetDescription": "{name} için kaydedilen toplamlar sıfırlanır. Oturum trafiği korunur",
+    "resetFailed": "Sıfırlama kaydedilemedi. Toplamlar değişmedi",
+    "cumulativeHint": "Başlangıç: {since}\nİzlenen trafik her arayüz için ayrı kaydedilir\nYerel ağ trafiği dahildir; izlenmeyen süreler hariçtir",
+    "cumulativeUnavailable": "Kaydedilen toplamlar geçici olarak kullanılamıyor\nOturum trafiği kaydedilmeye devam eder"
   },
   "diskDetails": {
     "activity": "Disk etkinliği",

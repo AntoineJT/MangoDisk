@@ -4341,9 +4341,7 @@
     "cachedHint": "顯示上次讀取的健康資料\n正在背景更新"
   },
   "networkDetails": {
-    "title": "連線詳細資訊",
-    "received": "本次下載",
-    "transmitted": "本次上傳",
+    "title": "流量",
     "sessionHint": "本次執行期間，目前介面的監測流量\n重新啟動應用程式或切換介面後重新累計\n暫停、斷線等未監測時段不計入",
     "linkHint": "系統回報的網卡連線速率\n不代表實際網際網路速度",
     "status": "狀態",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "目前 MAC 位址",
     "standard": "Wi-Fi 標準",
     "channel": "頻道",
-    "wifiLinkHint": "目前 Wi-Fi 協商的傳送速率\n不代表實際網際網路速度"
+    "wifiLinkHint": "目前 Wi-Fi 協商的傳送速率\n不代表實際網際網路速度",
+    "totalReceived": "累計下載",
+    "totalTransmitted": "累計上傳",
+    "sessionValue": "本次 {value}",
+    "reset": "重設",
+    "resetHint": "重設目前網卡的累計流量\n保留本次流量",
+    "resetTitle": "重設累計流量？",
+    "resetDescription": "重設 {name} 的累計流量，保留本次流量",
+    "resetFailed": "無法儲存重設，累計流量未變更",
+    "cumulativeHint": "開始於 {since}\n按網卡分別儲存監測到的流量\n包含區域網路流量，未監測時段不計入",
+    "cumulativeUnavailable": "累計資料暫時無法使用\n本次流量不受影響"
   },
   "diskDetails": {
     "activity": "磁碟活動",

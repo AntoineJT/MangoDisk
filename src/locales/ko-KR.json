@@ -4341,9 +4341,7 @@
     "cachedHint": "이전 건강 데이터를 표시 중입니다\n백그라운드에서 갱신합니다"
   },
   "networkDetails": {
-    "title": "연결 정보",
-    "received": "이번 실행 다운로드",
-    "transmitted": "이번 실행 업로드",
+    "title": "트래픽",
     "sessionHint": "이번 실행 중 현재 인터페이스에서 측정한 트래픽\n앱을 다시 시작하거나 인터페이스를 바꾸면 초기화됩니다\n일시 중지 등 측정하지 않은 구간은 제외됩니다",
     "linkHint": "시스템이 보고한 연결 속도\n실제 인터넷 속도가 아닙니다",
     "status": "상태",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "현재 MAC 주소",
     "standard": "Wi-Fi 표준",
     "channel": "채널",
-    "wifiLinkHint": "현재 Wi-Fi에서 협상된 송신 속도\n실제 인터넷 속도가 아닙니다"
+    "wifiLinkHint": "현재 Wi-Fi에서 협상된 송신 속도\n실제 인터넷 속도가 아닙니다",
+    "totalReceived": "누적 다운로드",
+    "totalTransmitted": "누적 업로드",
+    "sessionValue": "이번 실행 {value}",
+    "reset": "초기화",
+    "resetHint": "현재 인터페이스의 누적 트래픽 초기화\n이번 실행의 트래픽은 유지됩니다",
+    "resetTitle": "누적 트래픽을 초기화할까요?",
+    "resetDescription": "{name}의 저장된 누적 트래픽을 초기화합니다. 이번 실행의 트래픽은 유지됩니다",
+    "resetFailed": "초기화를 저장하지 못했습니다. 누적 트래픽은 변경되지 않았습니다",
+    "cumulativeHint": "시작: {since}\n모니터링한 트래픽을 인터페이스별로 저장\n로컬 네트워크 트래픽을 포함하며 미관측 시간은 제외합니다",
+    "cumulativeUnavailable": "저장된 누적 트래픽을 일시적으로 사용할 수 없습니다\n이번 실행의 트래픽은 계속 기록됩니다"
   },
   "diskDetails": {
     "activity": "디스크 활동",

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
+import { ResidentService } from '@/lib/services/resident-service';
+import { LoggerService } from '@/lib/services/logger-service';
+import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { useI18n } from 'vue-i18n';
 import type { ResourceReadings } from '@/lib/models/system-resources';
 import { ByteSizeService } from '@/lib/services/byte-size-service';
@@ -8,7 +12,7 @@ import MdResourceOverview from './md-resource-overview.vue';
 import MdResourceFacts from './md-resource-facts.vue';
 
 const props = defineProps<{ reading: ResourceReadings; active: boolean }>();
-const { t, n } = useI18n({ useScope: 'global' });
+const { t, n, locale } = useI18n({ useScope: 'global' });
 const network = computed(() => (props.reading.network.status === 'ready' ? props.reading.network.value : null));
 function speed(bits: number | null | undefined): string {
   if (bits === null || bits === undefined || !Number.isFinite(bits) || bits <= 0) return '—';
@@ -23,20 +27,64 @@ const connection = computed(() => {
     ? speed(value.receiveLinkBps)
     : `↓ ${speed(value.receiveLinkBps)} · ↑ ${speed(value.transmitLinkBps)}`;
 });
-const facts = computed(() => [
+const cumulative = computed(() => network.value?.cumulative);
+const trafficHint = computed(() => {
+  const started = cumulative.value?.startedAtMs;
+  if (!started) return t('networkDetails.cumulativeUnavailable');
+  const since = started
+    ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(started)
+    : '—';
+  return t('networkDetails.cumulativeHint', { since });
+});
+const trafficFacts = computed(() => [
   {
     key: 'received',
-    label: t('networkDetails.received'),
-    value: network.value ? ByteSizeService.bytes(network.value.receivedBytesSinceStart) : '—',
-    unit: '',
+    label: t('networkDetails.totalReceived'),
+    total: cumulative.value?.receivedBytes,
+    session: network.value?.receivedBytesSinceStart,
   },
   {
     key: 'transmitted',
-    label: t('networkDetails.transmitted'),
-    value: network.value ? ByteSizeService.bytes(network.value.transmittedBytesSinceStart) : '—',
-    unit: '',
+    label: t('networkDetails.totalTransmitted'),
+    total: cumulative.value?.transmittedBytes,
+    session: network.value?.transmittedBytesSinceStart,
   },
 ]);
+const resetTarget = ref<{ id: string; name: string; startedAtMs: number } | null>(null);
+const resetting = ref(false);
+const resetError = ref(false);
+function requestReset() {
+  resetError.value = false;
+  const value = network.value;
+  if (value?.cumulative)
+    resetTarget.value = {
+      id: value.interface.id,
+      name: value.interface.name,
+      startedAtMs: value.cumulative.startedAtMs,
+    };
+}
+async function resetTraffic() {
+  const target = resetTarget.value;
+  if (!target || resetting.value) return;
+  resetting.value = true;
+  resetError.value = false;
+  try {
+    const reading = await ResidentService.resetNetworkTraffic(target.id, target.startedAtMs);
+    useTrayPanelStore().accept(reading);
+    resetTarget.value = null;
+  } catch {
+    resetError.value = true;
+    LoggerService.warn('monitoring', 'network_traffic_reset_failed');
+  } finally {
+    resetting.value = false;
+  }
+}
+watch(
+  () => props.active,
+  active => {
+    if (!active && !resetting.value) resetTarget.value = null;
+  }
+);
 const interfaceFacts = computed(() => {
   const value = network.value?.interface;
   const rows = [
@@ -91,13 +139,30 @@ const interfaceFacts = computed(() => {
 
 <template>
   <MdResourceOverview metric="network" :reading="reading" :active="active" class="detail-summary network-summary" />
-  <section class="network-details" :aria-label="t('networkDetails.title')">
+  <section class="network-details network-traffic" :aria-label="t('networkDetails.title')">
     <header>
-      <MdTooltip :active="active" :text="t('networkDetails.sessionHint')" multiline>
+      <MdTooltip :active="active" :text="trafficHint" multiline>
         <h2 tabindex="0">{{ t('networkDetails.title') }}</h2>
       </MdTooltip>
+      <MdTooltip :active="active" :text="t('networkDetails.resetHint')" multiline>
+        <button type="button" class="traffic-reset" :disabled="!cumulative || resetting" @click="requestReset">
+          {{ t('networkDetails.reset') }}
+        </button>
+      </MdTooltip>
     </header>
-    <MdResourceFacts :active="active" :facts="facts" />
+    <dl class="traffic-facts">
+      <div v-for="fact in trafficFacts" :key="fact.key">
+        <dt>{{ fact.label }}</dt>
+        <dd>{{ fact.total === undefined ? '—' : ByteSizeService.bytes(Number(fact.total)) }}</dd>
+        <MdTooltip :active="active" :text="t('networkDetails.sessionHint')" multiline>
+          <small tabindex="0">{{
+            t('networkDetails.sessionValue', {
+              value: fact.session === undefined ? '—' : ByteSizeService.bytes(fact.session),
+            })
+          }}</small>
+        </MdTooltip>
+      </div>
+    </dl>
   </section>
   <section class="network-details network-interface" :aria-label="t('systemStatus.interface')">
     <header>
@@ -117,6 +182,26 @@ const interfaceFacts = computed(() => {
     </header>
     <MdResourceFacts :active="active" :facts="interfaceFacts" layout="rows" />
   </section>
+  <MdConfirmDialog
+    v-if="resetTarget"
+    presentation="panel"
+    :open="true"
+    :title="t('networkDetails.resetTitle')"
+    :description="t('networkDetails.resetDescription', { name: resetTarget.name })"
+    :cancel-label="t('common.cancel')"
+    :confirm-label="t('networkDetails.reset')"
+    :busy="resetting"
+    @update:open="
+      open => {
+        if (!open) resetTarget = null;
+      }
+    "
+    @confirm="resetTraffic"
+  >
+    <template v-if="resetError" #default>
+      <p role="alert" class="text-xs text-destructive-text">{{ t('networkDetails.resetFailed') }}</p>
+    </template>
+  </MdConfirmDialog>
 </template>
 
 <style scoped>
@@ -127,6 +212,44 @@ const interfaceFacts = computed(() => {
   flex-direction: column;
   flex: none;
   gap: 12px;
+}
+.network-traffic {
+  padding-block: 4px;
+  gap: 8px;
+}
+.traffic-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.traffic-facts > div {
+  @apply rounded-lg bg-muted/40;
+  padding: 8px;
+  min-width: 0;
+}
+.traffic-facts dt,
+.traffic-facts small {
+  @apply text-muted-foreground;
+  display: block;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+.traffic-facts dd {
+  margin-block: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.traffic-reset {
+  @apply text-muted-foreground hover:text-foreground;
+  font-size: 11px;
+  padding: 2px 4px;
+  flex: none;
+  cursor: pointer;
+}
+.traffic-reset:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .network-interface {
   @apply border-t border-border;

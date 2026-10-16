@@ -30,9 +30,12 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // Disk health, I/O and interface details add localized labels and hints.
 // Japanese measures 329,390 raw bytes; Russian measures 398,077 raw bytes.
 // Extend only the measured locale margins; application budgets remain unchanged.
+// Persisted traffic adds localized accumulation/reset guidance: Japanese measures
+// 330,879 raw / 62,638 gzip bytes; Russian measures 399,778 raw / 70,709 gzip.
+// Add only 512 raw bytes per locale and 256/128 gzip bytes respectively.
 const localeChunkLimitOverrides = new Map([
-  ['ja-jp', { bytes: 323 * 1024, gzipBytes: 61 * 1024 }],
-  ['ru-ru', { bytes: 390 * 1024, gzipBytes: 69 * 1024 }],
+  ['ja-jp', { bytes: 323 * 1024 + 512, gzipBytes: 61 * 1024 + 256 }],
+  ['ru-ru', { bytes: 390 * 1024 + 512, gzipBytes: 69 * 1024 + 128 }],
 ]);
 
 function fail(message) {

@@ -4341,9 +4341,7 @@
     "cachedHint": "Exibindo a última leitura de saúde\nAtualizando em segundo plano"
   },
   "networkDetails": {
-    "title": "Detalhes da conexão",
-    "received": "Baixado nesta sessão",
-    "transmitted": "Enviado nesta sessão",
+    "title": "Tráfego",
     "sessionHint": "Tráfego monitorado nesta interface durante esta execução\nReiniciar o app ou trocar a interface reinicia o total\nPausas e períodos sem monitoramento são excluídos",
     "linkHint": "Taxa de conexão informada pelo sistema\nNão é a velocidade da internet",
     "status": "Status",
@@ -4351,7 +4349,17 @@
     "hardwareAddress": "Endereço MAC atual",
     "standard": "Padrão Wi-Fi",
     "channel": "Canal",
-    "wifiLinkHint": "Taxa de transmissão Wi-Fi negociada no momento\nNão é a velocidade da internet"
+    "wifiLinkHint": "Taxa de transmissão Wi-Fi negociada no momento\nNão é a velocidade da internet",
+    "totalReceived": "Download acumulado",
+    "totalTransmitted": "Upload acumulado",
+    "sessionValue": "Nesta sessão: {value}",
+    "reset": "Redefinir",
+    "resetHint": "Redefinir os totais desta interface\nO tráfego da sessão é mantido",
+    "resetTitle": "Redefinir totais de tráfego?",
+    "resetDescription": "Redefinir os totais salvos de {name}. O tráfego da sessão é mantido",
+    "resetFailed": "Não foi possível salvar a redefinição. Os totais não mudaram",
+    "cumulativeHint": "Desde {since}\nTráfego monitorado salvo por interface\nInclui a rede local; períodos sem monitoramento são excluídos",
+    "cumulativeUnavailable": "Totais salvos indisponíveis no momento\nO tráfego da sessão continua sendo registrado"
   },
   "diskDetails": {
     "activity": "Atividade do disco",

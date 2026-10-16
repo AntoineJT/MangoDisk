@@ -1,6 +1,10 @@
 // @vitest-environment happy-dom
 import { flushPromises, mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
+import { createPinia } from 'pinia';
+import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
+import { ResidentService } from '@/lib/services/resident-service';
+import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DiskDetails from './md-disk-details.vue';
 import NetworkDetails from './md-network-details.vue';
@@ -16,6 +20,8 @@ import pt from '@/locales/pt-BR.json';
 import ru from '@/locales/ru-RU.json';
 import tr from '@/locales/tr-TR.json';
 
+vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+
 const clipboard = vi.hoisted(() => ({ writeText: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('@/lib/services/clipboard-service', () => ({ ClipboardService: clipboard }));
 
@@ -29,7 +35,7 @@ function render(component: typeof DiskDetails | typeof NetworkDetails, reading: 
   const wrapper = mount(component, {
     props: { reading, active: true },
     global: {
-      plugins: [createI18n({ legacy: false, locale: 'en-US', messages: { 'en-US': messages } })],
+      plugins: [createPinia(), createI18n({ legacy: false, locale: 'en-US', messages: { 'en-US': messages } })],
       stubs: { MdResourceOverview: true },
     },
   });
@@ -334,7 +340,43 @@ describe('disk health and network detail presentation', () => {
     await flushPromises();
     expect(clipboard.writeText).toHaveBeenLastCalledWith('192.0.2.1');
     expect(wrapper.text()).not.toContain(en.networkDetails.sessionHint);
-    expect(wrapper.findComponent({ name: 'MdTooltip' }).props('text')).toBe(en.networkDetails.sessionHint);
+    expect(
+      wrapper
+        .findAllComponents({ name: 'MdTooltip' })
+        .some(component => component.props('text') === en.networkDetails.sessionHint)
+    ).toBe(true);
+    const reset = vi.spyOn(ResidentService, 'resetNetworkTraffic');
+    let finish!: (value: Awaited<ReturnType<typeof ResidentService.resetNetworkTraffic>>) => void;
+    reset.mockImplementationOnce(
+      () =>
+        new Promise(resolve => {
+          finish = resolve;
+        })
+    );
+    await wrapper.get('.traffic-reset').trigger('click');
+    const dialog = wrapper.getComponent(MdConfirmDialog);
+    expect(dialog.props('description')).toContain('Ethernet');
+    dialog.vm.$emit('confirm');
+    await flushPromises();
+    expect(reset).toHaveBeenCalledExactlyOnceWith('lan', 1000);
+    expect(dialog.props('busy')).toBe(true);
+    const accepted = { ...reading, revision: 50 };
+    finish(accepted);
+    await flushPromises();
+    expect(useTrayPanelStore().reading.revision).toBe(50);
+    expect(wrapper.findComponent(MdConfirmDialog).exists()).toBe(false);
+    reset.mockRejectedValueOnce(new Error('write failed'));
+    await wrapper.get('.traffic-reset').trigger('click');
+    wrapper.getComponent(MdConfirmDialog).vm.$emit('confirm');
+    await flushPromises();
+    expect(document.querySelector('[role=alert]')?.textContent).toBe(en.networkDetails.resetFailed);
+    expect(wrapper.findComponent(MdConfirmDialog).props('busy')).toBe(false);
+    reset.mockResolvedValueOnce({ ...accepted, revision: 51 });
+    wrapper.getComponent(MdConfirmDialog).vm.$emit('confirm');
+    await flushPromises();
+    expect(wrapper.findComponent(MdConfirmDialog).exists()).toBe(false);
+    expect(document.querySelector('[role=alert]')).toBeNull();
+    expect(useTrayPanelStore().reading.revision).toBe(51);
     const wifi = {
       ...reading.network.value!,
       receiveLinkBps: null,
