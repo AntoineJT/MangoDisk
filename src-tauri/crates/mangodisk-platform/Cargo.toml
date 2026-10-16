@@ -22,6 +22,7 @@ system-configuration = "0.8.0"
 dispatch2 = { version = "0.3.1", default-features = false, features = ["std"] }
 libc = "0.2.190"
 objc2 = "0.6.5"
+objc2-core-wlan = { version = "0.3.2", default-features = false, features = ["std", "CWChannel", "CWInterface", "CWWiFiClient", "CoreWLANTypes"] }
 objc2-app-kit = { version = "0.3.2", default-features = false, features = ["libc", "NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSPasteboard", "NSPasteboardItem", "NSRunningApplication", "NSWorkspace", "objc2-core-foundation", "objc2-uniform-type-identifiers"] }
 objc2-core-foundation = { version = "0.3.2", default-features = false, features = ["std", "CFArray", "CFDate", "CFString", "CFUUID"] }
 objc2-core-services = { version = "0.3.2", default-features = false, features = ["std", "dispatch2", "FSEvents", "libc"] }

@@ -928,7 +928,17 @@ describe('status display interactions', () => {
     });
     vi.mocked(ResidentService.catalogue).mockResolvedValue({
       ...readingFixture(),
-      interfaces: [{ id: 'wifi', name: 'Wi-Fi', kind: 'wifi', connected: true, physical: true, defaultRouteMetric: 1 }],
+      interfaces: [
+        {
+          id: 'wifi',
+          name: 'Wi-Fi',
+          kind: 'wifi',
+          connected: true,
+          physical: true,
+          details: null,
+          defaultRouteMetric: 1,
+        },
+      ],
     });
     const wrapper = mount(Settings, { props: { isMacOs: true }, global: global(), attachTo: document.body });
     wrappers.push(wrapper);

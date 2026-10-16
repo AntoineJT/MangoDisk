@@ -110,11 +110,27 @@ export interface NetworkInterface {
   connected: boolean;
   physical: boolean;
   defaultRouteMetric: number | null;
+  details: {
+    addresses: string[];
+    hardwareAddress: string | null;
+    wifi: {
+      standard: string | null;
+      channel: number | null;
+      bandGhz: number | null;
+      channelWidthMhz: number | null;
+      signalDbm: number | null;
+      noiseDbm: number | null;
+    } | null;
+  } | null;
 }
 export interface NetworkRate {
   interface: NetworkInterface;
   receivedBytesPerSecond: number;
   transmittedBytesPerSecond: number;
+  receivedBytesSinceStart: number;
+  transmittedBytesSinceStart: number;
+  receiveLinkBps: number | null;
+  transmitLinkBps: number | null;
   selectionReason: 'manual' | 'defaultRoute' | 'physicalFallback' | 'disconnected';
 }
 export interface ResourceVolume {
@@ -256,7 +272,7 @@ export interface DiskHealth {
 }
 
 export interface ResourceReadings {
-  schemaVersion: 24;
+  schemaVersion: 27;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;

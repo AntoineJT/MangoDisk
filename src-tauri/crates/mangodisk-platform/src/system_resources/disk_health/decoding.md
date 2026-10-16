@@ -62,6 +62,6 @@ unrecognized variants. The drive brand alone is insufficient. If a logical
 sector size is unavailable, Seagate byte totals stay absent. macOS may therefore
 expose fewer ATA summaries while retaining the full attribute table.
 
-Current readings use schema 24. The panel displays concise, decoded lifetime
+Current readings use schema 27. The panel displays concise, decoded lifetime
 summaries; the engineering probe additionally emits the complete raw/decoded
 ATA table and extended NVMe fields. Those diagnostics do not add polling.

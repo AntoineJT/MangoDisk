@@ -36,7 +36,7 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 25; resource readings use version 24.
+Resident preferences use schema version 25; resource readings use version 27.
 Versions 1–8 preferences preserve every saved selection and order, appending GPU
 display disabled. New installations also leave GPU display unselected. Resource
 version 9 adds the GPU catalogue. Version 9 preferences migrate GPU selection to automatic; version 10 persists fixed selection. Frontends reject mismatched envelopes.
@@ -79,6 +79,13 @@ Health queries do not enable SMART, run self-tests, install drivers, or elevate.
 NVMe lifetime counters retain their 128-bit decimal representation across JSON;
 ATA attributes retain their IDs, flags, normalized/current/worst values and all seven vendor bytes. Only verified model/firmware profiles decode units and life percentages; unknown profiles keep raw attributes without guessed summaries. See [SMART decoding](../../crates/mangodisk-platform/src/system_resources/disk_health/decoding.md). Windows
 management-only status is explicitly distinguished from detailed SMART data.
+
+Network totals count valid observed intervals for the selected interface. Source
+changes start a new total, while pauses and counter resets prime a new baseline
+without counting the unobserved interval. Link rates are reported by the native
+interface and never described as internet bandwidth. No active traffic probes or
+average disk response-time display are added.
+Network metadata uses a bounded ten-second CoreWLAN cache on macOS for negotiated transmit rate, PHY mode, channel and signal/noise. Generic IFMIB Wi-Fi baud rates are not displayed as negotiated rates; receive link rate stays absent when the native API supplies only transmit rate. Current interface MAC addresses can differ from factory addresses under private addressing. Traffic totals cover the monitored interface in this process; the UI labels them as session totals. Health percentage is max(0, 100 - NVMe percentage used).
 
 Memory process details are requested only by its selected page or startup icon
 warming. CPU application counters stay warm while resident mode is enabled, every 4 seconds in the background and every 2 seconds on the CPU page. Opening or explicitly refreshing that page requests a sample immediately while reusing any in-flight query and displaying cached rows. Baseline-only results receive at most two 250 ms retries. Reopening preserves the last
@@ -447,7 +454,7 @@ shared tray text and tooltips keep their existing precision.
 
 ### Overview history and disk activity
 
-Resource readings use schema version 24 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
+Resource readings use schema version 27 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
 
 Memory pressure is independent of occupancy. macOS reads `kern.memorystatus_vm_pressure_level` in the existing three-second memory sample and decodes dispatch flags 1/2/4 as normal/warning/critical. Unknown flags, unexpected lengths and read errors publish unavailable; Windows and Linux publish unsupported. The panel hides unsupported pressure and marks non-ready samples as not updated. Diagnostics record the first observation, transitions, failures and recovery rather than every sample.
 
@@ -1085,7 +1092,7 @@ a recovered main window. Follow Microsoft's [process-related event guidance](htt
 
 ## macOS fan speed
 
-Preference envelopes use version 25; current readings use version 24. Previous preferences retain all
+Preference envelopes use version 25; current readings use version 27. Previous preferences retain all
 saved display choices, relative order, colors, and device selections. Migration
 adds fan speed disabled before a trailing network item, with automatic fan
 selection. Version-23 automatic and fixed choices migrate to highest and selected

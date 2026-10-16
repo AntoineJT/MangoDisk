@@ -49,6 +49,10 @@ pub struct NetworkRate {
     pub interface: NetworkInterface,
     pub received_bytes_per_second: f64,
     pub transmitted_bytes_per_second: f64,
+    pub received_bytes_since_start: u64,
+    pub transmitted_bytes_since_start: u64,
+    pub receive_link_bps: Option<u64>,
+    pub transmit_link_bps: Option<u64>,
     pub selection_reason: NetworkSelectionReason,
 }
 
@@ -91,6 +95,9 @@ pub fn select<'a>(
 #[derive(Default)]
 pub struct NetworkDelta {
     previous: Option<(String, NetworkCounters, u64)>,
+    session_interface: Option<String>,
+    received: u64,
+    transmitted: u64,
 }
 
 impl NetworkDelta {
@@ -101,6 +108,11 @@ impl NetworkDelta {
         elapsed_ms: u64,
         selection_reason: NetworkSelectionReason,
     ) -> Option<NetworkRate> {
+        if self.session_interface.as_deref() != Some(&interface.id) {
+            self.session_interface = Some(interface.id.clone());
+            self.received = 0;
+            self.transmitted = 0;
+        }
         let previous = self
             .previous
             .replace((interface.id.clone(), counters, elapsed_ms))?;
@@ -113,11 +125,17 @@ impl NetworkDelta {
         }
         let received = counters.received.checked_sub(previous.1.received)?;
         let transmitted = counters.transmitted.checked_sub(previous.1.transmitted)?;
+        self.received = self.received.saturating_add(received);
+        self.transmitted = self.transmitted.saturating_add(transmitted);
         Some(NetworkRate {
             interface: interface.clone(),
             received_bytes_per_second: received as f64 * 1000.0 / elapsed as f64,
             transmitted_bytes_per_second: transmitted as f64 * 1000.0 / elapsed as f64,
             selection_reason,
+            received_bytes_since_start: self.received,
+            transmitted_bytes_since_start: self.transmitted,
+            receive_link_bps: counters.receive_link_bps.filter(|value| *value > 0),
+            transmit_link_bps: counters.transmit_link_bps.filter(|value| *value > 0),
         })
     }
 
@@ -129,11 +147,88 @@ impl NetworkDelta {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn session_totals_exclude_pauses_rollbacks_and_changes_without_losing_link_metadata() {
+        let lan = interface("lan", true, Some(1)).interface;
+        let wifi = interface("wifi", true, Some(2)).interface;
+        let mut delta = NetworkDelta::default();
+        let counters = |received, transmitted| NetworkCounters {
+            received,
+            transmitted,
+            receive_link_bps: Some(1_000_000_000),
+            transmit_link_bps: None,
+        };
+        let mut sample = |interface: &NetworkInterface, rx, tx, time| {
+            delta.sample(
+                interface,
+                counters(rx, tx),
+                time,
+                NetworkSelectionReason::Manual,
+            )
+        };
+        assert!(sample(&lan, 1000, 2000, 0).is_none());
+        let first = sample(&lan, 1100, 2300, 1000).unwrap();
+        assert_eq!(
+            (
+                first.received_bytes_since_start,
+                first.transmitted_bytes_since_start
+            ),
+            (100, 300)
+        );
+        assert_eq!(first.receive_link_bps, Some(1_000_000_000));
+        assert_eq!(first.transmit_link_bps, None);
+        assert!(sample(&lan, 2000, 3000, 10_000).is_none());
+        let resumed = sample(&lan, 2010, 3020, 11_000).unwrap();
+        assert_eq!(
+            (
+                resumed.received_bytes_since_start,
+                resumed.transmitted_bytes_since_start
+            ),
+            (110, 320)
+        );
+        assert!(sample(&lan, 0, 0, 12_000).is_none());
+        assert_eq!(
+            sample(&lan, 10, 10, 13_000)
+                .unwrap()
+                .received_bytes_since_start,
+            120
+        );
+        assert!(sample(&wifi, 8000, 8000, 14_000).is_none());
+        assert_eq!(
+            sample(&wifi, 8010, 8010, 15_000)
+                .unwrap()
+                .received_bytes_since_start,
+            10
+        );
+        delta.reset();
+        assert!(delta
+            .sample(
+                &wifi,
+                counters(9000, 9000),
+                16_000,
+                NetworkSelectionReason::Manual
+            )
+            .is_none());
+        assert_eq!(
+            delta
+                .sample(
+                    &wifi,
+                    counters(9010, 9010),
+                    17_000,
+                    NetworkSelectionReason::Manual
+                )
+                .unwrap()
+                .received_bytes_since_start,
+            20
+        );
+    }
     use mangodisk_platform::system_resources::network::InterfaceKind;
 
     fn interface(id: &str, physical: bool, metric: Option<u32>) -> InterfaceSample {
         InterfaceSample {
             interface: NetworkInterface {
+                details: None,
                 id: id.into(),
                 name: id.into(),
                 kind: InterfaceKind::Ethernet,
@@ -211,7 +306,8 @@ mod tests {
                 &interface,
                 NetworkCounters {
                     received: 100,
-                    transmitted: 200
+                    transmitted: 200,
+                    ..Default::default()
                 },
                 0,
                 reason
@@ -223,6 +319,7 @@ mod tests {
                 NetworkCounters {
                     received: 3100,
                     transmitted: 6200,
+                    ..Default::default()
                 },
                 1500,
                 reason,
@@ -236,6 +333,7 @@ mod tests {
                 NetworkCounters {
                     received: 3100,
                     transmitted: 6200,
+                    ..Default::default()
                 },
                 2500,
                 reason,
@@ -253,6 +351,7 @@ mod tests {
         let counters = NetworkCounters {
             received: 100,
             transmitted: 100,
+            ..Default::default()
         };
         assert!(delta.sample(&one, counters, 0, reason).is_none());
         assert!(delta.sample(&two, counters, 1000, reason).is_none());
@@ -261,7 +360,8 @@ mod tests {
                 &two,
                 NetworkCounters {
                     received: 1,
-                    transmitted: 1
+                    transmitted: 1,
+                    ..Default::default()
                 },
                 2000,
                 reason
