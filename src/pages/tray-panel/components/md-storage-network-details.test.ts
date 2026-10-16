@@ -312,6 +312,7 @@ describe('disk health and network detail presentation', () => {
         receivedBytesPerSecond: 0,
         transmittedBytesPerSecond: 0,
         selectionReason: 'defaultRoute',
+        cumulative: { receivedBytes: '0', transmittedBytes: '100000', startedAtMs: 1000 },
         receivedBytesSinceStart: 0,
         transmittedBytesSinceStart: 1024,
         receiveLinkBps: 1e9,

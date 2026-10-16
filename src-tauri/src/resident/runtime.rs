@@ -35,6 +35,8 @@ pub struct ResidentState {
     // Serialize native preference transactions and periodic display refreshes.
     // Sampling only reads the short-lived committed-preferences lock below.
     pub preference_update: Mutex<()>,
+    pub network_traffic:
+        Mutex<Option<Arc<mangodisk_core::system_resources::network_traffic::NetworkTraffic>>>,
     pub preferences: Mutex<ResidentPreferences>,
     pub panel_open: AtomicBool,
     pub panel_ready: AtomicBool,
@@ -153,6 +155,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
     let (sender, events) = mpsc::sync_channel(8);
     let state = Arc::new(ResidentState {
         preference_update: Mutex::new(()),
+        network_traffic: Mutex::new(None),
         preferences: Mutex::new(preferences),
         panel_open: AtomicBool::new(false),
         panel_ready: AtomicBool::new(false),
@@ -196,6 +199,9 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
             MetricId::ALL.map(|metric| sampling_workers::start(metric, origin, sender.clone()));
         let mut slots: [SamplingSlot; 5] = std::array::from_fn(|_| SamplingSlot::default());
         let mut cache = ResourceCache::default();
+        if let Some(traffic) = super::network_traffic::install(&app, &worker) {
+            cache.set_network_traffic(traffic);
+        }
         let disk_activity = super::disk_activity::start(origin, sender.clone());
         let mut disk_slot = SamplingSlot::default();
         let mut disk_status = MetricStatus::Loading;
@@ -686,6 +692,16 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                     }
                     reading.revision += 1;
                     reading.resources = resources;
+                    // A reset may finish after snapshot construction but before
+                    // this lock. Never publish that snapshot's pre-reset totals.
+                    if let Some(network) = reading.resources.network.value.as_mut() {
+                        network.cumulative = worker
+                            .network_traffic
+                            .lock()
+                            .unwrap_or_else(|error| error.into_inner())
+                            .as_ref()
+                            .and_then(|traffic| traffic.total(&network.interface.id));
+                    }
                 }
                 // Independent workers commonly finish within a few milliseconds.
                 // Native status-bar layout is expensive. Limit periodic display
@@ -852,6 +868,7 @@ mod overview_tests {
         }
         ResidentState {
             preference_update: Mutex::new(()),
+            network_traffic: Mutex::new(None),
             preferences: Mutex::new(preferences),
             panel_open: AtomicBool::new(true),
             panel_ready: AtomicBool::new(true),

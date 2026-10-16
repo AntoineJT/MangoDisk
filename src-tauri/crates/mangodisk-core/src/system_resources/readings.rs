@@ -72,7 +72,7 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 27,
+            schema_version: 28,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
             cpu_identity: None,
@@ -134,6 +134,12 @@ pub struct ResourceCache {
 }
 
 impl ResourceCache {
+    pub fn set_network_traffic(
+        &mut self,
+        traffic: std::sync::Arc<super::network_traffic::NetworkTraffic>,
+    ) {
+        self.network_delta.set_traffic(traffic);
+    }
     pub fn cpu(
         &mut self,
         counters: impl Into<CpuSample>,
@@ -581,10 +587,13 @@ impl ResourceCache {
             self.fail(MetricId::Network, MetricStatus::Failed);
             return reason;
         };
-        if let Some(value) =
-            self.network_delta
-                .sample(&selected.interface, counters, monotonic_ms, reason)
-        {
+        if let Some(value) = self.network_delta.sample(
+            &selected.interface,
+            counters,
+            monotonic_ms,
+            reason,
+            timestamp_ms,
+        ) {
             self.network_history.push(TrendPoint {
                 sampled_at_ms: timestamp_ms,
                 primary: value.received_bytes_per_second,
@@ -896,6 +905,9 @@ impl ResourceCache {
         self.readings.gpu_renderer_history = self.gpu_renderer_history.snapshot(now_ms);
         self.readings.gpu_tiler_history = self.gpu_tiler_history.snapshot(now_ms);
         self.readings.network_history = self.network_history.snapshot(now_ms);
+        if let Some(network) = self.readings.network.value.as_mut() {
+            network.cumulative = self.network_delta.cumulative(&network.interface.id);
+        }
         self.readings.clone()
     }
 }
@@ -1468,7 +1480,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 27);
+        assert_eq!(wire["schemaVersion"], 28);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -1590,7 +1602,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 27);
+        assert_eq!(cache.snapshot(1000).schema_version, 28);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

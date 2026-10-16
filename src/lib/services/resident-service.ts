@@ -22,6 +22,9 @@ export class ResidentService {
   static reading(): Promise<ResidentReading> {
     return invoke('monitoring_get_reading');
   }
+  static resetNetworkTraffic(interfaceId: string, startedAtMs: number): Promise<ResidentReading> {
+    return invoke('monitoring_reset_network_traffic', { interfaceId, startedAtMs });
+  }
   static refresh(): Promise<void> {
     return invoke('monitoring_refresh');
   }

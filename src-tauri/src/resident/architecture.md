@@ -36,7 +36,7 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 25; resource readings use version 27.
+Resident preferences use schema version 25; resource readings use version 28.
 Versions 1–8 preferences preserve every saved selection and order, appending GPU
 display disabled. New installations also leave GPU display unselected. Resource
 version 9 adds the GPU catalogue. Version 9 preferences migrate GPU selection to automatic; version 10 persists fixed selection. Frontends reject mismatched envelopes.
@@ -77,7 +77,7 @@ from SMART lifetime counters. Interface IP/MAC metadata remains local display da
 never diagnostic or external-service payloads. macOS reuses its existing address
 enumeration; Windows caches the local unicast table for ten seconds and invalidates
 it on native topology changes. No per-process I/O/network tracking is added. Resource
-version 25 adds disk health and network session totals/link rates; version 26 adds optional Wi-Fi metadata; version 27 adds lossless ATA attributes and additional standardized NVMe counters. Disk health is
+version 25 adds disk health and network session totals/link rates; version 26 adds optional Wi-Fi metadata; version 27 adds lossless ATA attributes and additional standardized NVMe counters; version 28 adds per-interface persisted network traffic totals. Disk health is
 read only on its visible detail page, cached for five minutes, and expires after
 ten minutes. Reopening the same disk preserves the last health fields while stale
 results refresh in the background; cached status remains explicit. Unavailable
@@ -464,7 +464,7 @@ shared tray text and tooltips keep their existing precision.
 
 ### Overview history and disk activity
 
-Resource readings use schema version 27 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
+Resource readings use schema version 28 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
 
 Memory pressure is independent of occupancy. macOS reads `kern.memorystatus_vm_pressure_level` in the existing three-second memory sample and decodes dispatch flags 1/2/4 as normal/warning/critical. Unknown flags, unexpected lengths and read errors publish unavailable; Windows and Linux publish unsupported. The panel hides unsupported pressure and marks non-ready samples as not updated. Diagnostics record the first observation, transitions, failures and recovery rather than every sample.
 
@@ -1102,7 +1102,7 @@ a recovered main window. Follow Microsoft's [process-related event guidance](htt
 
 ## macOS fan speed
 
-Preference envelopes use version 25; current readings use version 27. Previous preferences retain all
+Preference envelopes use version 25; current readings use version 28. Previous preferences retain all
 saved display choices, relative order, colors, and device selections. Migration
 adds fan speed disabled before a trailing network item, with automatic fan
 selection. Version-23 automatic and fixed choices migrate to highest and selected
@@ -1139,3 +1139,22 @@ existing color choices are preserved. Highest and average modes color their
 aggregate value; paired rows classify independently by fan ID. Missing or stale
 values use the system foreground. Descending boundaries hold for 100 RPM to
 avoid flicker and reset when the mode, selected fans, or rules change.
+
+
+### Persisted network traffic
+
+Core `system_resources::network_traffic` accumulates only valid intervals from
+`NetworkDelta` for the selected interface. Unobserved gaps, application downtime,
+source changes and counter rollbacks never import operating-system totals.
+Network identities retain per-interface history across application restarts;
+this is monitored traffic, including LAN traffic, rather than Internet billing.
+
+`network-traffic.json` uses schema 1. Missing history starts empty; unknown,
+malformed or oversized history is preserved and disables persisted totals.
+A lifetime file lease prevents concurrent writers. Background saves occur at
+most once per minute, with an additional final save on normal exit. Atomic
+same-directory replacement prevents partial JSON. An abnormal termination may
+lose up to one unsaved minute. Reset saves before acknowledgement, targets the
+confirmed interface and start time, and preserves the current session counters.
+Intervals overlapping a reset are excluded. The adapter refreshes totals before
+publishing a snapshot so an in-flight sample cannot restore pre-reset values.

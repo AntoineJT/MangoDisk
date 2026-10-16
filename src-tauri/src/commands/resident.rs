@@ -210,3 +210,16 @@ pub async fn memory_release_open_settings(app: tauri::AppHandle) -> CommandResul
     })
     .await
 }
+
+#[tauri::command]
+pub async fn monitoring_reset_network_traffic(
+    state: tauri::State<'_, Arc<ResidentState>>,
+    interface_id: String,
+    started_at_ms: u64,
+) -> CommandResult<ResidentReading> {
+    let state = state.inner().clone();
+    super::error::run_blocking("monitoring_reset_network_traffic", move || {
+        resident::network_traffic::reset(&state, &interface_id, started_at_ms)
+    })
+    .await
+}

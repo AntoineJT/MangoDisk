@@ -123,7 +123,13 @@ export interface NetworkInterface {
     } | null;
   } | null;
 }
+export interface NetworkTrafficTotal {
+  receivedBytes: string;
+  transmittedBytes: string;
+  startedAtMs: number;
+}
 export interface NetworkRate {
+  cumulative: NetworkTrafficTotal | null;
   interface: NetworkInterface;
   receivedBytesPerSecond: number;
   transmittedBytesPerSecond: number;
@@ -272,7 +278,7 @@ export interface DiskHealth {
 }
 
 export interface ResourceReadings {
-  schemaVersion: 27;
+  schemaVersion: 28;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;

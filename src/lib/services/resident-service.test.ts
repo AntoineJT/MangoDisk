@@ -15,6 +15,10 @@ vi.mock('@tauri-apps/api/window', () => ({
 }));
 
 describe('resident desktop protocol', () => {
+  it('binds traffic resets to the displayed interface and accumulation start', async () => {
+    await ResidentService.resetNetworkTraffic('lan', 1234);
+    expect(invoke).toHaveBeenCalledWith('monitoring_reset_network_traffic', { interfaceId: 'lan', startedAtMs: 1234 });
+  });
   beforeEach(() => vi.clearAllMocks());
 
   it('seeds visibility without focus and preserves an event received during the query', async () => {

@@ -193,6 +193,7 @@ pub fn run() {
         )
         .invoke_handler(tauri::generate_handler![
             commands::resident::monitoring_get_reading,
+            commands::resident::monitoring_reset_network_traffic,
             commands::resident::monitoring_refresh,
             commands::resident::monitoring_release_memory,
             commands::resident::memory_release_preferences,
@@ -392,6 +393,7 @@ pub fn run() {
                 code
             );
         } else if matches!(&_event, tauri::RunEvent::Exit) {
+            resident::network_traffic::close(_app);
             log::info!("application_exited process_id={}", std::process::id());
         }
         #[cfg(windows)]

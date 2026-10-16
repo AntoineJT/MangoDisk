@@ -9,6 +9,7 @@ mod memory_automatic;
 pub mod memory_preferences;
 pub mod memory_release;
 pub mod memory_window;
+pub mod network_traffic;
 pub mod panel;
 mod preference_schema;
 pub mod preferences;
