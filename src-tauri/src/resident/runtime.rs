@@ -118,7 +118,10 @@ impl ResidentState {
             battery: metric == MetricId::Cpu && preferences.enabled && preferences.shows_battery(),
             temperature: (preferences.enabled
                 && metric == MetricId::Disk
-                && preferences.shows_disk_temperature())
+                && (preferences.shows_disk_temperature()
+                    || (cfg!(any(target_os = "macos", windows))
+                        && panel_open
+                        && selected == MetricId::Disk)))
                 || (temperature_sampling && metric == MetricId::Cpu)
                 || (gpu_sampling
                     && cfg!(any(target_os = "macos", windows))
@@ -132,7 +135,7 @@ impl ResidentState {
             detailed: preferences.enabled
                 && ((metric == MetricId::Memory
                     && ((panel_open && selected == metric) || warm_icons))
-                    || (matches!(metric, MetricId::Cpu | MetricId::Gpu)
+                    || (matches!(metric, MetricId::Cpu | MetricId::Gpu | MetricId::Disk)
                         && panel_open
                         && selected == metric)),
             catalogue_only: metric == MetricId::Gpu && !gpu_sampling,
@@ -252,9 +255,6 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
             for (index, metric) in MetricId::ALL.into_iter().enumerate() {
                 let selection_changed = slots[index].demand.selection != demands[index].selection;
                 if slots[index].update(demands[index].clone()) {
-                    if metric == MetricId::Disk && !demands[index].temperature {
-                        cache.clear_disk_temperature();
-                    }
                     if selection_changed {
                         cache.reset(metric);
                     } else if !demands[index].active {
@@ -567,6 +567,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                             Ok(Observation::Disk {
                                 volumes,
                                 selected,
+                                health,
                                 temperature,
                             }) => {
                                 cache.volumes(volumes);
@@ -589,8 +590,11 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
                                         )),
                                         completion.timestamp_ms,
                                     );
-                                } else {
-                                    cache.clear_disk_temperature();
+                                }
+                                // Hiding details stops temperature demand, not the last
+                                // observation's lifetime. Source changes still reset it.
+                                if let Some((sampled_at_ms, health)) = health {
+                                    cache.disk_health(health, sampled_at_ms);
                                 }
                                 worker.catalogue.fetch_and(!2, Ordering::Relaxed);
                             }
@@ -717,6 +721,14 @@ mod overview_tests {
     fn disk_temperature_only_collects_when_selected_and_resident_enabled() {
         let state = test_state();
         assert!(!state.demands(false)[4].temperature);
+        *state.panel_metric.lock().unwrap() = MetricId::Disk;
+        assert_eq!(
+            state.demands(false)[4].temperature,
+            cfg!(any(target_os = "macos", windows))
+        );
+        state.panel_open.store(false, Ordering::Relaxed);
+        assert!(!state.demands(false)[4].temperature);
+
         {
             let mut preferences = state.preferences.lock().unwrap();
             preferences.disk_volume = Some("chosen-volume".into());
@@ -907,11 +919,16 @@ mod overview_tests {
                     demand.temperature,
                     (metric == MetricId::Cpu && cfg!(any(windows, target_os = "macos")))
                         || (metric == MetricId::Gpu && cfg!(any(target_os = "macos", windows)))
+                        || (metric == MetricId::Disk
+                            && selected == MetricId::Disk
+                            && cfg!(any(target_os = "macos", windows)))
                 );
                 assert_eq!(
                     demand.detailed,
-                    matches!(metric, MetricId::Cpu | MetricId::Memory | MetricId::Gpu)
-                        && metric == selected
+                    matches!(
+                        metric,
+                        MetricId::Cpu | MetricId::Memory | MetricId::Gpu | MetricId::Disk
+                    ) && metric == selected
                 );
             }
             assert_eq!(state.cpu_processes_visible(), selected == MetricId::Cpu);

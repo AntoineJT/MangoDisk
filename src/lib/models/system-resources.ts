@@ -121,6 +121,7 @@ export interface ResourceVolume {
   id: string;
   name: string;
   system: boolean;
+  fileSystem: string | null;
 }
 export interface DiskUsage {
   volume: ResourceVolume;
@@ -137,6 +138,8 @@ export interface TrendPoint {
 export interface DiskIoRate {
   readBytesPerSecond: number;
   writtenBytesPerSecond: number;
+  totalReadBytes: string;
+  totalWrittenBytes: string;
 }
 export type BatterySource = 'appleSmc' | 'appleSmartBattery';
 export interface BatteryTemperature {
@@ -172,8 +175,88 @@ export interface DiskTemperature {
   source: 'nvmeSmart' | 'ataSmart' | 'windowsStorage';
 }
 
+export interface DiskHealth {
+  volumeId: string;
+  volumeName: string;
+  status: 'healthy' | 'warning' | 'unhealthy' | 'unknown';
+  source: DiskTemperature['source'];
+  percentageUsed: number | null;
+  totalWrittenBytes: string | null;
+  totalReadBytes: string | null;
+  powerCycles: number | null;
+  availableSpare: number | null;
+  criticalWarning: number | null;
+  powerOnHours: number | null;
+  mediaErrors: string | null;
+  temperatureCelsius: number | null;
+  ata: {
+    model: string | null;
+    firmware: string | null;
+    profile: 'unknown' | 'samsungConsumer' | 'siliconMotionLegacy' | 'seagateBarracuda';
+    revision: number;
+    attributes: {
+      id: number;
+      flags: number;
+      current: number;
+      worst: number;
+      raw: number[];
+      reserved: number;
+      decoded: {
+        metric:
+          | 'reallocatedSectors'
+          | 'powerOnHours'
+          | 'powerCycles'
+          | 'remainingLife'
+          | 'hostWrittenBytes'
+          | 'hostReadBytes'
+          | 'uncorrectableErrors'
+          | 'spareBlocks'
+          | 'initialBadBlocks'
+          | 'totalEraseCount'
+          | 'maximumEraseCount'
+          | 'minimumEraseCount'
+          | 'averageEraseCount'
+          | 'ratedEraseCount'
+          | 'runtimeInvalidBlocks'
+          | 'programFailures'
+          | 'eraseFailures'
+          | 'temperature'
+          | 'reallocationEvents'
+          | 'pendingSectors'
+          | 'offlineUncorrectableSectors'
+          | 'interfaceCrcErrors'
+          | 'tlcWrittenBytes'
+          | 'slcWrittenBytes'
+          | 'startStopCycles'
+          | 'loadCycles'
+          | 'headFlyingHours';
+        value: string;
+        unit: 'count' | 'hours' | 'bytes' | 'percent' | 'celsius';
+      } | null;
+    }[];
+  } | null;
+  nvme: {
+    enduranceGroupCriticalWarning: number;
+    availableSpareThreshold: number;
+    dataUnitsRead: string;
+    dataUnitsWritten: string;
+    powerCycles: string;
+    powerOnHours: string;
+    hostReadCommands: string;
+    hostWriteCommands: string;
+    controllerBusyMinutes: string;
+    unsafeShutdowns: string;
+    errorInformationLogEntries: string;
+    warningTemperatureMinutes: number;
+    criticalTemperatureMinutes: number;
+    temperatureSensorsCelsius: (number | null)[];
+    thermalManagementTransitionCounts: number[];
+    thermalManagementTotalSeconds: number[];
+  } | null;
+}
+
 export interface ResourceReadings {
-  schemaVersion: 23;
+  schemaVersion: 24;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;
@@ -201,6 +284,7 @@ export interface ResourceReadings {
   disk: MetricReading<DiskUsage>;
   diskTemperature: MetricReading<DiskTemperature>;
   diskIo: MetricReading<DiskIoRate>;
+  diskHealth: MetricReading<DiskHealth>;
   interfaces: NetworkInterface[];
   volumes: ResourceVolume[];
   gpuAdapters: { id: string; name: string }[];

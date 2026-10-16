@@ -58,6 +58,7 @@ pub struct ResourceReadings {
     pub disk_temperature:
         MetricReading<mangodisk_platform::system_resources::disk_temperature::DiskTemperature>,
     pub disk_io: MetricReading<DiskIoRate>,
+    pub disk_health: MetricReading<mangodisk_platform::system_resources::disk_health::DiskHealth>,
     pub interfaces: Vec<NetworkInterface>,
     pub volumes: Vec<ResourceVolume>,
     pub gpu_adapters: Vec<mangodisk_platform::system_resources::gpu::GpuAdapter>,
@@ -71,7 +72,7 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 23,
+            schema_version: 24,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
             cpu_identity: None,
@@ -99,6 +100,7 @@ impl Default for ResourceReadings {
             disk: MetricReading::default(),
             disk_temperature: MetricReading::default(),
             disk_io: MetricReading::default(),
+            disk_health: MetricReading::default(),
             interfaces: Vec::new(),
             volumes: Vec::new(),
             gpu_adapters: Vec::new(),
@@ -622,10 +624,58 @@ impl ResourceCache {
 
     pub fn disk(&mut self, volume: ResourceVolume, capacity: VolumeCapacity, timestamp_ms: u64) {
         if let Some(value) = disk::usage(volume, capacity) {
+            if self
+                .readings
+                .disk_health
+                .value
+                .as_ref()
+                .is_some_and(|health| health.volume_id != value.volume.id)
+            {
+                self.readings.disk_health = MetricReading::default();
+            }
             self.readings.disk = MetricReading::ready(value, timestamp_ms);
         } else {
             self.fail(MetricId::Disk, MetricStatus::Failed);
         }
+    }
+
+    pub fn disk_health(
+        &mut self,
+        result: mangodisk_platform::PlatformResult<
+            mangodisk_platform::system_resources::disk_health::DiskHealth,
+        >,
+        timestamp_ms: u64,
+    ) {
+        self.readings.disk_health = match result {
+            Ok(value)
+                if !value.volume_id.is_empty()
+                    && self
+                        .readings
+                        .disk
+                        .value
+                        .as_ref()
+                        .is_some_and(|disk| disk.volume.id == value.volume_id) =>
+            {
+                MetricReading::ready(value, timestamp_ms)
+            }
+            result => MetricReading {
+                status: match result {
+                    Err(error)
+                        if error.code() == mangodisk_platform::PlatformErrorCode::Unsupported =>
+                    {
+                        MetricStatus::Unsupported
+                    }
+                    Err(error)
+                        if error.code() == mangodisk_platform::PlatformErrorCode::ItemChanged =>
+                    {
+                        MetricStatus::Disconnected
+                    }
+                    _ => MetricStatus::Failed,
+                },
+                sampled_at_ms: None,
+                value: None,
+            },
+        };
     }
 
     pub fn clear_disk_temperature(&mut self) {
@@ -679,6 +729,11 @@ impl ResourceCache {
             }
             MetricId::Disk => {
                 self.readings.disk.status = status;
+                self.readings.disk_health = MetricReading {
+                    status,
+                    value: None,
+                    sampled_at_ms: None,
+                };
                 self.readings.disk_temperature = MetricReading {
                     status,
                     sampled_at_ms: None,
@@ -731,6 +786,7 @@ impl ResourceCache {
             }
             MetricId::Disk => {
                 self.readings.disk = MetricReading::default();
+                self.readings.disk_health = MetricReading::default();
                 self.clear_disk_temperature();
             }
         }
@@ -774,6 +830,10 @@ impl ResourceCache {
             now_ms,
             mangodisk_platform::system_resources::power::SYSTEM_POWER_FRESHNESS_MS,
         );
+        self.readings.disk_health.expire(
+            now_ms,
+            mangodisk_platform::system_resources::disk_health::DISK_HEALTH_FRESHNESS_MS,
+        );
         self.readings.disk_io.expire(now_ms, 5000);
         self.readings.disk_temperature.expire(
             now_ms,
@@ -797,7 +857,7 @@ impl ResourceCache {
         before != self.statuses()
     }
 
-    fn statuses(&self) -> [MetricStatus; 18] {
+    fn statuses(&self) -> [MetricStatus; 19] {
         [
             self.readings.fan_speed.status,
             self.readings.system_power.status,
@@ -814,6 +874,7 @@ impl ResourceCache {
             self.readings.network.status,
             self.readings.disk.status,
             self.readings.disk_temperature.status,
+            self.readings.disk_health.status,
             self.readings.disk_io.status,
             self.readings.cpu_processes.status,
             self.readings.memory_processes.status,
@@ -1407,7 +1468,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 23);
+        assert_eq!(wire["schemaVersion"], 24);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -1529,7 +1590,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 23);
+        assert_eq!(cache.snapshot(1000).schema_version, 24);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

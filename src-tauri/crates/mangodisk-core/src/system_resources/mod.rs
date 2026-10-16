@@ -17,3 +17,6 @@ pub mod release_policy;
 pub mod service;
 
 mod gpu_temperature;
+
+#[cfg(test)]
+mod disk_health_tests;

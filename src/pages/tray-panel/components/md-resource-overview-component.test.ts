@@ -143,7 +143,7 @@ describe('resource details', () => {
       status: 'ready',
       sampledAtMs: 0,
       value: {
-        volume: { id: 'system', name: '/', system: true },
+        volume: { id: 'system', name: '/', system: true, fileSystem: null },
         totalBytes: 100,
         availableBytes: 75,
         usedBytes: 25,
@@ -310,7 +310,7 @@ describe('resource details', () => {
         status: 'ready',
         sampledAtMs: 0,
         value: {
-          volume: { id: 'test', name: 'Test', system: false },
+          volume: { id: 'test', name: 'Test', system: false, fileSystem: null },
           totalBytes: 100,
           availableBytes: 75,
           usedBytes: 25,
