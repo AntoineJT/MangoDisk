@@ -54,7 +54,7 @@ const pressureHint = computed(() => (pressureState.value ? t(PRESSURE_KEYS[press
   cursor: help;
 }
 .memory-pressure[data-pressure='normal'] {
-  color: var(--success-foreground);
+  color: var(--usage-green);
 }
 .memory-pressure[data-pressure='warning'] {
   color: var(--warning-foreground);

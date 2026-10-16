@@ -238,7 +238,7 @@ const rates = computed(() =>
           :class="['cleanup-link', { 'cleanup-button': cleanupVariant === 'button' }]"
           @click="$emit('cleanup')"
         >
-          <MdIcon v-if="cleanupVariant === 'button'" :name="ICON_NAMES.cleanup" :size="12" aria-hidden="true" />
+          <MdIcon v-if="cleanupVariant === 'button'" :name="ICON_NAMES.deepCleanup" :size="12" aria-hidden="true" />
           {{ t('navigation.cleanup') }}<span v-if="cleanupVariant === 'link'" aria-hidden="true">›</span>
         </button>
       </template>
@@ -401,7 +401,7 @@ small {
 }
 .capacity-track i {
   background: var(--primary);
-  opacity: 0.55;
+  border-radius: inherit;
   height: 100%;
   display: block;
 }

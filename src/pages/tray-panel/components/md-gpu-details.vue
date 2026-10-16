@@ -416,7 +416,7 @@ b {
   display: block;
   height: 100%;
   background: var(--primary);
-  opacity: 0.6;
+  border-radius: inherit;
 }
 .detail-note {
   @apply text-muted-foreground;

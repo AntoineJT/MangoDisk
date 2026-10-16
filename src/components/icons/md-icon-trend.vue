@@ -16,7 +16,6 @@ defineProps<{ series: { line: string; area: string; color: string }[]; amplitude
           stroke-linecap="round"
           stroke-linejoin="round"
           vector-effect="non-scaling-stroke"
-          opacity="0.85"
         />
       </g>
     </g>

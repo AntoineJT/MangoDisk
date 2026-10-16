@@ -99,7 +99,7 @@ const interfaceFacts = computed(() => {
     </header>
     <MdResourceFacts :active="active" :facts="facts" />
   </section>
-  <section class="network-details" :aria-label="t('systemStatus.interface')">
+  <section class="network-details network-interface" :aria-label="t('systemStatus.interface')">
     <header>
       <h2>{{ t('systemStatus.interface') }}</h2>
       <MdTooltip
@@ -122,11 +122,14 @@ const interfaceFacts = computed(() => {
 <style scoped>
 @reference "@assets/main.css";
 .network-details {
-  @apply rounded-xl border border-border bg-card;
   padding: 12px;
   display: flex;
   flex-direction: column;
+  flex: none;
   gap: 12px;
+}
+.network-interface {
+  @apply border-t border-border;
 }
 header {
   display: flex;

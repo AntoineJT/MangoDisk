@@ -192,11 +192,14 @@ const activities = computed(() => {
 @reference "@assets/main.css";
 .disk-health,
 .disk-activity {
-  @apply rounded-xl border border-border bg-card;
   padding: 12px;
   display: flex;
   flex-direction: column;
+  flex: none;
   gap: 6px;
+}
+.disk-health {
+  @apply border-t border-border;
 }
 header {
   display: flex;
@@ -272,7 +275,7 @@ h2 {
   white-space: nowrap;
 }
 .disk-activity {
-  padding: 12px;
+  @apply rounded-lg bg-muted/30;
   gap: 8px;
 }
 .disk-health .health-metadata {
