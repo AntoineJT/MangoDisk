@@ -24,7 +24,7 @@ fn retained_rows_preserve_empty_entries_at_the_visible_limit() {
         let (aggregate, snapshot) = traverse_memory_only(
             &root,
             TraversalKind::Analysis(AnalysisScanMode::Standard),
-            now_ms(),
+            crate::shared::clock::unix_time_ms(),
             None,
             &progress,
             &AtomicBool::new(false),
@@ -78,7 +78,7 @@ fn retained_directory_rows_preserve_empty_entries_at_the_visible_limit() {
         let (aggregate, snapshot) = traverse_memory_only(
             &root,
             TraversalKind::Analysis(AnalysisScanMode::Standard),
-            now_ms(),
+            crate::shared::clock::unix_time_ms(),
             None,
             &progress,
             &AtomicBool::new(false),
@@ -185,7 +185,7 @@ fn retained_rows_match_display_path_order_for_non_utf8_names() {
     let (aggregate, snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),
@@ -246,7 +246,7 @@ fn retained_navigation_rows_match_independent_metadata_and_fall_back_after_evict
     let (aggregate, mut snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),
@@ -348,7 +348,7 @@ fn complete_shared_alias_navigation_uses_snapshot_without_reopening_directory() 
     let (_, snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),
@@ -1009,7 +1009,7 @@ fn native_large_file_candidate_below_physical_threshold_is_not_skipped() {
     let mut validation = LargeFileStreamValidation::new(
         &root,
         allocated.saturating_add(1),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         &progress,
         &cancelled,
         true,
@@ -1048,7 +1048,7 @@ fn duplicate_native_large_file_candidate_is_idempotent() {
     let mut validation = LargeFileStreamValidation::new(
         &root,
         0,
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         &progress,
         &cancelled,
         true,
@@ -1409,7 +1409,7 @@ fn macos_file_create_modify_and_delete_invalidate_analysis_snapshot() {
     let root = std::env::temp_dir().join(format!(
         "mangodisk-fsevents-cache-{}-{}",
         std::process::id(),
-        now_ms()
+        crate::shared::clock::unix_time_ms()
     ));
     let _sandbox_cleanup = DirectoryCleanup(root.clone());
     fs::create_dir_all(&root).expect("the FSEvents cache fixture should be created");
@@ -1451,7 +1451,7 @@ fn large_file_session_supports_switching_from_high_threshold_to_candidate_floor(
     let root = std::env::temp_dir().join(format!(
         "mangodisk-large-file-cache-{}-{}",
         std::process::id(),
-        now_ms()
+        crate::shared::clock::unix_time_ms()
     ));
     let files = [("60-mb.bin", 60), ("120-mb.bin", 120), ("600-mb.bin", 600)]
         .into_iter()
@@ -1472,7 +1472,7 @@ fn large_file_session_supports_switching_from_high_threshold_to_candidate_floor(
         bytes: files.values().map(|file| file.bytes).sum(),
         logical_bytes: files.values().map(|file| file.logical_bytes).sum(),
         file_count: files.len() as u64,
-        scanned_at_ms: now_ms(),
+        scanned_at_ms: crate::shared::clock::unix_time_ms(),
         ..DirectoryAggregate::default()
     };
     let retained_entries = cache::large_file_entries_from_snapshot(&root, &files);
@@ -1587,7 +1587,7 @@ fn real_analysis_materializes_complete_memory_index() {
         .expect("the empty exclusion set should resolve");
     let (aggregate, summary) = stream_fast_analysis_once(
         &canonical_root,
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         &progress,
         &cancelled,
         &exclusions,
@@ -1768,7 +1768,7 @@ fn analysis_charges_hard_links_once_with_stable_native_and_fallback_ownership() 
     let (aggregate, snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),
@@ -1899,7 +1899,7 @@ fn hierarchy_counts_small_direct_items_without_recursive_descendants_or_empty_fi
     let (_, snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),
@@ -1957,7 +1957,7 @@ fn hierarchy_projects_medium_files_below_large_file_floor_in_native_and_fallback
     let (aggregate, snapshot) = traverse_memory_only(
         &root,
         TraversalKind::Analysis(AnalysisScanMode::Standard),
-        now_ms(),
+        crate::shared::clock::unix_time_ms(),
         None,
         &progress,
         &AtomicBool::new(false),

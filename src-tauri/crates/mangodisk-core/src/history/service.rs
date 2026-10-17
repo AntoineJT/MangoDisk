@@ -894,7 +894,7 @@ mod tests {
         let directory = std::env::temp_dir().join(format!(
             "mangodisk-history-quarantine-{}-{}",
             std::process::id(),
-            crate::filesystem::metadata::now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         fs::create_dir_all(&directory).expect("the history fixture directory must be created");
         let history = directory.join("history.json");

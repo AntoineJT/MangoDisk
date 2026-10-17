@@ -11,7 +11,7 @@ pub(super) fn scan(
     callback: impl Fn(TraversalProgress) + Send + Sync + 'static,
 ) -> CoreResult<(LargeFilesResult, LargeFileScanDiagnostics)> {
     let started = Instant::now();
-    let scanned_at_ms = now_ms();
+    let scanned_at_ms = crate::shared::clock::unix_time_ms();
     let exclusions = roots
         .iter()
         .map(|root| StorageScanExclusions::resolve_options(root, excluded_paths))

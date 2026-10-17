@@ -38,7 +38,7 @@ use crate::{
         RiskLevel, ScanItemStatus, ScanRuleResult,
     },
     filesystem::{
-        metadata::{display_path, is_link_like, latest_timestamp, modified_ms, now_ms},
+        metadata::{display_path, is_link_like, latest_timestamp, modified_ms},
         permanent_delete::{physical_path_identity_snapshot, PhysicalPathIdentity},
     },
     shared::{
@@ -693,7 +693,7 @@ impl CleanupScanService {
             schema_version: CLEANUP_SCAN_SCHEMA_VERSION.to_string(),
             custom_scan_id,
             missing_custom_root_count,
-            scanned_at_ms: now_ms(),
+            scanned_at_ms: crate::shared::clock::unix_time_ms(),
             disk,
             rules,
             application_icons,
@@ -1647,7 +1647,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-custom-only-scan-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         fs::create_dir_all(&root).expect("custom scan root should be created");
@@ -1681,7 +1681,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-custom-overlap-scan-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         let nested = root.join("nested");
@@ -1739,7 +1739,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-overlap-scan-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         let child = root.join("nested");
@@ -1868,7 +1868,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-scheduler-parity-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         let first_root = root.join("first");
@@ -2053,7 +2053,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-scheduler-cancel-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         fs::create_dir_all(&root).expect("cancellation fixture root should be created");
@@ -2108,7 +2108,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-scheduler-inflight-cancel-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let _sandbox_cleanup = DirectoryCleanup(root.clone());
         fs::create_dir_all(&root).expect("claimed-task fixture root should be created");

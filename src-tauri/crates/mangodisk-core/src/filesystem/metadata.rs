@@ -366,13 +366,6 @@ pub(crate) fn display_path(path: &Path) -> String {
     current_platform().display_path(path)
 }
 
-pub(crate) fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64
-}
-
 /// Keep the full target path: identical filenames in different directories are
 /// common, and a hash cannot tell support which target failed. Never use this
 /// diagnostic representation for filesystem access or identity comparisons.
@@ -488,7 +481,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-fingerprint-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let nested = root.join("nested");
         let file = nested.join("sample.bin");
@@ -518,7 +511,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-metadata-observer-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let nested = root.join("nested");
         fs::create_dir_all(&nested).expect("the observer fixture should be created");

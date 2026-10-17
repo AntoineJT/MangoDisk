@@ -11,7 +11,7 @@ use std::{
 
 use crate::filesystem::metadata::{
     diagnostic_path, finalize_metadata_fingerprint, is_link_like, metadata_fingerprint_entry,
-    modified_ms, native_path_string, now_ms, scan_entry_metadata, MetadataFingerprintEntry,
+    modified_ms, native_path_string, scan_entry_metadata, MetadataFingerprintEntry,
 };
 use crate::shared::operation::{
     CoordinatedOperationKind, OperationGuard, OPERATION_CANCELLED_ERROR,
@@ -375,7 +375,7 @@ impl StorageTraversal {
             CacheReuseDecision::Miss => {}
         }
         progress.emit(TraversalStage::Analyzing, &root);
-        let scanned_at_ms = now_ms();
+        let scanned_at_ms = crate::shared::clock::unix_time_ms();
         let cache_mutation_revision = cache::mutation_revision()?;
         let change_token = capture_filesystem_change_token(&root);
         let traversal_started = Instant::now();
@@ -572,7 +572,7 @@ impl StorageTraversal {
         }
         let root_count = roots.len() as u64;
         let callback = Arc::new(callback);
-        let scanned_at_ms = now_ms();
+        let scanned_at_ms = crate::shared::clock::unix_time_ms();
         let mut combined = LargeFileScanDiagnostics::default();
         let mut retained_entries = Vec::new();
         let mut skipped_count = 0_u64;

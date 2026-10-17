@@ -31,7 +31,7 @@ use crate::{
     },
     cleanup::rules::{compile_scan_plan, compile_scoped_rules, registry},
     cleanup::source_selection::SourceSelectionPolicy,
-    filesystem::metadata::{display_path, now_ms},
+    filesystem::metadata::display_path,
     history::HistoryService,
     shared::{
         operation::{CoordinatedOperationKind, OperationCancellationToken, OperationGuard},
@@ -301,7 +301,7 @@ impl CleanupService {
     where
         F: FnMut(CleanupExecutionProgress),
     {
-        let operation_id = format!("deep-cleanup-{}", now_ms());
+        let operation_id = format!("deep-cleanup-{}", crate::shared::clock::unix_time_ms());
         Self::execute_deep_cleanup_step_with_progress(request, operation_id, progress)
     }
 
@@ -521,7 +521,7 @@ impl CleanupService {
                 "deep cleanup operation id must not be empty",
             ));
         }
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let started = Instant::now();
         let selected = request.rule_ids.iter().cloned().collect::<HashSet<_>>();
         if selected.len() != request.rule_ids.len() {
@@ -767,7 +767,7 @@ impl CleanupService {
         let record = summarize_deep_cleanup(
             deep_cleanup_operation_id,
             started_at_ms,
-            now_ms(),
+            crate::shared::clock::unix_time_ms(),
             request.dry_run,
             DeepCleanupOperationDetails {
                 cleanup: Some(CleanupOperationDetails {

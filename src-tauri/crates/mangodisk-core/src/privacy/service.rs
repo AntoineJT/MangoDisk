@@ -19,7 +19,6 @@ use crate::{
         catalog::ProcessSnapshot,
         process_control::{close_resolved_applications, ResolvedApplicationCloseTarget},
     },
-    filesystem::metadata::now_ms,
     history::{
         HistoryService, OperationCategory, OperationDetails, OperationOutcome, OperationRecord,
         PrivacyCleanupHistoryItem, PrivacyCleanupHistoryItemStatus, PrivacyCleanupOperationDetails,
@@ -182,7 +181,7 @@ impl PrivacyService {
         clear_scan_session()?;
         clear_pending_plan()?;
         let started = Instant::now();
-        let observed_at_ms = now_ms();
+        let observed_at_ms = crate::shared::clock::unix_time_ms();
         let cancellation = platform_cancellation(&operation);
         let platform = current_platform();
         progress(PrivacyScanProgress {
@@ -878,7 +877,7 @@ impl PrivacyService {
     }
 
     pub fn prepare(request: PrivacyExecutionRequest) -> CoreResult<PrivacyExecutionPlan> {
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         if request.tokens.is_empty() || request.tokens.len() > MAX_SELECTIONS {
             return Err(CoreError::invalid_input(
                 "privacy selection count is invalid",
@@ -917,7 +916,7 @@ impl PrivacyService {
             selected.push(candidate.clone());
         }
         selected.sort_by(|left, right| left.token.cmp(&right.token));
-        let created_at_ms = now_ms();
+        let created_at_ms = crate::shared::clock::unix_time_ms();
         let expires_at_ms = created_at_ms.saturating_add(PLAN_TTL_MS);
         let plan_id = plan_id(&session.public_result, &selected, expires_at_ms);
         let browser_close_requirements = browser_close_requirements(&selected);
@@ -958,7 +957,7 @@ impl PrivacyService {
             operation.id(),
             public_plan.items.len(),
             PLAN_TTL_MS,
-            now_ms().saturating_sub(started_at_ms)
+            crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms)
         );
         operation.complete();
         Ok(public_plan)
@@ -1057,9 +1056,9 @@ impl PrivacyService {
             ));
         }
         let operation = OperationGuard::start(CoordinatedOperationKind::PrivacyExecution)?;
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let mut pending = take_pending_plan(&request.plan_id)?;
-        if now_ms() > pending.public_plan.expires_at_ms {
+        if crate::shared::clock::unix_time_ms() > pending.public_plan.expires_at_ms {
             return Err(CoreError::invalid_input(
                 "privacy execution plan has expired",
             ));
@@ -1095,7 +1094,7 @@ impl PrivacyService {
                 completed_item_count: 0,
                 total_item_count: 0,
                 affected_item_count: 0,
-                elapsed_ms: now_ms().saturating_sub(started_at_ms),
+                elapsed_ms: crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms),
                 completed_items: Vec::new(),
             });
             let scan = current_scan_session().ok().and_then(|session| {
@@ -1123,7 +1122,7 @@ impl PrivacyService {
             completed_item_count: 0,
             total_item_count,
             affected_item_count: 0,
-            elapsed_ms: now_ms().saturating_sub(started_at_ms),
+            elapsed_ms: crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms),
             completed_items: Vec::new(),
         });
         let running = current_platform()
@@ -1249,7 +1248,7 @@ impl PrivacyService {
                 completed_item_count: total_item_count,
                 total_item_count,
                 affected_item_count: 0,
-                elapsed_ms: now_ms().saturating_sub(started_at_ms),
+                elapsed_ms: crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms),
                 completed_items: execution_progress_items(&results),
             });
             let history_saved = append_history_record(
@@ -1259,7 +1258,7 @@ impl PrivacyService {
                 &pending.candidates,
                 &results,
                 started_at_ms,
-                now_ms(),
+                crate::shared::clock::unix_time_ms(),
             );
             log::warn!(
                 "privacy_execution_preflight_blocked operation_id={} selected_item_count={} retained_item_count={} failed_count={} cancelled_count={} history_saved={} outcome=unchanged",
@@ -1294,7 +1293,7 @@ impl PrivacyService {
                 completed_item_count: results.len() as u64,
                 total_item_count,
                 affected_item_count: results.iter().map(|item| item.affected_item_count).sum(),
-                elapsed_ms: now_ms().saturating_sub(started_at_ms),
+                elapsed_ms: crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms),
                 completed_items: execution_progress_items(&results),
             });
             if operation.ensure_not_cancelled().is_err() {
@@ -1440,7 +1439,7 @@ impl PrivacyService {
             completed_item_count: total_item_count,
             total_item_count,
             affected_item_count,
-            elapsed_ms: now_ms().saturating_sub(started_at_ms),
+            elapsed_ms: crate::shared::clock::unix_time_ms().saturating_sub(started_at_ms),
             completed_items: execution_progress_items(&results),
         });
         let history_saved = append_history_record(
@@ -1450,7 +1449,7 @@ impl PrivacyService {
             &pending.candidates,
             &results,
             started_at_ms,
-            now_ms(),
+            crate::shared::clock::unix_time_ms(),
         );
         // A verified cleanup already gives Core enough evidence to update the visible snapshot.
         // Rebuilding the entire privacy catalog here makes a successful action feel like another
@@ -1499,7 +1498,7 @@ fn resolve_browser_process_targets(
     source_ids: &[String],
 ) -> CoreResult<Vec<ResolvedApplicationCloseTarget>> {
     let pending = current_pending_plan(plan_id)?;
-    if now_ms() > pending.public_plan.expires_at_ms {
+    if crate::shared::clock::unix_time_ms() > pending.public_plan.expires_at_ms {
         return Err(CoreError::invalid_input(
             "privacy execution plan has expired",
         ));
@@ -3343,7 +3342,7 @@ fn reconcile_scan_after_execution(
             "privacy-reconciled-scan:{}:{}:{}",
             executed_scan_id,
             session.public_result.revision,
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         )
         .as_bytes(),
     )
@@ -4147,8 +4146,8 @@ mod tests {
                 schema_version: PRIVACY_PLAN_SCHEMA_VERSION,
                 plan_id: plan_id.clone(),
                 scan_id: "scan".into(),
-                created_at_ms: now_ms(),
-                expires_at_ms: now_ms().saturating_add(60_000),
+                created_at_ms: crate::shared::clock::unix_time_ms(),
+                expires_at_ms: crate::shared::clock::unix_time_ms().saturating_add(60_000),
                 items: Vec::new(),
                 browser_close_requirements: browser_close_requirements(std::slice::from_ref(
                     &candidate,

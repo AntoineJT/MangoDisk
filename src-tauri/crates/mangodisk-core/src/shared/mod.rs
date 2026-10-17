@@ -1,4 +1,5 @@
 mod application_paths;
+pub(crate) mod clock;
 mod error;
 pub(crate) mod operation;
 pub(crate) mod progress;

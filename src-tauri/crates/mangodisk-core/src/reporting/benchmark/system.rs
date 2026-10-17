@@ -1,8 +1,4 @@
-use std::{
-    env,
-    process::Command,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{env, process::Command};
 
 use serde::Serialize;
 
@@ -195,12 +191,6 @@ pub(crate) fn local_timestamp(fallback_ms: u64) -> String {
 #[cfg(not(any(target_os = "macos", windows)))]
 pub(crate) fn local_timestamp(fallback_ms: u64) -> String {
     fallback_ms.to_string()
-}
-
-pub(crate) fn now_ms() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_or(0, |duration| duration.as_millis() as u64)
 }
 
 fn command_output(program: &str, arguments: &[&str]) -> Option<String> {

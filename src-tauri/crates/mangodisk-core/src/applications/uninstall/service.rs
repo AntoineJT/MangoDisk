@@ -29,7 +29,7 @@ use crate::{
         catalog::{ProcessSnapshot, ScanContext},
         process_control::{close_resolved_applications, ResolvedApplicationCloseTarget},
     },
-    filesystem::metadata::{display_path, now_ms},
+    filesystem::metadata::display_path,
     history::{
         ApplicationUninstallApplicationDetails, ApplicationUninstallOperationDetails,
         HistoryService, OperationCategory, OperationDetails, OperationOutcome, OperationRecord,
@@ -413,7 +413,7 @@ impl ApplicationUninstallService {
     {
         Self::validate_batch_plan(&batch_plan)?;
         let operation = OperationGuard::start(CoordinatedOperationKind::Applications)?;
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let started = Instant::now();
         let mut progress = UninstallExecutionReporter::new(batch_plan.plans.len(), progress);
         progress.emit(ApplicationUninstallExecutionStage::Validating, None);
@@ -489,7 +489,7 @@ impl ApplicationUninstallService {
             && save_batch_execution_history(
                 operation.id(),
                 started_at_ms,
-                now_ms(),
+                crate::shared::clock::unix_time_ms(),
                 &batch_plan,
                 &results,
                 &scan.candidates,
@@ -535,7 +535,7 @@ impl ApplicationUninstallService {
     ) -> CoreResult<ApplicationUninstallResult> {
         Self::validate_plan(&plan)?;
         let operation = OperationGuard::start(CoordinatedOperationKind::Applications)?;
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let started = Instant::now();
         let scan = scan_without_guard(operation.id(), false, None, operation.cancellation_flag())?;
         if !scan.catalog_actionable {
@@ -559,7 +559,7 @@ impl ApplicationUninstallService {
         result.history_saved = save_execution_history(
             operation.id(),
             started_at_ms,
-            now_ms(),
+            crate::shared::clock::unix_time_ms(),
             &plan,
             &result,
             application,
@@ -1680,7 +1680,7 @@ fn scan_without_guard(
     );
     Ok(ApplicationUninstallScanResult {
         schema_version: APPLICATION_UNINSTALL_SCAN_SCHEMA_VERSION,
-        scanned_at_ms: now_ms(),
+        scanned_at_ms: crate::shared::clock::unix_time_ms(),
         supported: true,
         execution_supported: cfg!(any(target_os = "macos", windows)),
         catalog_actionable,

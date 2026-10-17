@@ -7,7 +7,6 @@ use mangodisk_platform::{current_platform, Platform};
 
 use crate::{
     applications::catalog::ScanContext,
-    filesystem::metadata::now_ms,
     history::{
         summarize_deep_cleanup, ApplicationLeftoverOperationDetails, DeepCleanupOperationDetails,
         HistoryService,
@@ -100,7 +99,7 @@ impl ApplicationLeftoverService {
         let expected_bytes = items.iter().fold(0_u64, |total, item| {
             total.saturating_add(item.expected_bytes)
         });
-        let created_at_ms = now_ms();
+        let created_at_ms = crate::shared::clock::unix_time_ms();
         let plan_hash = plan_hash(created_at_ms, &items, expected_bytes);
         Ok(ApplicationLeftoverPlan {
             schema_version: APPLICATION_LEFTOVER_PLAN_SCHEMA_VERSION,
@@ -160,7 +159,7 @@ impl ApplicationLeftoverService {
         // unrelated application uninstall or inventory operation.
         let operation =
             OperationGuard::start(CoordinatedOperationKind::ApplicationLeftoverCleanup)?;
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let scan = scan_without_guard()?;
         if !scan.result.supported || !scan.result.inventory_complete {
             return Err(CoreError::operation_failed(
@@ -255,7 +254,7 @@ impl ApplicationLeftoverService {
             }
         }
 
-        let finished_at_ms = now_ms();
+        let finished_at_ms = crate::shared::clock::unix_time_ms();
         let record = summarize_deep_cleanup(
             deep_cleanup_operation_id,
             started_at_ms,
@@ -378,7 +377,7 @@ fn scan_without_guard() -> Result<InternalScan, String> {
     });
     let result = ApplicationLeftoverScanResult {
         schema_version: APPLICATION_LEFTOVER_SCAN_SCHEMA_VERSION,
-        scanned_at_ms: now_ms(),
+        scanned_at_ms: crate::shared::clock::unix_time_ms(),
         supported,
         inventory_complete: inventory_complete && !access_limited,
         access_limited,
@@ -550,7 +549,7 @@ fn create_plan_from_reviewed_items(
     let expected_bytes = items.iter().fold(0_u64, |total, item| {
         total.saturating_add(item.expected_bytes)
     });
-    let created_at_ms = now_ms();
+    let created_at_ms = crate::shared::clock::unix_time_ms();
     let plan_hash = plan_hash(created_at_ms, &items, expected_bytes);
     Ok(ApplicationLeftoverPlan {
         schema_version: APPLICATION_LEFTOVER_PLAN_SCHEMA_VERSION,

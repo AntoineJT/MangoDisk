@@ -15,7 +15,6 @@ use mangodisk_platform::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    filesystem::metadata::now_ms,
     history::{
         HistoryService, OperationCategory, OperationDetails, OperationOutcome, OperationRecord,
         SystemOptimizationHistoryItem, SystemOptimizationHistoryItemStatus,
@@ -99,7 +98,12 @@ impl SystemSettingsService {
         }
 
         let recovery = load_recovery()?;
-        let pending = build_change_plan(selection, session, recovery.as_ref(), now_ms());
+        let pending = build_change_plan(
+            selection,
+            session,
+            recovery.as_ref(),
+            crate::shared::clock::unix_time_ms(),
+        );
         let public = pending.public.clone();
         replace_change_plan(pending)?;
         log::info!(
@@ -126,9 +130,9 @@ impl SystemSettingsService {
     pub fn execute_change(plan_id: String) -> CoreResult<SystemSettingsChangeResult> {
         validate_plan_id(&plan_id)?;
         let operation = OperationGuard::start(CoordinatedOperationKind::SystemSettingsChange)?;
-        let started_at_ms = now_ms();
+        let started_at_ms = crate::shared::clock::unix_time_ms();
         let pending = take_change_plan(&plan_id)?;
-        if now_ms() > pending.public.expires_at_ms {
+        if crate::shared::clock::unix_time_ms() > pending.public.expires_at_ms {
             return Err(CoreError::invalid_input(
                 "system settings change plan has expired",
             ));
@@ -485,7 +489,7 @@ fn assemble_catalog_session(
     recovery: Option<&RecoveryDocument>,
 ) -> CatalogSession {
     let recovery_available = mark_restore_availability(&mut native_items, recovery);
-    let scanned_at_ms = now_ms();
+    let scanned_at_ms = crate::shared::clock::unix_time_ms();
     let catalog_revision = catalog_revision(&native_items);
     let scan_id = stable_id(
         "system-settings-scan",
@@ -756,7 +760,7 @@ fn append_history(
         operation_id: stable_id("system-settings-change", &[plan_id, &time_component]),
         category: OperationCategory::SystemOptimization,
         started_at_ms,
-        finished_at_ms: now_ms(),
+        finished_at_ms: crate::shared::clock::unix_time_ms(),
         outcome: if cancelled {
             OperationOutcome::Cancelled
         } else if failed_count > 0 {
@@ -902,7 +906,7 @@ fn save_recovery(recovery_id: &str, items: Vec<RecoveryItem>, operation_id: u64)
     let document = RecoveryDocument {
         schema_version: RECOVERY_SCHEMA_VERSION,
         recovery_id: recovery_id.to_string(),
-        created_at_ms: now_ms(),
+        created_at_ms: crate::shared::clock::unix_time_ms(),
         items,
     };
     let content = serde_json::to_vec_pretty(&document).map_err(|error| {
@@ -2012,7 +2016,7 @@ mod tests {
         let directory = std::env::temp_dir().join(format!(
             "mangodisk-system-settings-recovery-quarantine-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         fs::create_dir_all(&directory).expect("the recovery fixture directory must be created");
         let recovery = directory.join(RECOVERY_FILE_NAME);

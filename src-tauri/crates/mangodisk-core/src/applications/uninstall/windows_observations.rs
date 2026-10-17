@@ -11,7 +11,7 @@ use mangodisk_platform::{current_platform, DirectoryTreeAggregateError, Platform
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    filesystem::metadata::{display_path, now_ms},
+    filesystem::metadata::display_path,
     shared::{application_paths, operation::OPERATION_CANCELLED_ERROR},
 };
 
@@ -147,7 +147,7 @@ pub(super) fn annotate(
                         .iter()
                         .map(|path| display_path(path))
                         .collect(),
-                    observed_at_ms: now_ms(),
+                    observed_at_ms: crate::shared::clock::unix_time_ms(),
                 };
                 if let Some(previous) = previous_by_identity
                     .get(&key)
@@ -696,7 +696,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-observed-path-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         let candidate = root.join("AssociatedData");
         fs::create_dir_all(&candidate).expect("the observed path fixture should be created");
@@ -794,7 +794,7 @@ mod tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-application-observation-{}-{}",
             std::process::id(),
-            now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         fs::create_dir_all(&root).expect("the observation fixture should be created");
         let path = root.join(OBSERVATION_FILE_NAME);

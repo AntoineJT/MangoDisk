@@ -12,7 +12,7 @@ use mangodisk_platform::{
 use plist::Value;
 
 use crate::{
-    filesystem::metadata::{display_path, now_ms},
+    filesystem::metadata::display_path,
     shared::{
         operation::OPERATION_CANCELLED_ERROR,
         progress::{ProgressTracker, TraversalStage},
@@ -560,7 +560,7 @@ pub(super) fn inspect_candidate(
 
     Ok(ApplicationUninstallInspection {
         schema_version: APPLICATION_UNINSTALL_INSPECTION_SCHEMA_VERSION,
-        inspected_at_ms: now_ms(),
+        inspected_at_ms: crate::shared::clock::unix_time_ms(),
         application_id: candidate.application_id.clone(),
         application_name: candidate.name.clone(),
         primary_identifier: candidate.primary_identifier.clone(),

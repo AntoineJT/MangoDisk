@@ -15,7 +15,7 @@ use crate::{
     },
     filesystem::VolumeInfo,
     reporting::benchmark::system::{
-        environment_info, local_timestamp, now_ms, BenchmarkEnvironment, BenchmarkSourceInfo,
+        environment_info, local_timestamp, BenchmarkEnvironment, BenchmarkSourceInfo,
     },
     shared::TraversalProgress,
 };
@@ -214,7 +214,7 @@ impl CleanupBaselineService {
             )
         })?;
 
-        let generated_at_ms = now_ms();
+        let generated_at_ms = crate::shared::clock::unix_time_ms();
         let generated_at_local = local_timestamp(generated_at_ms);
         let rule_catalog_digest = rules::compatibility_digest()?;
         let special_cleaner_catalog_digest = cleaners::catalog_digest();

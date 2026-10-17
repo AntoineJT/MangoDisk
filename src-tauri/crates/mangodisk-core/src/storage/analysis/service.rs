@@ -456,7 +456,7 @@ mod tests {
             let root = std::env::temp_dir().join(format!(
                 "mangodisk-analysis-service-{}-{}",
                 std::process::id(),
-                crate::filesystem::metadata::now_ms()
+                crate::shared::clock::unix_time_ms()
             ));
             fs::create_dir_all(&root).expect("the analysis service fixture should be created");
             Self { root }

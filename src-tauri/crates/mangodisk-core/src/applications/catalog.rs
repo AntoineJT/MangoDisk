@@ -929,7 +929,7 @@ mod icon_tests {
         let root = std::env::temp_dir().join(format!(
             "mangodisk-process-path-{}-{}",
             std::process::id(),
-            crate::filesystem::metadata::now_ms()
+            crate::shared::clock::unix_time_ms()
         ));
         std::fs::create_dir_all(&root).expect("the process path fixture should be created");
         let executable = root.join("Example.exe");

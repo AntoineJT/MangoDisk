@@ -1,7 +1,5 @@
 use std::collections::HashSet;
 
-use crate::filesystem::metadata::now_ms;
-
 use super::{
     models::{
         ApplicationUninstallBatchPlan, ApplicationUninstallPlan,
@@ -20,7 +18,7 @@ pub(super) fn create_plan(
     validate_plan_collection(&catalog_revision, &plans)?;
     plans.sort_by(|left, right| left.application_id.cmp(&right.application_id));
     let expected_bytes = expected_bytes(&plans);
-    let created_at_ms = now_ms();
+    let created_at_ms = crate::shared::clock::unix_time_ms();
     let batch_hash = batch_hash(created_at_ms, &catalog_revision, &plans, expected_bytes);
     Ok(ApplicationUninstallBatchPlan {
         schema_version: APPLICATION_UNINSTALL_BATCH_PLAN_SCHEMA_VERSION,
