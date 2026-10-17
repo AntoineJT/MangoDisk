@@ -16,7 +16,8 @@ application termination, or memory-reclamation algorithms.
 | `presentation` | Bounded, coalesced visible-window publication and native display updates |
 | `tray_display` | Shared formatting, localization, native entries and Windows bitmap ownership |
 | `taskbar_display` | Windows native window, shell geometry, task-button space lease, painting and fallback |
-| `preferences` / `preference_schema` | Version migration, revision conflicts, native application and persistence rollback |
+| `preference_schema` / `preference_schema/migrations` | Desktop preference models, normalization and backward-compatible pure decoding |
+| `preferences` | Revision conflicts, native application and persistence rollback |
 | `panel` / `main_window` | Independent presentation, source anchoring, focus and background-launch behavior |
 | Vue resident settings store | Serialized optimistic edits and rollback to committed preferences |
 | Vue settings / tray panel | Configuration preview and presentation of actual readings |
