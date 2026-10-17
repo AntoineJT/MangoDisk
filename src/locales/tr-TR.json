@@ -2481,7 +2481,10 @@
       "ruRU": "Русский",
       "enUS": "English",
       "trTR": "Türkçe",
-      "ptBR": "Português (Brasil)"
+      "ptBR": "Português (Brasil)",
+      "frFR": "Français (France)",
+      "deDE": "Deutsch (Deutschland)",
+      "esES": "Español (España)"
     },
     "colorThemeTitle": "Tema rengi",
     "colorThemeDescription": "Açık veya koyu moddan bağımsız bir renk paleti seçin",

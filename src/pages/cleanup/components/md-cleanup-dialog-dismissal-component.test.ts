@@ -18,6 +18,47 @@ import MdCustomCleanupDialog from './md-custom-cleanup-dialog.vue';
 describe('volume capacity platform hint', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it.each([
+    ['fr-FR', '100.00 GB disponibles / 500.00 GB'],
+    ['de-DE', '100.00 GB verfügbar / 500.00 GB'],
+    ['es-ES', '100.00 GB libres / 500.00 GB'],
+  ] as const)('describes available disk space in %s', (locale, expected) => {
+    const previousLocale = i18n.global.locale.value;
+    i18n.global.locale.value = locale;
+    vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue('macos');
+    const wrapper = mount(MdCleanupVolumeDialog, {
+      props: {
+        modelValue: true,
+        disks: [
+          {
+            name: 'Test disk',
+            mountPoint: '/fixture',
+            totalBytes: 500_000_000_000,
+            availableBytes: 100_000_000_000,
+            usedBytes: 400_000_000_000,
+          },
+        ],
+        initialMountPoints: [],
+        systemDisk: null,
+      },
+      global: {
+        plugins: [i18n],
+        stubs: {
+          Dialog: { template: '<div><slot /></div>' },
+          DialogTitle: { template: '<h2><slot /></h2>' },
+          DialogDescription: { template: '<p><slot /></p>' },
+          MdDialogContent: { template: '<div><slot /></div>' },
+        },
+      },
+    });
+    try {
+      expect(wrapper.get('.volume-capacity').text()).toBe(expected);
+    } finally {
+      wrapper.unmount();
+      i18n.global.locale.value = previousLocale;
+    }
+  });
+
   it.each(['macos', 'linux', 'windows'] as const)(
     'shows the reclaimable-space explanation only on macOS: %s',
     platform => {

@@ -181,3 +181,47 @@ it('uses the checkbox for selection state while retaining the total for partial 
   );
   wrapper.unmount();
 });
+
+it.each([
+  ['fr-FR', '1 fichier', '2 fichiers'],
+  ['de-DE', '1 Datei', '2 Dateien'],
+  ['es-ES', '1 archivo', '2 archivos'],
+] as const)('uses the numeric source count for %s plural selection', async (locale, singular, plural) => {
+  const previousLocale = i18n.global.locale.value;
+  i18n.global.locale.value = locale;
+  const withCount = (fileCount: number): PresentedScanRuleResult => ({
+    ...rule,
+    fileCount,
+    sources: [{ ...rule.sources[0]!, fileCount, blockReason: null }],
+  });
+  const wrapper = mount(MdCleanupRuleGroups, {
+    props: {
+      busy: false,
+      leftovers: null,
+      rules: [withCount(2)],
+      selectedLeftoverIds: [],
+      selectedRuleIds: [],
+      sourceSelections: [],
+      privilegedScanRuleId: null,
+    },
+    global: {
+      plugins: [createPinia(), i18n],
+      stubs: {
+        MdResultTable: { methods: { scrollTo() {} }, template: '<div><slot name="header" /><slot /></div>' },
+        MdAiAction: true,
+        MdIconAction: true,
+      },
+    },
+  });
+  try {
+    await flushPromises();
+    wrapper.findComponent(MdResultItemContent).vm.$emit('toggle');
+    await flushPromises();
+    expect(wrapper.get('.source-row small').text()).toBe(plural);
+    await wrapper.setProps({ rules: [withCount(1)] });
+    expect(wrapper.get('.source-row small').text()).toBe(singular);
+  } finally {
+    wrapper.unmount();
+    i18n.global.locale.value = previousLocale;
+  }
+});

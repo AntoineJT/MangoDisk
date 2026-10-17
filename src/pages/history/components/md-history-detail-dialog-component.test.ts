@@ -42,6 +42,33 @@ function render(record: PresentedOperationRecord) {
 }
 
 describe('history detail dialog', () => {
+  it('describes cleared privacy data consistently with the Spanish cleanup result', () => {
+    const previousLocale = i18n.global.locale.value;
+    i18n.global.locale.value = 'es-ES';
+    const wrapper = render({
+      ...base,
+      category: 'privacyCleanup',
+      details: {
+        type: 'privacyCleanup',
+        payload: {
+          planId: 'plan',
+          timeRange: 'allTime',
+          items: [
+            { sourceId: 'browser', kind: 'cookies', affectedItemCount: 2, status: 'cleared', failureReason: null },
+          ],
+        },
+      },
+    });
+    try {
+      expect(wrapper.get('.detail-action small').text()).toBe(i18n.global.t('privacy.result.statuses.cleared'));
+      expect(wrapper.get('.detail-action').text()).toContain('2');
+      expect(wrapper.get('.action-status').classes()).not.toContain('warning');
+    } finally {
+      wrapper.unmount();
+      i18n.global.locale.value = previousLocale;
+    }
+  });
+
   it('keeps cancelled uninstall space uncounted and prioritizes failed actions in its explanation', async () => {
     const wrapper = render({
       ...base,

@@ -109,9 +109,13 @@ watch(
     :title="
       executing
         ? executionTitle
-        : t(nativeBatch ? 'applicationUninstall.confirmNativeBatchTitle' : 'applicationUninstall.confirmBatchTitle', {
-            count: FormatService.integer(preview?.selectedApplicationCount ?? selectedCandidates.length),
-          })
+        : t(
+            nativeBatch ? 'applicationUninstall.confirmNativeBatchTitle' : 'applicationUninstall.confirmBatchTitle',
+            {
+              count: FormatService.integer(preview?.selectedApplicationCount ?? selectedCandidates.length),
+            },
+            preview?.selectedApplicationCount ?? selectedCandidates.length
+          )
     "
     :description="
       executing
@@ -129,9 +133,13 @@ watch(
         ? ''
         : preparing
           ? t('applicationUninstall.preparingBatchSummary')
-          : t('applicationUninstall.confirmBatchSummary', {
-              count: FormatService.integer(preview?.previewedApplicationCount ?? 0),
-            })
+          : t(
+              'applicationUninstall.confirmBatchSummary',
+              {
+                count: FormatService.integer(preview?.previewedApplicationCount ?? 0),
+              },
+              preview?.previewedApplicationCount ?? 0
+            )
     "
     :summary-value="
       executing ? '' : ByteSizeService.bytes(preview?.previewedBytes ?? plan?.expectedBytes ?? selectedBytes)

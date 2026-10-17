@@ -454,7 +454,13 @@ watch(
                       t(`applicationLeftovers.sources.${candidate.source}`)
                     }}</strong>
                     <MdMiddleEllipsis :text="PathUtils.display(candidate.path)" :tail-length="22" />
-                    <small>{{ t('cleanup.sourceFiles', { count: FormatService.integer(candidate.fileCount) }) }}</small>
+                    <small>{{
+                      t(
+                        'cleanup.sourceFiles',
+                        { count: FormatService.integer(candidate.fileCount) },
+                        candidate.fileCount
+                      )
+                    }}</small>
                   </span>
                   <span class="source-actions">
                     <MdIconAction
@@ -684,7 +690,9 @@ watch(
                   <span class="source-main">
                     <MdMiddleEllipsis :text="PathUtils.display(source.path)" :tail-length="22" />
                     <small>
-                      {{ t('cleanup.sourceFiles', { count: FormatService.integer(source.fileCount) }) }}
+                      {{
+                        t('cleanup.sourceFiles', { count: FormatService.integer(source.fileCount) }, source.fileCount)
+                      }}
                       <template v-if="source.modifiedAtMs">
                         ·
                         {{

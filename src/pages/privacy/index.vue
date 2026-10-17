@@ -91,10 +91,14 @@ const selectionModeOptions = computed<MdSelectionModeOption[]>(() => {
 const selectedCount = computed(() => selectionSummary.value.itemCount);
 const selectedValue = computed(() =>
   selectionSummary.value.pendingScanCount
-    ? t('privacy.selectedPendingSummary', {
-        count: FormatService.integer(selectedCount.value),
-        pending: FormatService.integer(selectionSummary.value.pendingScanCount),
-      })
+    ? t(
+        'privacy.selectedPendingSummary',
+        {
+          count: FormatService.integer(selectedCount.value),
+          pending: FormatService.integer(selectionSummary.value.pendingScanCount),
+        },
+        selectedCount.value
+      )
     : t('privacy.traceCount', { count: FormatService.integer(selectedCount.value) }, selectedCount.value)
 );
 const hasPermissionRequired = computed(

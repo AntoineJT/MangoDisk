@@ -533,7 +533,9 @@ watch(
     <MdResultWorkspace v-else>
       <template v-if="catalog" #summary>
         <MdResultSummary
-          :title="t('startup.summary.programs', { count: FormatService.integer(displayGroups.length) })"
+          :title="
+            t('startup.summary.programs', { count: FormatService.integer(displayGroups.length) }, displayGroups.length)
+          "
           :metric-label="t('startup.summary.enabled')"
           :metric-value="FormatService.integer(filterCounts.enabled)"
         >
@@ -644,7 +646,9 @@ watch(
 
         <MdLoadMoreButton
           v-if="remainingResultCount"
-          :remaining-label="t('startup.remainingResults', { count: FormatService.integer(remainingResultCount) })"
+          :remaining-label="
+            t('startup.remainingResults', { count: FormatService.integer(remainingResultCount) }, remainingResultCount)
+          "
           @load-more="loadMoreResults"
         />
       </MdResultTable>

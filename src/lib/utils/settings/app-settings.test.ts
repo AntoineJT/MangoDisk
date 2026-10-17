@@ -64,6 +64,14 @@ describe('AppSettingsUtils', () => {
     }
   );
 
+  it.each([LANGUAGE_IDS.frFR, LANGUAGE_IDS.deDE, LANGUAGE_IDS.esES])(
+    'preserves the saved %s locale when reloading preferences',
+    language => {
+      const saved = { ...AppSettingsUtils.defaults(language), theme: THEME_IDS.dark };
+      expect(AppSettingsUtils.parse(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
+    }
+  );
+
   it('rejects incomplete persisted settings', () => {
     expect(() => AppSettingsUtils.parse({})).toThrow('Invalid app settings document');
   });

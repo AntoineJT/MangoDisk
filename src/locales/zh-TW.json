@@ -2481,7 +2481,10 @@
       "koKR": "한국어",
       "ruRU": "Русский",
       "trTR": "Türkçe",
-      "ptBR": "Português (Brasil)"
+      "ptBR": "Português (Brasil)",
+      "frFR": "Français (France)",
+      "deDE": "Deutsch (Deutschland)",
+      "esES": "Español (España)"
     },
     "colorThemeTitle": "主題顏色",
     "colorThemeDescription": "選擇介面配色，明暗模式獨立設定",

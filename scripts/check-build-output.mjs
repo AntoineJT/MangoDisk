@@ -3,7 +3,19 @@ import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const assetDirectory = fileURLToPath(new URL('../dist/assets/', import.meta.url));
-const expectedLocaleIds = new Set(['en-us', 'ja-jp', 'ko-kr', 'pt-br', 'ru-ru', 'tr-tr', 'zh-cn', 'zh-tw']);
+const expectedLocaleIds = new Set([
+  'de-de',
+  'en-us',
+  'es-es',
+  'fr-fr',
+  'ja-jp',
+  'ko-kr',
+  'pt-br',
+  'ru-ru',
+  'tr-tr',
+  'zh-cn',
+  'zh-tw',
+]);
 const maximumApplicationChunkBytes = 300 * 1024;
 // Allow a small raw-size margin for localized scan, monitoring and disk-capacity guidance while
 // retaining the 60 KiB gzip limit on transferred locale assets.
@@ -33,7 +45,13 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // Persisted traffic adds localized accumulation/reset guidance: Japanese measures
 // 330,879 raw / 62,638 gzip bytes; Russian measures 399,778 raw / 70,709 gzip.
 // Add only 512 raw bytes per locale and 256/128 gzip bytes respectively.
+// French, German and Spanish assets measure approximately 318 / 308 / 310 kB
+// raw and 63.2 / 63.8 / 61.7 kB gzip. Keep their measured allowances local;
+// application and existing locale budgets stay fixed.
 const localeChunkLimitOverrides = new Map([
+  ['fr-fr', { bytes: 311 * 1024, gzipBytes: 62 * 1024 }],
+  ['de-de', { bytes: maximumLocaleChunkBytes, gzipBytes: 63 * 1024 }],
+  ['es-es', { bytes: maximumLocaleChunkBytes, gzipBytes: 61 * 1024 }],
   ['ja-jp', { bytes: 323 * 1024 + 512, gzipBytes: 61 * 1024 + 256 }],
   ['ru-ru', { bytes: 390 * 1024 + 512, gzipBytes: 69 * 1024 + 128 }],
 ]);

@@ -57,11 +57,15 @@ const resultActions = computed(() => {
       key: 'application-leftovers',
       message: leftoverResult.dryRun
         ? t('cleanup.previewPassed')
-        : t('applicationLeftovers.executionSummary', {
-            count: FormatService.integer(leftoverResult.affectedItemCount),
-            size: ByteSizeService.bytes(leftoverResult.releasedBytes),
-            failed: FormatService.integer(leftoverResult.failedItemCount),
-          }),
+        : t(
+            'applicationLeftovers.executionSummary',
+            {
+              count: FormatService.integer(leftoverResult.affectedItemCount),
+              size: ByteSizeService.bytes(leftoverResult.releasedBytes),
+              failed: FormatService.integer(leftoverResult.failedItemCount),
+            },
+            leftoverResult.affectedItemCount
+          ),
       name: t('applicationLeftovers.categoryTitle'),
       releasedBytes: leftoverResult.releasedBytes,
     },

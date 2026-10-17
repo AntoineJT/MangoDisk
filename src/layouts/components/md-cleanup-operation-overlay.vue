@@ -110,17 +110,25 @@ const items = computed(() => {
     if (result?.status === 'previewed') {
       detail = t('loading.cleanupItemChecked');
     } else if (result?.status === 'partial') {
-      detail = t('loading.cleanupItemPartial', {
-        count: FormatService.integer(result.affectedItemCount),
-        size: ByteSizeService.bytes(result.releasedBytes),
-      });
+      detail = t(
+        'loading.cleanupItemPartial',
+        {
+          count: FormatService.integer(result.affectedItemCount),
+          size: ByteSizeService.bytes(result.releasedBytes),
+        },
+        result.affectedItemCount
+      );
     } else if (result && ['blocked', 'failed'].includes(result.status)) {
       detail = t('loading.cleanupItemSkipped');
     } else if (result) {
-      detail = t('loading.cleanupItemCompleted', {
-        count: FormatService.integer(result.affectedItemCount),
-        size: ByteSizeService.bytes(result.releasedBytes),
-      });
+      detail = t(
+        'loading.cleanupItemCompleted',
+        {
+          count: FormatService.integer(result.affectedItemCount),
+          size: ByteSizeService.bytes(result.releasedBytes),
+        },
+        result.affectedItemCount
+      );
     } else if (active && currentProgress?.stage === 'validating') {
       detail = t('loading.cleanupItemValidating');
     } else if (active && currentProgress?.currentItemPath) {

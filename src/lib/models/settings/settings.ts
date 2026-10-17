@@ -9,6 +9,9 @@ export const LANGUAGE_IDS = {
   enUS: 'en-US',
   trTR: 'tr-TR',
   ptBR: 'pt-BR',
+  frFR: 'fr-FR',
+  deDE: 'de-DE',
+  esES: 'es-ES',
 } as const;
 
 export type LanguageId = (typeof LANGUAGE_IDS)[keyof typeof LANGUAGE_IDS];
@@ -59,6 +62,24 @@ export const LANGUAGE_OPTIONS = [
     id: LANGUAGE_IDS.ptBR,
     labelKey: 'settings.languageNames.ptBR',
     browserLanguagePrefixes: ['pt'],
+    websitePath: '',
+  },
+  {
+    id: LANGUAGE_IDS.frFR,
+    labelKey: 'settings.languageNames.frFR',
+    browserLanguagePrefixes: ['fr'],
+    websitePath: '',
+  },
+  {
+    id: LANGUAGE_IDS.deDE,
+    labelKey: 'settings.languageNames.deDE',
+    browserLanguagePrefixes: ['de'],
+    websitePath: '',
+  },
+  {
+    id: LANGUAGE_IDS.esES,
+    labelKey: 'settings.languageNames.esES',
+    browserLanguagePrefixes: ['es'],
     websitePath: '',
   },
   {
