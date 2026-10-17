@@ -1,22 +1,23 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
 import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
-/** Exposes disk enumeration without aggregating unrelated native commands. */
-export class DiskService {
-  static getSystemDisk(refresh = false): Promise<DiskInfo> {
-    return invoke<DiskInfo>('get_system_disk', { refresh });
+/** Exposes volume enumeration without aggregating unrelated native commands. */
+// Command names are retained for compatibility with the existing desktop IPC contract.
+export class VolumeService {
+  static getSystemVolume(refresh = false): Promise<VolumeInfo> {
+    return invoke<VolumeInfo>('get_system_disk', { refresh });
   }
 
-  static listDisks(): Promise<DiskInfo[]> {
-    return invoke<DiskInfo[]>('list_disks');
+  static listVolumes(): Promise<VolumeInfo[]> {
+    return invoke<VolumeInfo[]>('list_disks');
   }
 
   /** Refresh active windows cheaply; returning to the app always requests a snapshot. */
-  static async watch(refresh: () => Promise<unknown>): Promise<() => void> {
+  static async watchCapacity(refresh: () => Promise<unknown>): Promise<() => void> {
     const current = getCurrentWindow();
     let disposed = false;
     let focused = false;

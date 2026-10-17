@@ -37,7 +37,7 @@ import type {
   DuplicateKeeperRuleId,
   DuplicateScanLocation,
 } from '@/lib/models/storage/duplicate-file';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import type { TraversalProgress } from '@/lib/models/presentation/progress';
 import type { FileCategoryId } from '@/lib/models/filesystem/file-category';
 import * as DuplicateFileSelectionUtils from '@/lib/utils/storage/duplicate-file-selection';
@@ -57,8 +57,8 @@ import { duplicateProgressBytesLabelKey } from './duplicate-file-progress-presen
 const { locale, t } = useI18n({ useScope: 'global' });
 
 const props = defineProps<{
-  disk: DiskInfo | null;
-  disks: DiskInfo[];
+  disk: VolumeInfo | null;
+  disks: VolumeInfo[];
   result: DuplicateFilesResult | null;
   resultComplete: boolean;
   hasMore: boolean;

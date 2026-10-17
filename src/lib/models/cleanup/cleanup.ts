@@ -1,4 +1,4 @@
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import type { CustomCleanupRule } from '@/lib/models/cleanup/custom-cleanup';
 import type { CleanupActionResult, PresentedCleanupActionResult } from '@/lib/models/cleanup/cleanup-action';
 
@@ -172,7 +172,7 @@ export interface CleanupScanResult {
   /** Added in scan schema 1.9; older snapshots have no missing-root diagnostics. */
   missingCustomRootCount?: number;
   scannedAtMs: number;
-  disk: DiskInfo;
+  disk: VolumeInfo;
   rules: ScanRuleResult[];
   applicationIcons: CleanupApplicationIcon[];
   applicationCloseIdentities?: CleanupApplicationCloseIdentity[];

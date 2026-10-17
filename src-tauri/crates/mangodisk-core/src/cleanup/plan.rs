@@ -236,7 +236,7 @@ fn hash_string(hasher: &mut Hasher, value: &str) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{CleanupCategory, CleanupScanResult, DiskInfo, ScanRuleResult};
+    use crate::{CleanupCategory, CleanupScanResult, ScanRuleResult, VolumeInfo};
 
     fn scan_rule(id: &str, risk: RiskLevel, default_selected: bool, bytes: u64) -> ScanRuleResult {
         ScanRuleResult {
@@ -266,7 +266,7 @@ mod tests {
             custom_scan_id: None,
             missing_custom_root_count: 0,
             scanned_at_ms: 10,
-            disk: DiskInfo {
+            disk: VolumeInfo {
                 name: "fixture".to_string(),
                 mount_point: "/fixture".to_string(),
                 total_bytes: 100,

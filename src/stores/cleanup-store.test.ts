@@ -16,7 +16,7 @@ import {
 import type { TraversalProgress } from '@/lib/models/presentation/progress';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
 import { CleanupService } from '@/lib/services/cleanup/cleanup-service';
-import { DiskService } from '@/lib/services/storage/volume-service';
+import { VolumeService } from '@/lib/services/storage/volume-service';
 import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 import { useAppStore } from './app-store';
@@ -163,8 +163,8 @@ describe('cleanup workflow completion', () => {
       const appStore = useAppStore();
       appStore.disk = snapshot.disk;
       appStore.disks = [snapshot.disk];
-      vi.spyOn(DiskService, 'listDisks').mockResolvedValue([fresh]);
-      vi.spyOn(DiskService, 'getSystemDisk').mockResolvedValue(fresh);
+      vi.spyOn(VolumeService, 'listVolumes').mockResolvedValue([fresh]);
+      vi.spyOn(VolumeService, 'getSystemVolume').mockResolvedValue(fresh);
       let complete!: (snapshot: CleanupScanResult) => void;
       const scan = vi
         .spyOn(CleanupService, 'scanWithProgress')
@@ -709,7 +709,7 @@ describe('cleanup workflow completion', () => {
     };
     vi.spyOn(CleanupService, 'executeWithProgress').mockResolvedValue(executionResult);
     const rescan = vi.spyOn(CleanupService, 'scanWithProgress');
-    const refreshDisk = vi.spyOn(DiskService, 'getSystemDisk').mockResolvedValue(refreshedDisk);
+    const refreshDisk = vi.spyOn(VolumeService, 'getSystemVolume').mockResolvedValue(refreshedDisk);
     vi.spyOn(useHistoryStore(), 'load').mockResolvedValue();
     const store = useCleanupStore();
     store.scan = cleanupScan({
@@ -777,7 +777,7 @@ describe('cleanup workflow completion', () => {
       ],
     };
     vi.spyOn(CleanupService, 'executeWithProgress').mockResolvedValue(executionResult);
-    vi.spyOn(DiskService, 'getSystemDisk').mockResolvedValue({
+    vi.spyOn(VolumeService, 'getSystemVolume').mockResolvedValue({
       name: 'Fixture',
       mountPoint: '/',
       totalBytes: 1_000,
@@ -855,7 +855,7 @@ describe('cleanup workflow completion', () => {
       ],
     };
     vi.spyOn(CleanupService, 'executeWithProgress').mockResolvedValue(executionResult);
-    vi.spyOn(DiskService, 'getSystemDisk').mockRejectedValue(new Error('secondary refresh unavailable'));
+    vi.spyOn(VolumeService, 'getSystemVolume').mockRejectedValue(new Error('secondary refresh unavailable'));
     vi.spyOn(LoggerService, 'warn').mockImplementation(() => undefined);
     const store = useCleanupStore();
     store.scan = cleanupScan({
@@ -899,7 +899,7 @@ describe('cleanup workflow completion', () => {
     };
     vi.spyOn(CleanupService, 'executeWithProgress').mockResolvedValue(executionResult);
     const refreshError = new Error('disk refresh failed');
-    vi.spyOn(DiskService, 'getSystemDisk').mockRejectedValue(refreshError);
+    vi.spyOn(VolumeService, 'getSystemVolume').mockRejectedValue(refreshError);
     const warn = vi.spyOn(LoggerService, 'warn').mockImplementation(() => undefined);
     const appStore = useAppStore();
     const reportError = vi.spyOn(appStore, 'reportError');

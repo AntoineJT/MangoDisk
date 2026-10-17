@@ -25,7 +25,7 @@ import {
   type CleanupScanScope,
   type CleanupSourceSelection,
 } from '@/lib/models/cleanup/cleanup';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/settings/macos-permissions';
@@ -38,7 +38,7 @@ import type { TraversalProgress } from '@/lib/models/presentation/progress';
 import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup/cleanup-rule-selection';
 import type { CleanupSelectionMode } from '@/lib/utils/cleanup/cleanup-rule-selection';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import { DiskService } from '@/lib/services/storage/volume-service';
+import { VolumeService } from '@/lib/services/storage/volume-service';
 import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
 import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
@@ -84,8 +84,8 @@ void customCleanupStore.initialize();
 
 const props = defineProps<{
   busy: boolean;
-  disk: DiskInfo | null;
-  disks: DiskInfo[];
+  disk: VolumeInfo | null;
+  disks: VolumeInfo[];
   leftovers: ApplicationLeftoverScanResult | null;
   leftoverResult: ApplicationLeftoverResult | null;
   scanningLeftovers: boolean;
@@ -129,7 +129,7 @@ const customDialogOpen = ref(false);
 const permissionPromptOpen = ref(false);
 const permissionPromptShown = ref(false);
 const incompleteScanPromptOpen = ref(false);
-const selectableDisks = ref<DiskInfo[]>([]);
+const selectableDisks = ref<VolumeInfo[]>([]);
 const selectedLeftoverIds = ref<string[]>([]);
 const scanRules = computed(() => props.scan?.rules ?? []);
 const isMacOs = computed(() => MacOsPermissionService.isMacOs());
@@ -291,7 +291,7 @@ function startStandardScan() {
 
 async function refreshSelectableDisks() {
   try {
-    selectableDisks.value = await DiskService.listDisks();
+    selectableDisks.value = await VolumeService.listVolumes();
   } catch (error) {
     selectableDisks.value = [...props.disks];
     LoggerService.warn(LOG_DOMAINS.cleanup, LOG_EVENTS.volumeSelectionRefreshFailed, {

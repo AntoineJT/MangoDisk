@@ -28,7 +28,7 @@ import { ApplicationWindowService } from '@/lib/services/shell/application-windo
 import type { ResidentDestination } from '@/lib/models/resident/resident';
 import { ResidentService } from '@/lib/services/resident/resident-service';
 import { BackgroundUpdateService } from '@/lib/services/updates/background-update-service';
-import { DiskService } from '@/lib/services/storage/volume-service';
+import { VolumeService } from '@/lib/services/storage/volume-service';
 import { ApplicationMenuService } from '@/lib/services/shell/application-menu-service';
 import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
@@ -279,7 +279,7 @@ function preloadFeaturePages() {
     void initializeDisks()
       .then(() => {
         if (!shellMounted) return undefined;
-        return DiskService.watch(() => store.refreshDisks());
+        return VolumeService.watchCapacity(() => store.refreshDisks());
       })
       .then(stop => {
         if (shellMounted) stopDiskWatch = stop;

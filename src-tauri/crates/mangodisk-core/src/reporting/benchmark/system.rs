@@ -6,7 +6,7 @@ use std::{
 
 use serde::Serialize;
 
-use crate::filesystem::DiskInfo;
+use crate::filesystem::VolumeInfo;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -32,7 +32,7 @@ pub(crate) struct BenchmarkEnvironment {
 
 pub(crate) fn environment_info(
     environment_id: Option<&str>,
-    disk: &DiskInfo,
+    disk: &VolumeInfo,
 ) -> BenchmarkEnvironment {
     let os = env::consts::OS.to_string();
     let architecture = env::consts::ARCH.to_string();
@@ -78,7 +78,7 @@ fn automatic_environment_id(
     logical_cpu_count: usize,
     physical_memory_bytes: Option<u64>,
     user_identity: &str,
-    disk: &DiskInfo,
+    disk: &VolumeInfo,
 ) -> String {
     let mut hasher = blake3::Hasher::new();
     for value in [

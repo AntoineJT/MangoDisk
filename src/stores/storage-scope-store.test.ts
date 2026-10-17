@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import { STORAGE_SCOPE_IDS } from '@/lib/models/storage/storage-scope';
 import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
 import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
@@ -27,7 +27,7 @@ const { loadMock, values } = vi.hoisted(() => {
 });
 
 vi.mock('@tauri-apps/plugin-store', () => ({ load: loadMock }));
-const disks: DiskInfo[] = [
+const disks: VolumeInfo[] = [
   {
     name: 'System',
     mountPoint: '/',

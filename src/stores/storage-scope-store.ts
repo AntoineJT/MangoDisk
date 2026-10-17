@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { MAX_DIRECTORY_ENTRIES_PER_REQUEST } from '@/lib/models/storage/folder-selection';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
 import {
   STORAGE_SCOPE_IDS,
@@ -45,7 +45,7 @@ export const useStorageScopeStore = defineStore('storage-scope', {
     standardFolders: [],
   }),
   actions: {
-    async initialize(disks: readonly DiskInfo[]) {
+    async initialize(disks: readonly VolumeInfo[]) {
       if (this.initialized) return;
 
       const pendingInitialization = initializationByStore.get(this);
@@ -78,7 +78,7 @@ export const useStorageScopeStore = defineStore('storage-scope', {
         LoggerService.info(LOG_DOMAINS.storageScope, LOG_EVENTS.standardScanFoldersLoadFailed, { error });
       }
     },
-    async restorePreferences(disks: readonly DiskInfo[]) {
+    async restorePreferences(disks: readonly VolumeInfo[]) {
       let saved: unknown | null;
       try {
         saved = await PreferenceStorageService.loadStorageScopePreferences();
@@ -176,7 +176,7 @@ export const useStorageScopeStore = defineStore('storage-scope', {
       const selection = this.selectedPaths[scopeId];
       return Array.isArray(selection) ? (selection[0] ?? '') : (selection ?? '');
     },
-    select(scopeId: StorageScopeId, path: string, disks: readonly DiskInfo[]) {
+    select(scopeId: StorageScopeId, path: string, disks: readonly VolumeInfo[]) {
       const normalized = PathUtils.display(path);
       if (!normalized) return;
 
@@ -196,7 +196,7 @@ export const useStorageScopeStore = defineStore('storage-scope', {
     selectPaths(
       scopeId: typeof STORAGE_SCOPE_IDS.largeFiles | typeof STORAGE_SCOPE_IDS.duplicateFiles,
       paths: string[],
-      disks: readonly DiskInfo[]
+      disks: readonly VolumeInfo[]
     ) {
       const keys = new Set<string>();
       const selected = paths.map(PathUtils.display).filter(path => {

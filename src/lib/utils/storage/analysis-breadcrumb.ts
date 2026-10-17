@@ -1,4 +1,4 @@
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import type { AnalysisDirectoryNode, AnalysisResult, DirectoryEntryInfo } from '@/lib/models/storage/analysis';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 export type AnalysisSiblingFolder = Pick<DirectoryEntryInfo, 'name' | 'path' | 'bytes'>;
@@ -8,7 +8,7 @@ export interface AnalysisBreadcrumb {
   siblings?: readonly AnalysisSiblingFolder[];
   siblingParentBytes?: number;
 }
-export function create(path: string, activeDisk: DiskInfo | null, localDiskLabel: string): AnalysisBreadcrumb[] {
+export function create(path: string, activeDisk: VolumeInfo | null, localDiskLabel: string): AnalysisBreadcrumb[] {
   const normalized = PathUtils.display(path);
   if (!normalized) return [];
   const driveMatch = normalized.match(/^([A-Za-z]:)[\\/]*(.*)$/);

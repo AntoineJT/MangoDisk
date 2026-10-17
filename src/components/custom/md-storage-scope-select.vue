@@ -8,7 +8,7 @@ import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
 import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
@@ -22,7 +22,7 @@ const props = withDefaults(
   defineProps<{
     modelValue: string | string[];
     multiple?: boolean;
-    disks: DiskInfo[];
+    disks: VolumeInfo[];
     recentFolders?: string[];
     standardFolders?: StandardScanFolder[];
     disabled?: boolean;

@@ -7,7 +7,7 @@ vi.mock('@tauri-apps/api/window', () => ({
 }));
 vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
 
-import { DiskService } from '@/lib/services/storage/volume-service';
+import { VolumeService } from '@/lib/services/storage/volume-service';
 
 let focus: (event: { payload: boolean }) => void;
 beforeEach(() => {
@@ -23,7 +23,7 @@ afterEach(() => vi.useRealTimers());
 
 it('refreshes on focus and at a low frequency, pauses in the background and releases observers', async () => {
   const refresh = vi.fn().mockResolvedValue(true);
-  const stop = await DiskService.watch(refresh);
+  const stop = await VolumeService.watchCapacity(refresh);
   await vi.advanceTimersByTimeAsync(15_000);
   expect(refresh).toHaveBeenCalledTimes(1);
   focus({ payload: false });
@@ -48,7 +48,7 @@ it('coalesces focus and timer requests while native capacity is pending', async 
         complete = resolve;
       })
   );
-  const stop = await DiskService.watch(refresh);
+  const stop = await VolumeService.watchCapacity(refresh);
   focus({ payload: true });
   await vi.advanceTimersByTimeAsync(30_000);
   focus({ payload: true });
@@ -70,7 +70,7 @@ it('keeps a focus event newer than the initial focus query', async () => {
       })
   );
   const refresh = vi.fn().mockResolvedValue(true);
-  const watching = DiskService.watch(refresh);
+  const watching = VolumeService.watchCapacity(refresh);
   await vi.advanceTimersByTimeAsync(0);
   focus({ payload: false });
   complete(true);
@@ -82,14 +82,14 @@ it('keeps a focus event newer than the initial focus query', async () => {
 
 it('releases the focus observer when initial state cannot be read', async () => {
   native.isFocused.mockRejectedValue(new Error('window closed'));
-  await expect(DiskService.watch(vi.fn())).rejects.toThrow('window closed');
+  await expect(VolumeService.watchCapacity(vi.fn())).rejects.toThrow('window closed');
   expect(native.stop).toHaveBeenCalledOnce();
   expect(vi.getTimerCount()).toBe(0);
 });
 
 it('requests cache invalidation only for an explicit refresh', async () => {
-  await DiskService.getSystemDisk();
-  await DiskService.getSystemDisk(true);
+  await VolumeService.getSystemVolume();
+  await VolumeService.getSystemVolume(true);
   expect(native.invoke.mock.calls).toEqual([
     ['get_system_disk', { refresh: false }],
     ['get_system_disk', { refresh: true }],

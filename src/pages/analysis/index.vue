@@ -18,10 +18,10 @@ import type {
   AnalysisViewId,
   DirectoryEntryInfo,
 } from '@/lib/models/storage/analysis';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import type { TraversalProgress } from '@/lib/models/presentation/progress';
 import * as AnalysisBreadcrumbUtils from '@/lib/utils/storage/analysis-breadcrumb';
-import * as DiskUtils from '@/lib/utils/storage/volume';
+import * as VolumeUtils from '@/lib/utils/storage/volume';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import * as PathUtils from '@/lib/utils/filesystem/path';
@@ -43,8 +43,8 @@ const props = defineProps<{
   excludedFolders: string[];
   excludedNames?: ScanNameExclusion[];
   homePath: string;
-  disk: DiskInfo | null;
-  disks: DiskInfo[];
+  disk: VolumeInfo | null;
+  disks: VolumeInfo[];
   progress: TraversalProgress | null;
   busy: boolean;
   cancelling: boolean;
@@ -143,7 +143,7 @@ const resultMatchesExclusions = computed(
     )
 );
 const activeDisk = computed(() =>
-  DiskUtils.findForPath(
+  VolumeUtils.findForPath(
     props.disks,
     props.result?.root || selectedScopePath.value || props.homePath || props.disk?.mountPoint || '',
     props.disk

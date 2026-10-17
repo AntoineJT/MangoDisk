@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 
 import * as AnalysisBreadcrumbUtils from '@/lib/utils/storage/analysis-breadcrumb';
 
-const externalDisk: DiskInfo = {
+const externalDisk: VolumeInfo = {
   name: 'Projects',
   mountPoint: '/Volumes/Projects',
   totalBytes: 1_000,

@@ -28,7 +28,7 @@ import {
 } from '@/lib/models/storage/large-file';
 import { STORAGE_SCOPE_IDS } from '@/lib/models/storage/storage-scope';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import type { TraversalProgress } from '@/lib/models/presentation/progress';
 import type { FileCategoryId } from '@/lib/models/filesystem/file-category';
 import type { LargeFileEntry, LargeFilesResult } from '@/lib/models/storage/large-file';
@@ -48,8 +48,8 @@ import MdLargeFileScanButton from './components/md-large-file-scan-button.vue';
 const { locale, t } = useI18n({ useScope: 'global' });
 
 const props = defineProps<{
-  disk: DiskInfo | null;
-  disks: DiskInfo[];
+  disk: VolumeInfo | null;
+  disks: VolumeInfo[];
   result: LargeFilesResult | null;
   progress: TraversalProgress | null;
   minimumBytes: number;

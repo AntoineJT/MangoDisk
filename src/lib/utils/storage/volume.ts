@@ -1,6 +1,6 @@
-import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { VolumeInfo } from '@/lib/models/storage/volume';
 import * as PathUtils from '@/lib/utils/filesystem/path';
-export function findForPath(disks: DiskInfo[], path: string, fallback: DiskInfo | null = null): DiskInfo | null {
+export function findForPath(disks: VolumeInfo[], path: string, fallback: VolumeInfo | null = null): VolumeInfo | null {
   const normalizedPath = PathUtils.comparisonKey(path);
   if (!normalizedPath) return fallback;
   // Prefer specific mounts and enforce path boundaries so similarly prefixed

@@ -4,7 +4,6 @@ pub(crate) mod app_distribution;
 pub(crate) mod app_updates;
 pub(crate) mod applications;
 pub(crate) mod cleanup;
-pub(crate) mod disk;
 pub(crate) mod duplicate_files;
 pub(crate) mod error;
 pub(crate) mod feedback;
@@ -19,5 +18,6 @@ pub(crate) mod resident;
 pub(crate) mod startup;
 pub(crate) mod system_maintenance;
 pub(crate) mod system_settings;
+pub(crate) mod volumes;
 
 pub(crate) mod windows_monitoring;

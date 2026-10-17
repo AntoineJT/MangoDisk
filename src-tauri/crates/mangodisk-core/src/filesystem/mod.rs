@@ -12,5 +12,5 @@ pub use directory_selection::{
     DirectorySelectionOutcome, DirectorySelectionService, ResolvedDirectory,
 };
 pub use models::{
-    DiskInfo, PermanentDeleteBatchResult, PermanentDeleteCandidate, PermanentDeleteFailure,
+    PermanentDeleteBatchResult, PermanentDeleteCandidate, PermanentDeleteFailure, VolumeInfo,
 };

@@ -1,4 +1,4 @@
-export interface DiskInfo {
+export interface VolumeInfo {
   name: string;
   mountPoint: string;
   totalBytes: number;
