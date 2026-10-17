@@ -48,7 +48,13 @@ function global() {
     stubs: { teleport: true },
     plugins: [
       createPinia(),
-      createI18n({ legacy: false, locale: 'en', messages: { en: {} }, missingWarn: false, fallbackWarn: false }),
+      createI18n({
+        legacy: false,
+        locale: 'en',
+        messages: { en: { systemStatus: { moveAnnouncement: '{name}: {position}/{count}' } } },
+        missingWarn: false,
+        fallbackWarn: false,
+      }),
     ],
   };
 }
@@ -896,6 +902,7 @@ describe('status display interactions', () => {
     await handle.trigger('keydown', { key: 'ArrowUp' });
     await flushPromises();
     expect(document.activeElement).toBe(wrapper.get('[data-metric="memory"] .drag-handle').element);
+    expect(wrapper.get('[aria-live="polite"]').text()).toContain(`: 1/${wrapper.findAll('.metric-row').length}`);
     expect(ResidentService.savePreferences).not.toHaveBeenCalled();
     await handle.trigger('keydown', { key: 'Escape' });
     expect(wrapper.findAll('.metric-heading label')[0]!.text()).toBe('systemStatus.cpuShort');

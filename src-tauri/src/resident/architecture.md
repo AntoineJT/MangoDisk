@@ -29,7 +29,11 @@ application termination, or memory-reclamation algorithms.
 | `preferences` | Revision conflicts, native application and persistence rollback |
 | `panel` / `main_window` | Independent presentation, source anchoring, focus and background-launch behavior |
 | Vue resident settings store | Serialized optimistic edits and rollback to committed preferences |
-| Vue settings / tray panel | Configuration preview and presentation of actual readings |
+| Vue `md-status-display-settings` | Committed enable state and settings navigation |
+| Vue `md-resident-display-editor` | Metric choices, GPU sample freshness and Windows temperature consent |
+| Vue `md-resident-metric-order` | Local reorder preview, pointer cleanup and keyboard focus |
+| `ResidentDisplayCatalogService` | One settings view’s schema/revision checks, subscription retries and disposal |
+| Vue tray panel | Presentation of actual readings |
 
 ## Validation
 
