@@ -108,7 +108,10 @@ function result(status: 'completed' | 'failed', kind: 'applicationBinary' | 'cac
 describe('application uninstall result synchronization', () => {
   it('removes an application only after its primary component is removed', () => {
     const snapshot = catalog([candidate('removed'), candidate('remaining', 'applicationRunning')]);
-    const updated = ApplicationUninstallResultUtils.apply(snapshot, result('completed', 'applicationBinary'));
+    const updated = ApplicationUninstallResultUtils.applyVerifiedRemovals(
+      snapshot,
+      result('completed', 'applicationBinary')
+    );
 
     expect(updated.candidates.map(item => item.applicationId)).toEqual(['remaining']);
     expect(updated.readyCount).toBe(0);
@@ -118,12 +121,12 @@ describe('application uninstall result synchronization', () => {
   it('retains applications after failed or secondary-only actions', () => {
     const snapshot = catalog([candidate('removed')]);
 
-    expect(ApplicationUninstallResultUtils.apply(snapshot, result('failed', 'applicationBinary')).candidates).toEqual(
-      snapshot.candidates
-    );
-    expect(ApplicationUninstallResultUtils.apply(snapshot, result('completed', 'cache')).candidates).toEqual(
-      snapshot.candidates
-    );
+    expect(
+      ApplicationUninstallResultUtils.applyVerifiedRemovals(snapshot, result('failed', 'applicationBinary')).candidates
+    ).toEqual(snapshot.candidates);
+    expect(
+      ApplicationUninstallResultUtils.applyVerifiedRemovals(snapshot, result('completed', 'cache')).candidates
+    ).toEqual(snapshot.candidates);
   });
 });
 
@@ -133,19 +136,19 @@ describe('native failures after verified registration removal', () => {
     const failure = result('failed', 'applicationBinary');
     failure.results[0]!.actions[0]!.kind = 'nativeInstaller';
     failure.results[0]!.actions[0]!.reason = 'nativeInstallerFailedAfterRemoval';
-    const updated = ApplicationUninstallResultUtils.apply(scan, failure);
+    const updated = ApplicationUninstallResultUtils.applyVerifiedRemovals(scan, failure);
     expect(updated.candidates.map(item => item.applicationId)).toEqual(['untouched']);
     expect(updated.scannedAtMs).toBe(scan.scannedAtMs);
     expect(failure.failedApplicationCount).toBe(1);
     expect(failure.results[0]!.actions[0]!.status).toBe('failed');
     expect(failure.releasedBytes).toBe(0);
     failure.results[0]!.actions[0]!.reason = 'nativeInstallerFailed';
-    expect(ApplicationUninstallResultUtils.apply(scan, failure)).toBe(scan);
+    expect(ApplicationUninstallResultUtils.applyVerifiedRemovals(scan, failure)).toBe(scan);
     failure.results[0]!.actions[0]!.reason = 'nativeInstallerFailedAfterRemoval';
     failure.results[0]!.actions[0]!.kind = 'applicationBinary';
-    expect(ApplicationUninstallResultUtils.apply(scan, failure)).toBe(scan);
+    expect(ApplicationUninstallResultUtils.applyVerifiedRemovals(scan, failure)).toBe(scan);
     failure.results[0]!.actions[0]!.kind = 'nativeInstaller';
     failure.dryRun = true;
-    expect(ApplicationUninstallResultUtils.apply(scan, failure)).toBe(scan);
+    expect(ApplicationUninstallResultUtils.applyVerifiedRemovals(scan, failure)).toBe(scan);
   });
 });

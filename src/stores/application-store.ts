@@ -238,7 +238,7 @@ export const useApplicationStore = defineStore('applications', {
        * where another installer changed the cached registration or component.
        */
       if (this.uninstallCatalog) {
-        this.uninstallCatalog = ApplicationUninstallResultUtils.apply(this.uninstallCatalog, result);
+        this.uninstallCatalog = ApplicationUninstallResultUtils.applyVerifiedRemovals(this.uninstallCatalog, result);
       }
       void useHistoryStore().load({ reportError: false });
       this.uninstallLastResult = result;

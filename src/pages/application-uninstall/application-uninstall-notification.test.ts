@@ -116,6 +116,40 @@ function render(locale: keyof typeof messages) {
 }
 
 describe.each(Object.keys(messages) as (keyof typeof messages)[])('uninstall result messages in %s', locale => {
+  it('formats released space with the platform formatter after successful removal', async () => {
+    const wrapper = render(locale);
+    const batch = result(['completed']);
+    batch.releasedBytes = 1024;
+    batch.releasedBytesIsEstimate = true;
+    await wrapper.setProps({ lastResult: batch });
+    expect(vi.mocked(toast.success).mock.lastCall?.[1]?.description).toContain(
+      messages[locale].applicationUninstall.resultEstimatedSpace.replace('{size}', '1.00 KB')
+    );
+    wrapper.unmount();
+  });
+
+  it('retains warnings when a cancelled action and continuing installer share one application', async () => {
+    const wrapper = render(locale);
+    const batch = result(['continuing']);
+    batch.results[0]!.actions.push({
+      componentId: 'cache',
+      kind: 'cache',
+      status: 'failed',
+      reason: 'permanentDeleteFailed',
+      expectedBytes: 0,
+      releasedBytes: 0,
+    });
+    batch.failedItemCount = 1;
+    await wrapper.setProps({ lastResult: batch });
+    const call = vi.mocked(toast.warning).mock.lastCall!;
+    expect(call[0]).toBe(messages[locale].applicationUninstall.completedWithWarnings);
+    expect(call[1]?.description).not.toContain(
+      messages[locale].applicationUninstall.resultCancelled.replace('{count}', '1')
+    );
+    expect(toast.info).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
   it('uses a single clear message for confirmed cancellation and preparation cancellation', async () => {
     const wrapper = render(locale);
     await wrapper.setProps({ lastResult: result(['cancelled']) });

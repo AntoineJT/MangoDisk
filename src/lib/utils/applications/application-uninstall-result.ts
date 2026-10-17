@@ -1,8 +1,9 @@
 import type {
   ApplicationUninstallBatchResult,
+  ApplicationUninstallActionResult,
   ApplicationUninstallScanResult,
 } from '@/lib/models/applications/application';
-export function apply(
+export function applyVerifiedRemovals(
   catalog: ApplicationUninstallScanResult,
   result: ApplicationUninstallBatchResult
 ): ApplicationUninstallScanResult {
@@ -45,4 +46,29 @@ export function removeApplications(
     readyCount,
     blockedCount: candidates.length - readyCount,
   };
+}
+
+/** Counts continuing installers separately from confirmed cancellation in mixed batches. */
+export function summarizeBatchOutcome(result: ApplicationUninstallBatchResult) {
+  const continuingApplications = result.results.filter(application =>
+    application.actions.some(action => action.reason === 'externalUninstallerContinuing')
+  ).length;
+  const cancelledApplications = result.results.filter(
+    application =>
+      application.actions.some(action => action.status === 'cancelled') &&
+      !application.actions.some(action => action.reason === 'externalUninstallerContinuing')
+  ).length;
+  const failed = result.failedApplicationCount;
+  const completed = result.affectedApplicationCount;
+  const hasFailures = result.failedItemCount > 0 || failed > 0;
+  const onlyCancelled = cancelledApplications > 0 && !completed && !hasFailures && !continuingApplications;
+  return { continuingApplications, cancelledApplications, failed, completed, hasFailures, onlyCancelled };
+}
+
+export function expectedActionBytes(actions: readonly ApplicationUninstallActionResult[]): number {
+  return actions.reduce((total, action) => total + action.expectedBytes, 0);
+}
+
+export function releasedActionBytes(actions: readonly ApplicationUninstallActionResult[]): number {
+  return actions.reduce((total, action) => total + action.releasedBytes, 0);
 }
