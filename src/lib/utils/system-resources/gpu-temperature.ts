@@ -1,3 +1,4 @@
+import { hasFreshValue } from './metric-reading';
 import {
   GPU_TEMPERATURE_FRESHNESS_MS,
   type GpuTemperature,
@@ -7,13 +8,7 @@ import {
 /** Require a fresh, identified observation; a missing reading never means zero. */
 export function currentGpuTemperature(reading: MetricReading<GpuTemperature>, now: number): GpuTemperature | null {
   const value = reading.value;
-  const sampled = reading.sampledAtMs;
-  return reading.status === 'ready' &&
-    sampled !== null &&
-    Number.isFinite(sampled) &&
-    Number.isFinite(now) &&
-    now >= sampled &&
-    now - sampled <= GPU_TEMPERATURE_FRESHNESS_MS &&
+  return hasFreshValue(reading, now, GPU_TEMPERATURE_FRESHNESS_MS) &&
     value !== null &&
     Number.isFinite(value.celsius) &&
     value.celsius > 0 &&

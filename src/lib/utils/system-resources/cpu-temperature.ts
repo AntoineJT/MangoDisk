@@ -1,3 +1,4 @@
+import { hasFreshValue } from './metric-reading';
 import {
   CPU_TEMPERATURE_FRESHNESS_MS,
   type CpuTemperature,
@@ -7,13 +8,7 @@ import {
 /** Require a fresh, identified observation; a missing reading never means zero. */
 export function currentCpuTemperature(reading: MetricReading<CpuTemperature>, now: number): CpuTemperature | null {
   const value = reading.value;
-  const sampled = reading.sampledAtMs;
-  return reading.status === 'ready' &&
-    sampled !== null &&
-    Number.isFinite(sampled) &&
-    Number.isFinite(now) &&
-    now >= sampled &&
-    now - sampled <= CPU_TEMPERATURE_FRESHNESS_MS &&
+  return hasFreshValue(reading, now, CPU_TEMPERATURE_FRESHNESS_MS) &&
     value !== null &&
     Number.isFinite(value.celsius) &&
     value.celsius > 0 &&

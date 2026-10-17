@@ -12,10 +12,8 @@ import type { DiskInfo } from '@/lib/models/storage/volume';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
 import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
-import {
-  findStandardScanFolderByPath,
-  type StandardScanFolder,
-} from '@/lib/services/storage/standard-scan-folder-service';
+import { findStandardScanFolderByPath } from '@/lib/utils/storage/standard-scan-folder';
+import { type StandardScanFolder } from '@/lib/models/storage/standard-scan-folder';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 
 const { t } = useI18n({ useScope: 'global' });

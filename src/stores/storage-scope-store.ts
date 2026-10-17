@@ -11,10 +11,8 @@ import {
 import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
 import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
-import {
-  StandardScanFolderService,
-  type StandardScanFolder,
-} from '@/lib/services/storage/standard-scan-folder-service';
+import { StandardScanFolderService } from '@/lib/services/storage/standard-scan-folder-service';
+import { type StandardScanFolder } from '@/lib/models/storage/standard-scan-folder';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import * as StorageScopePreferenceUtils from '@/lib/utils/storage/storage-scope-preference';
 

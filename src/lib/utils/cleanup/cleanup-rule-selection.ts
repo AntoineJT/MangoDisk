@@ -1,3 +1,4 @@
+import { sameMembers } from '@/lib/utils/collections/set-membership';
 import type {
   CleanupSourceDetail,
   CleanupSourceSelection,
@@ -54,11 +55,7 @@ export function selectionMode(
   if (!selected.size) return 'none';
   const matches = (ruleIds: readonly string[]) => {
     const expected = new Set(ruleIds);
-    if (
-      selected.size !== expected.size ||
-      !ruleIds.every(ruleId => selected.has(ruleId)) ||
-      sourceSelections.some(selection => !expected.has(selection.ruleId))
-    ) {
+    if (!sameMembers(selected, expected) || sourceSelections.some(selection => !expected.has(selection.ruleId))) {
       return false;
     }
     return rules

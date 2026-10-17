@@ -1,3 +1,4 @@
+import { sameMembers } from '@/lib/utils/collections/set-membership';
 import type { PrivacyDataKind, PrivacyItem } from '@/lib/models/privacy/privacy';
 
 export interface PrivacySelectionSummary {
@@ -48,12 +49,8 @@ export function privacySelectionMode(
 ): PrivacySelectionMode {
   const selected = new Set(selectedTokens);
   if (!selected.size) return 'none';
-  const matches = (tokens: readonly string[]) => {
-    const expected = new Set(tokens);
-    return selected.size === expected.size && tokens.every(token => selected.has(token));
-  };
-  if (matches(recommendedPrivacyTokens(items))) return 'smart';
-  if (matches(actionablePrivacyTokens(items))) return 'all';
+  if (sameMembers(selected, recommendedPrivacyTokens(items))) return 'smart';
+  if (sameMembers(selected, actionablePrivacyTokens(items))) return 'all';
   return 'manual';
 }
 
