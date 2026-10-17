@@ -12,6 +12,23 @@ pub enum AnalysisScanMode {
     Fast,
 }
 
+impl From<AnalysisScanMode> for crate::storage::index::metrics::ByteMetric {
+    fn from(mode: AnalysisScanMode) -> Self {
+        match mode {
+            AnalysisScanMode::Standard => Self::Allocated,
+            AnalysisScanMode::Fast => Self::Logical,
+        }
+    }
+}
+impl From<crate::storage::index::metrics::ByteMetric> for AnalysisScanMode {
+    fn from(metric: crate::storage::index::metrics::ByteMetric) -> Self {
+        match metric {
+            crate::storage::index::metrics::ByteMetric::Allocated => Self::Standard,
+            crate::storage::index::metrics::ByteMetric::Logical => Self::Fast,
+        }
+    }
+}
+
 impl AnalysisScanMode {
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
@@ -32,13 +49,6 @@ impl AnalysisScanMode {
                 metadata,
             ),
             Self::Fast => mangodisk_platform::FileSpaceUsage::logical_only(metadata.len()),
-        }
-    }
-
-    pub(crate) const fn displayed_bytes(self, usage: mangodisk_platform::FileSpaceUsage) -> u64 {
-        match self {
-            Self::Standard => usage.allocated_bytes,
-            Self::Fast => usage.logical_bytes,
         }
     }
 }

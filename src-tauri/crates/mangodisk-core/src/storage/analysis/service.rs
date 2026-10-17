@@ -254,18 +254,26 @@ impl AnalysisService {
                     }
                     crate::shared::CoreError::operation_failed(error).with_possible_side_effects()
                 })?;
+            let credits: Vec<_> = synchronized
+                .credits
+                .iter()
+                .map(|entry| cache::AllocationCredit {
+                    path: &entry.path,
+                    bytes: entry.bytes,
+                })
+                .collect();
             cache::remove_entry_with_allocation_credits(
                 &outcome.target,
                 outcome.removed_usage,
                 outcome.result.removed_file_count,
                 is_directory,
-                scan_mode,
-                Some(&synchronized.credits),
+                scan_mode.into(),
+                Some(&credits),
             );
             outcome.result.updated_results = synchronized.updated_results;
             outcome.result.invalidated_scan_ids = synchronized.invalidated_scan_ids;
             for result in &mut outcome.result.updated_results {
-                match cache::analysis_result(std::path::Path::new(&result.root)) {
+                match crate::storage::analysis::index_projection::analysis_result(std::path::Path::new(&result.root)) {
                     Ok(Some(rebuilt)) => *result = super::session::replace_reconciled_result(rebuilt, result.scan_id)
                         .map_err(|error| {
                             crate::shared::CoreError::operation_failed(error)
@@ -523,7 +531,9 @@ mod tests {
             }
             if !evict_index {
                 let root = fs::canonicalize(&fixture.root).unwrap();
-                let cached = cache::analysis_result(&root).unwrap().unwrap();
+                let cached = crate::storage::analysis::index_projection::analysis_result(&root)
+                    .unwrap()
+                    .unwrap();
                 assert_eq!(cached.entries.len(), 2);
                 assert_eq!(
                     cached.total_bytes,
@@ -583,9 +593,11 @@ mod tests {
                 );
                 assert_eq!(updated.total_entry_count, usize::from(index != 2));
                 if !evict_index {
-                    let cached = cache::analysis_result(&fs::canonicalize(&fixture.root).unwrap())
-                        .unwrap()
-                        .unwrap();
+                    let cached = crate::storage::analysis::index_projection::analysis_result(
+                        &fs::canonicalize(&fixture.root).unwrap(),
+                    )
+                    .unwrap()
+                    .unwrap();
                     assert_eq!(cached.total_bytes, expected_bytes);
                     assert_eq!(cached.entries.len(), 2 - index);
                 }

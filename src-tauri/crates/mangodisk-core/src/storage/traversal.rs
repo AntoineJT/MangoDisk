@@ -349,9 +349,10 @@ impl StorageTraversal {
         let cache_decision = if refresh {
             CacheReuseDecision::Miss
         } else {
-            cache::reuse_analysis_mode_decision(
+            cache::reuse_snapshot_decision(
                 &root,
-                scan_mode,
+                ScanPurpose::Analysis,
+                scan_mode.into(),
                 exclusions.configuration_fingerprint(),
                 &|| operation.cancelled().load(Ordering::Relaxed),
             )
@@ -360,7 +361,9 @@ impl StorageTraversal {
         diagnostics.cache_validation_ms = cache_validation_started.elapsed().as_millis() as u64;
         match cache_decision {
             CacheReuseDecision::Reusable => {
-                if let Some(result) = cache::analysis_result(&root)? {
+                if let Some(result) =
+                    crate::storage::analysis::index_projection::analysis_result(&root)?
+                {
                     diagnostics.fast_path = "cache";
                     log::info!("analysis_scan_cache_reused operation_id={} root={} scan_mode={} total_bytes={} entry_count={} elapsed_ms={}", operation.id(), diagnostic_path(&root), scan_mode.as_str(), result.total_bytes, result.entries.len(), started.elapsed().as_millis());
                     operation.complete();
@@ -477,7 +480,7 @@ impl StorageTraversal {
         let result_workers = parallel_analysis::worker_count(&root);
         #[cfg(not(windows))]
         let result_workers = 1;
-        let result = cache::analysis_result_from_snapshot(
+        let result = crate::storage::analysis::index_projection::analysis_result_from_snapshot(
             &root,
             root_aggregate,
             &completed_sink.directories,
@@ -753,10 +756,12 @@ impl StorageTraversal {
             };
 
             let result_build_started = Instant::now();
-            retained_entries.extend(cache::large_file_entries_from_snapshot(
-                root,
-                &completed_sink.files,
-            ));
+            retained_entries.extend(
+                crate::storage::large_files::index_projection::large_file_entries_from_snapshot(
+                    root,
+                    &completed_sink.files,
+                ),
+            );
             skipped_count = skipped_count.saturating_add(root_aggregate.skipped_count);
             diagnostics.result_build_ms = result_build_started.elapsed().as_millis() as u64;
             combined.accumulate(&diagnostics);
@@ -989,7 +994,7 @@ fn read_analysis_directory_with_file_queries(
         .visit_directory(traversal_stage(traversal.purpose), path);
     let mut aggregate = DirectoryAggregate {
         scanned_at_ms: traversal.scanned_at_ms,
-        scan_mode: traversal.scan_mode,
+        byte_metric: (traversal.scan_mode).into(),
         ..DirectoryAggregate::default()
     };
     // Directory work can wait behind other entries or workers. Revalidate at execution time
@@ -1200,7 +1205,7 @@ fn read_analysis_file_batch(
     let mut read = AnalysisDirectoryRead {
         aggregate: DirectoryAggregate {
             scanned_at_ms: traversal.scanned_at_ms,
-            scan_mode: traversal.scan_mode,
+            byte_metric: (traversal.scan_mode).into(),
             ..DirectoryAggregate::default()
         },
         fingerprint_entries: Vec::new(),
@@ -1346,7 +1351,7 @@ impl<'a> FastAnalysisStreamValidation<'a> {
                 }
                 let aggregate = DirectoryAggregate {
                     retained_file_limit,
-                    scan_mode: AnalysisScanMode::Standard,
+                    byte_metric: (AnalysisScanMode::Standard).into(),
                     bytes: allocated_bytes,
                     logical_bytes,
                     file_count,

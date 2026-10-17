@@ -431,7 +431,11 @@ fn inaccessible_surviving_alias_fails_closed_and_expires_every_session() {
         AnalysisService::resolve_open_target(sibling.scan_id, sibling.entries[0].path.clone())
             .is_err()
     );
-    assert!(cache::analysis_result(&root).unwrap().is_none());
+    assert!(
+        crate::storage::analysis::index_projection::analysis_result(&root)
+            .unwrap()
+            .is_none()
+    );
 }
 
 #[cfg(unix)]
@@ -473,7 +477,9 @@ fn cached_and_independently_refreshed_siblings_are_not_double_charged() {
         assert!(!response.requires_rescan);
         assert!(response.invalidated_scan_ids.contains(&parent.scan_id));
         assert!(!response.invalidated_scan_ids.contains(&sibling.scan_id));
-        let cached = cache::analysis_result(&root.join("b")).unwrap().unwrap();
+        let cached = crate::storage::analysis::index_projection::analysis_result(&root.join("b"))
+            .unwrap()
+            .unwrap();
         assert_eq!(
             cached.total_bytes, parent.total_bytes,
             "refresh_sibling={refresh_sibling}"
@@ -694,7 +700,9 @@ fn analysis_locked_failure_before_any_unlink_preserves_session() {
             .is_ok()
     );
     assert!(payload.exists());
-    let cached = cache::analysis_result(&root).unwrap().unwrap();
+    let cached = crate::storage::analysis::index_projection::analysis_result(&root)
+        .unwrap()
+        .unwrap();
     assert_eq!(cached.total_bytes, initial.total_bytes);
 
     cache::clear_all().unwrap();
@@ -732,7 +740,10 @@ fn analysis_locked_descendant_before_staging_preserves_session_and_cache() {
             .is_ok()
     );
     assert_eq!(
-        cache::analysis_result(&root).unwrap().unwrap().total_bytes,
+        crate::storage::analysis::index_projection::analysis_result(&root)
+            .unwrap()
+            .unwrap()
+            .total_bytes,
         initial.total_bytes
     );
     cache::clear_all().unwrap();
@@ -766,6 +777,10 @@ fn large_native_directory_failure_keeps_unknown_mutation_conservative() {
             .is_err()
     );
     assert!(locked.exists());
-    assert!(cache::analysis_result(&root).unwrap().is_none());
+    assert!(
+        crate::storage::analysis::index_projection::analysis_result(&root)
+            .unwrap()
+            .is_none()
+    );
     cache::clear_all().unwrap();
 }
