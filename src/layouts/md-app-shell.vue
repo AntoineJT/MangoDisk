@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import type { AnalysisScanMode } from '@/lib/models/storage/analysis';
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -38,7 +39,6 @@ import * as CleanupRuleTextUtils from '@/lib/utils/cleanup/cleanup-rule-text';
 import { type CleanupRuleMessageResolver } from '@/lib/utils/cleanup/cleanup-rule-text';
 import * as CleanupScanScopeUtils from '@/lib/utils/cleanup/cleanup-scan-scope';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import { useAnalysisStore } from '@/stores/analysis-store';
 import { useApplicationStore } from '@/stores/application-store';
 import { useAppUpdateStore } from '@/stores/app-update-store';
@@ -465,9 +465,9 @@ async function deleteLargeFilesPermanently(entries: LargeFileEntry[]) {
   const description = t(
     'largeFiles.deleteCompletedDescription',
     {
-      count: FormatUtils.integer(result.removedPaths.length),
+      count: FormatService.integer(result.removedPaths.length),
       size: ByteSizeService.bytes(result.releasedBytes),
-      failed: FormatUtils.integer(result.failed.length),
+      failed: FormatService.integer(result.failed.length),
     },
     result.removedPaths.length
   );
@@ -496,9 +496,9 @@ async function deleteDuplicateFilesPermanently(entries: DuplicateFileEntry[]) {
   const description = t(
     'duplicateFiles.deleteCompletedDescription',
     {
-      count: FormatUtils.integer(result.removedPaths.length),
+      count: FormatService.integer(result.removedPaths.length),
       size: ByteSizeService.bytes(result.releasedBytes),
-      failed: FormatUtils.integer(result.failed.length),
+      failed: FormatService.integer(result.failed.length),
     },
     result.removedPaths.length
   );
@@ -602,9 +602,9 @@ async function executeCleanup(leftovers: ApplicationLeftoverCandidate[]) {
     const description = t(
       'cleanup.completedDescription',
       {
-        count: FormatUtils.integer(affectedItemCount),
+        count: FormatService.integer(affectedItemCount),
         size: ByteSizeService.bytes(releasedBytes),
-        failed: FormatUtils.integer(failedItemCount),
+        failed: FormatService.integer(failedItemCount),
       },
       affectedItemCount
     );

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import {
   computed,
@@ -30,7 +31,6 @@ import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import type { LargeFileEntry } from '@/lib/models/storage/large-file';
 import type { SortDirection } from '@/lib/models/presentation/sort';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as LargeFileEntryUtils from '@/lib/utils/storage/large-file-entry';
 import { type LargeFileSortKey } from '@/lib/utils/storage/large-file-entry';
 import * as PathUtils from '@/lib/utils/filesystem/path';
@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
                   <MdMiddleEllipsis :text="PathUtils.display(entry.parentPath)" :show-tooltip="false" /></button
               ></MdTooltip>
               <strong class="file-size md-result-primary">{{ ByteSizeService.bytes(entry.bytes) }}</strong>
-              <span class="modified">{{ FormatUtils.dateTime(entry.modifiedAtMs, locale) }}</span>
+              <span class="modified">{{ FormatService.dateTime(entry.modifiedAtMs, locale) }}</span>
             </MdResultTableRow>
           </MdFileEntryContextMenu>
         </div>
@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
     </div>
     <MdLoadMoreButton
       v-if="remainingCount"
-      :remaining-label="t('common.fileCount', { count: FormatUtils.integer(remainingCount) }, remainingCount)"
+      :remaining-label="t('common.fileCount', { count: FormatService.integer(remainingCount) }, remainingCount)"
       @load-more="loadMore"
     />
   </MdResultTable>

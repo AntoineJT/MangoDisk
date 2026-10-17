@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -23,7 +24,6 @@ import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/settings/macos-permi
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
 import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import {
   actionablePrivacyTokens,
   privacySelectionMode,
@@ -69,7 +69,7 @@ const selectionModeOptions = computed<MdSelectionModeOption[]>(() => {
       value: 'smart',
       label: `${t('privacy.selectionMode.smart')} · ${t(
         'privacy.traceCount',
-        { count: FormatUtils.integer(recommendedSummary.value.itemCount) },
+        { count: FormatService.integer(recommendedSummary.value.itemCount) },
         recommendedSummary.value.itemCount
       )}`,
     },
@@ -77,7 +77,7 @@ const selectionModeOptions = computed<MdSelectionModeOption[]>(() => {
       value: 'all',
       label: `${t('privacy.selectionMode.all')} · ${t(
         'privacy.traceCount',
-        { count: FormatUtils.integer(allActionableSummary.value.itemCount) },
+        { count: FormatService.integer(allActionableSummary.value.itemCount) },
         allActionableSummary.value.itemCount
       )}`,
     },
@@ -92,10 +92,10 @@ const selectedCount = computed(() => selectionSummary.value.itemCount);
 const selectedValue = computed(() =>
   selectionSummary.value.pendingScanCount
     ? t('privacy.selectedPendingSummary', {
-        count: FormatUtils.integer(selectedCount.value),
-        pending: FormatUtils.integer(selectionSummary.value.pendingScanCount),
+        count: FormatService.integer(selectedCount.value),
+        pending: FormatService.integer(selectionSummary.value.pendingScanCount),
       })
-    : t('privacy.traceCount', { count: FormatUtils.integer(selectedCount.value) }, selectedCount.value)
+    : t('privacy.traceCount', { count: FormatService.integer(selectedCount.value) }, selectedCount.value)
 );
 const hasPermissionRequired = computed(
   () => store.scanResult?.coverage.some(source => source.capability === 'permissionRequired') ?? false

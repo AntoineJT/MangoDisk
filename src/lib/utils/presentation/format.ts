@@ -1,5 +1,5 @@
 import { EMPTY_DISPLAY_TEXT } from '@/lib/models/presentation/ui';
-const LOCAL_INTEGER_FORMATTER = new Intl.NumberFormat();
+const INTEGER_FORMATTERS = new Map<string, Intl.NumberFormat>();
 const LIST_FORMATTERS = new Map<string, Intl.ListFormat>();
 const DATE_TIME_FORMATTERS = new Map<string, Intl.DateTimeFormat>();
 export const BYTE_UNIT_BASES = {
@@ -36,17 +36,14 @@ export function bytes(bytes: number, unitBase: ByteUnitBase, minimumFractionDigi
   const digits = Math.max(defaultDigits, normalizedMinimum);
   return `${value.toFixed(digits)} ${units[index]}`;
 }
-export function dateTime(timestamp: number | null | undefined, locale?: string): string {
+export function dateTime(timestamp: number | null | undefined, locale: string, timeZone: string): string {
   if (timestamp === null || timestamp === undefined || !Number.isFinite(timestamp)) {
     return EMPTY_DISPLAY_TEXT;
   }
-  const cacheKey = locale || 'system';
+  const cacheKey = `${locale}:${timeZone}`;
   let formatter = DATE_TIME_FORMATTERS.get(cacheKey);
   if (!formatter) {
-    // Dates follow the language selected inside MangoDisk instead of the
-    // WebView locale. Keeping the time zone implicit still respects the
-    // operating system location while preventing ambiguous month/day order.
-    formatter = new Intl.DateTimeFormat(locale || undefined, DATE_TIME_FORMAT_OPTIONS);
+    formatter = new Intl.DateTimeFormat(locale, { ...DATE_TIME_FORMAT_OPTIONS, timeZone });
     DATE_TIME_FORMATTERS.set(cacheKey, formatter);
   }
   return formatter
@@ -60,14 +57,19 @@ export function elapsedSeconds(startedAtMs: number, finishedAtMs: number): numbe
   }
   return Math.max(0, Math.round((finishedAtMs - startedAtMs) / 1000));
 }
-export function integer(value: number): string {
-  return LOCAL_INTEGER_FORMATTER.format(value);
+export function integer(value: number, locale: string): string {
+  let formatter = INTEGER_FORMATTERS.get(locale);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat(locale);
+    INTEGER_FORMATTERS.set(locale, formatter);
+  }
+  return formatter.format(value);
 }
-export function list(values: readonly string[], locale?: string): string {
-  const cacheKey = locale || 'system';
+export function list(values: readonly string[], locale: string): string {
+  const cacheKey = locale;
   let formatter = LIST_FORMATTERS.get(cacheKey);
   if (!formatter) {
-    formatter = new Intl.ListFormat(locale || undefined, {
+    formatter = new Intl.ListFormat(locale, {
       style: 'short',
       type: 'conjunction',
     });

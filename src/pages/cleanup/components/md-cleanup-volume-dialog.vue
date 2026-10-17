@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -14,7 +15,6 @@ import type { DiskInfo } from '@/lib/models/storage/volume';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 
 const props = defineProps<{
@@ -144,7 +144,7 @@ watch(
           {{
             t(
               'cleanup.scanMode.selectedVolumeCount',
-              { count: FormatUtils.integer(selectedVolumeCount) },
+              { count: FormatService.integer(selectedVolumeCount) },
               selectedVolumeCount
             )
           }}

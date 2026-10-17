@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import { computed, nextTick, onBeforeUnmount, onDeactivated, onMounted, ref, watch } from 'vue';
 
@@ -59,7 +60,7 @@ function showRemainder(tile: HierarchicalTreemapTile) {
 function remainderName(tile: HierarchicalTreemapTile) {
   const count = tile.kind === TREEMAP_TILE_KINDS.remainder ? tile.entryCount : null;
   if (count === null) return t('analysis.other');
-  return t('analysis.treemapRemainder', { count: FormatUtils.integer(count) }, count);
+  return t('analysis.treemapRemainder', { count: FormatService.integer(count) }, count);
 }
 const hoveredTile = ref<HierarchicalTreemapTile | null>(null);
 const highlightedTile = computed(() => {
@@ -447,7 +448,7 @@ function tooltipStyle() {
             {{
               t(
                 'common.fileCount',
-                { count: FormatUtils.integer(hoveredTile.entry.fileCount) },
+                { count: FormatService.integer(hoveredTile.entry.fileCount) },
                 hoveredTile.entry.fileCount
               )
             }}

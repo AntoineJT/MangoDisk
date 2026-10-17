@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,6 @@ import { DiskService } from '@/lib/services/storage/volume-service';
 import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
 import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 import { useCleanupStore } from '@/stores/cleanup-store';
@@ -428,7 +428,7 @@ watch(
     <template v-if="!scanning && scan" #footer>
       <MdSelectionActionBar
         :selected-label="t('cleanup.selectedSummary')"
-        :selected-value="t('common.itemCount', { count: FormatUtils.integer(selectedItemCount) }, selectedItemCount)"
+        :selected-value="t('common.itemCount', { count: FormatService.integer(selectedItemCount) }, selectedItemCount)"
         :space-label="t('common.estimatedRelease')"
         :space-value="ByteSizeService.bytes(totalSelectedBytes)"
         :action-label="t('cleanup.clean')"
@@ -472,7 +472,7 @@ watch(
     <MdResultWorkspace v-else-if="scan">
       <template #summary>
         <MdResultSummary
-          :title="t('cleanup.summaryCount', { count: FormatUtils.integer(totalFoundItemCount) }, totalFoundItemCount)"
+          :title="t('cleanup.summaryCount', { count: FormatService.integer(totalFoundItemCount) }, totalFoundItemCount)"
           :metric-label="t('cleanup.summarySpace')"
           :metric-value="ByteSizeService.bytes(totalFoundBytes)"
         >

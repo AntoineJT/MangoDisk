@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { useI18n } from 'vue-i18n';
 import { computed, ref } from 'vue';
@@ -103,28 +104,28 @@ function selectedItemCount(record: PresentedOperationRecord): number {
 function recordSummary(record: PresentedOperationRecord): string {
   if (record.category === 'startupManagement') {
     return t('history.startupRecordSummary', {
-      selected: FormatUtils.integer(record.selectedItemCount),
-      changed: FormatUtils.integer(record.affectedItemCount),
+      selected: FormatService.integer(record.selectedItemCount),
+      changed: FormatService.integer(record.affectedItemCount),
     });
   }
   if (record.category === 'systemOptimization') {
     return t('history.systemOptimizationRecordSummary', {
-      selected: FormatUtils.integer(record.selectedItemCount),
-      changed: FormatUtils.integer(record.affectedItemCount),
+      selected: FormatService.integer(record.selectedItemCount),
+      changed: FormatService.integer(record.affectedItemCount),
     });
   }
   if (record.category === 'privacyCleanup') {
     return t('history.privacyRecordSummary', {
-      selected: FormatUtils.integer(record.selectedItemCount),
-      changed: FormatUtils.integer(record.affectedItemCount),
+      selected: FormatService.integer(record.selectedItemCount),
+      changed: FormatService.integer(record.affectedItemCount),
     });
   }
   const key = record.category === 'applicationUninstall' ? 'history.uninstallRecordSummary' : 'history.recordSummary';
   return t(
     key,
     {
-      items: FormatUtils.integer(selectedItemCount(record)),
-      files: FormatUtils.integer(record.affectedItemCount),
+      items: FormatService.integer(selectedItemCount(record)),
+      files: FormatService.integer(record.affectedItemCount),
     },
     record.category === 'applicationUninstall' ? record.selectedItemCount : record.affectedItemCount
   );
@@ -251,21 +252,21 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
                 </MdStatusBadge>
               </span>
               <small>
-                {{ FormatUtils.dateTime(record.startedAtMs, locale) }} ·
+                {{ FormatService.dateTime(record.startedAtMs, locale) }} ·
                 {{ recordSummary(record) }}
               </small>
             </span>
             <strong class="record-byte">
               {{
                 countBasedRecord(record)
-                  ? FormatUtils.integer(record.selectedItemCount)
+                  ? FormatService.integer(record.selectedItemCount)
                   : ByteSizeService.bytes(record.expectedBytes)
               }}
             </strong>
             <strong class="record-byte">
               {{
                 countBasedRecord(record)
-                  ? FormatUtils.integer(record.affectedItemCount)
+                  ? FormatService.integer(record.affectedItemCount)
                   : ByteSizeService.bytes(displayedReleasedBytes(record))
               }}
             </strong>
@@ -290,16 +291,16 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
           <div v-if="countBasedRecord(selectedRecord)" class="detail-summary">
             <span
               ><small>{{ t('history.selectedItems') }}</small
-              ><strong>{{ FormatUtils.integer(selectedRecord.selectedItemCount) }}</strong></span
+              ><strong>{{ FormatService.integer(selectedRecord.selectedItemCount) }}</strong></span
             >
             <span
               ><small>{{ t('history.changedItems') }}</small
-              ><strong>{{ FormatUtils.integer(selectedRecord.affectedItemCount) }}</strong></span
+              ><strong>{{ FormatService.integer(selectedRecord.affectedItemCount) }}</strong></span
             >
             <span
               ><small>{{ t('history.failedItems') }}</small
               ><strong :class="{ warning: selectedRecord.failedItemCount }">{{
-                FormatUtils.integer(selectedRecord.failedItemCount)
+                FormatService.integer(selectedRecord.failedItemCount)
               }}</strong></span
             >
           </div>
@@ -320,7 +321,7 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
                     : 'history.affectedItems'
                 )
               }}</small
-              ><strong>{{ FormatUtils.integer(selectedRecord.affectedItemCount) }}</strong></span
+              ><strong>{{ FormatService.integer(selectedRecord.affectedItemCount) }}</strong></span
             >
             <span
               ><small>{{
@@ -331,19 +332,19 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
                 )
               }}</small
               ><strong :class="{ warning: selectedRecord.failedItemCount }">{{
-                FormatUtils.integer(selectedRecord.failedItemCount)
+                FormatService.integer(selectedRecord.failedItemCount)
               }}</strong></span
             >
           </div>
           <div class="detail-meta">
-            <span>{{ FormatUtils.dateTime(selectedRecord.startedAtMs, locale) }}</span>
+            <span>{{ FormatService.dateTime(selectedRecord.startedAtMs, locale) }}</span>
             <span>
               {{ t('history.duration') }}
               {{
                 t(
                   'loading.elapsedSeconds',
                   {
-                    count: FormatUtils.integer(
+                    count: FormatService.integer(
                       FormatUtils.elapsedSeconds(selectedRecord.startedAtMs, selectedRecord.finishedAtMs)
                     ),
                   },
@@ -441,7 +442,7 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
                 <small>{{ t(`history.privacyStatuses.${item.status}`) }}</small>
               </span>
               <span
-                ><strong>{{ FormatUtils.integer(item.affectedItemCount) }}</strong></span
+                ><strong>{{ FormatService.integer(item.affectedItemCount) }}</strong></span
               >
             </div>
           </template>
@@ -537,7 +538,7 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
                 t(
                   'history.moreItemsOmitted',
                   {
-                    count: FormatUtils.integer(selectedRecord.details.payload.omittedItemCount),
+                    count: FormatService.integer(selectedRecord.details.payload.omittedItemCount),
                   },
                   selectedRecord.details.payload.omittedItemCount
                 )
@@ -557,7 +558,7 @@ function fileCleanupActionMessage(status: 'deleted' | 'failed'): string {
       :title="t('history.clearConfirmTitle')"
       :description="t('history.clearConfirmDescription')"
       :summary-label="t('history.clearConfirmScope')"
-      :summary-value="t('history.clearConfirmCount', { count: FormatUtils.integer(history.length) }, history.length)"
+      :summary-value="t('history.clearConfirmCount', { count: FormatService.integer(history.length) }, history.length)"
       :note="t('history.clearConfirmNote')"
       :cancel-label="t('common.cancel')"
       :confirm-label="t('history.clearConfirmAction')"

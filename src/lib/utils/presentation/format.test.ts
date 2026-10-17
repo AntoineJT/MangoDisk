@@ -22,9 +22,9 @@ describe('FormatUtils.bytes', () => {
 
 describe('FormatUtils.dateTime', () => {
   it('uses the application locale instead of the host default', () => {
-    const timestamp = new Date(2024, 2, 5, 15, 18).getTime();
-    const chinese = FormatUtils.dateTime(timestamp, 'zh-CN');
-    const english = FormatUtils.dateTime(timestamp, 'en-US');
+    const timestamp = Date.UTC(2024, 2, 5, 15, 18);
+    const chinese = FormatUtils.dateTime(timestamp, 'zh-CN', 'UTC');
+    const english = FormatUtils.dateTime(timestamp, 'en-US', 'UTC');
 
     expect(chinese).toContain('2024');
     expect(chinese.indexOf('03')).toBeLessThan(chinese.indexOf('05'));
@@ -35,7 +35,23 @@ describe('FormatUtils.dateTime', () => {
   });
 
   it('returns the empty display text for invalid values', () => {
-    expect(FormatUtils.dateTime(null, 'zh-CN')).toBe('—');
-    expect(FormatUtils.dateTime(Number.NaN, 'en-US')).toBe('—');
+    expect(FormatUtils.dateTime(null, 'zh-CN', 'UTC')).toBe('—');
+    expect(FormatUtils.dateTime(Number.NaN, 'en-US', 'UTC')).toBe('—');
+  });
+});
+
+describe('explicit formatting context', () => {
+  it('uses the supplied time zone across a date boundary', () => {
+    const timestamp = Date.UTC(2024, 2, 5, 23, 18);
+    expect(FormatUtils.dateTime(timestamp, 'en-US', 'UTC')).toBe('03/05/2024 23:18');
+    expect(FormatUtils.dateTime(timestamp, 'en-US', 'Asia/Shanghai')).toBe('03/06/2024 07:18');
+    expect(FormatUtils.dateTime(timestamp, 'en-US', 'UTC')).toBe('03/05/2024 23:18');
+  });
+  it('uses the supplied numeric and list locales independently', () => {
+    expect(FormatUtils.integer(1234567, 'en-US')).toBe('1,234,567');
+    expect(FormatUtils.integer(1234567, 'de-DE')).toBe('1.234.567');
+    expect(FormatUtils.list(['a', 'b'], 'en-US')).toBe(
+      new Intl.ListFormat('en-US', { style: 'short', type: 'conjunction' }).format(['a', 'b'])
+    );
   });
 });

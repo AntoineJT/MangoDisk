@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdResultTable from '@/components/custom/md-result-table.vue';
 import { useI18n } from 'vue-i18n';
@@ -189,16 +190,19 @@ onBeforeUnmount(() => {
         {{
           t(
             'analysis.folderFileSummary',
-            { folders: FormatUtils.integer(folderCount), files: FormatUtils.integer(fileCount) },
+            { folders: FormatService.integer(folderCount), files: FormatService.integer(fileCount) },
             fileCount
           )
         }}
       </p>
-      <MdTooltip v-if="truncated" :text="t('analysis.limitedEntries', { count: FormatUtils.integer(entries.length) })">
+      <MdTooltip
+        v-if="truncated"
+        :text="t('analysis.limitedEntries', { count: FormatService.integer(entries.length) })"
+      >
         <button
           type="button"
           class="md-help-action"
-          :aria-label="t('analysis.limitedEntries', { count: FormatUtils.integer(entries.length) })"
+          :aria-label="t('analysis.limitedEntries', { count: FormatService.integer(entries.length) })"
         >
           <MdIcon :name="ICON_NAMES.help" :size="14" aria-hidden="true" />
         </button>
@@ -248,7 +252,7 @@ onBeforeUnmount(() => {
                       {{
                         deletingPath === entry.path
                           ? t('analysis.deleting')
-                          : t('common.fileCount', { count: FormatUtils.integer(entry.fileCount) }, entry.fileCount)
+                          : t('common.fileCount', { count: FormatService.integer(entry.fileCount) }, entry.fileCount)
                       }}
                     </small>
                   </span>

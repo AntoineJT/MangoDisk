@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import MdAiWorkspace from '@/layouts/components/md-ai-workspace.vue';
 import { useAiStore } from '@/stores/ai-store';
@@ -43,7 +44,6 @@ import * as DuplicateFileSelectionUtils from '@/lib/utils/storage/duplicate-file
 import * as DuplicateFileGroupUtils from '@/lib/utils/storage/duplicate-file-group';
 import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
 import { useDuplicateFilesStore } from '@/stores/duplicate-files-store';
@@ -144,7 +144,7 @@ const pendingSummaryLabel = computed(() => {
   if (pendingDeleteEntries.value.length === 1) return pendingDeleteEntries.value[0]?.name ?? '';
   return t(
     'duplicateFiles.copyCount',
-    { count: FormatUtils.integer(pendingDeleteEntries.value.length) },
+    { count: FormatService.integer(pendingDeleteEntries.value.length) },
     pendingDeleteEntries.value.length
   );
 });
@@ -417,7 +417,11 @@ function confirmDelete() {
       <MdSelectionActionBar
         :selected-label="t('duplicateFiles.selected')"
         :selected-value="
-          t('duplicateFiles.copyCount', { count: FormatUtils.integer(selectedEntries.length) }, selectedEntries.length)
+          t(
+            'duplicateFiles.copyCount',
+            { count: FormatService.integer(selectedEntries.length) },
+            selectedEntries.length
+          )
         "
         :space-label="t('common.estimatedRelease')"
         :space-value="ByteSizeService.bytes(selectedBytes)"
@@ -436,7 +440,7 @@ function confirmDelete() {
           :title="
             t(
               'duplicateFiles.summaryCount',
-              { count: FormatUtils.integer(result.totalGroupCount) },
+              { count: FormatService.integer(result.totalGroupCount) },
               result.totalGroupCount
             )
           "

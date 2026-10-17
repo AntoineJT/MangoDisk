@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { useI18n } from 'vue-i18n';
 import {
@@ -27,7 +28,6 @@ import { SORT_DIRECTIONS } from '@/lib/models/presentation/sort';
 import * as AnalysisEntryUtils from '@/lib/utils/storage/analysis-entry';
 import { type AnalysisSortKey, type SortDirection } from '@/lib/utils/storage/analysis-entry';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 
@@ -259,9 +259,9 @@ function sortControlLabel(key: AnalysisSortKey, column: string) {
                 </span>
               </span>
               <strong class="details-number md-result-primary">{{ ByteSizeService.bytes(entry.bytes) }}</strong>
-              <span class="details-number">{{ FormatUtils.integer(entry.fileCount) }}</span>
+              <span class="details-number">{{ FormatService.integer(entry.fileCount) }}</span>
               <span class="details-modified hidden @5xl/analysis:block">{{
-                FormatUtils.dateTime(entry.modifiedAtMs, locale)
+                FormatService.dateTime(entry.modifiedAtMs, locale)
               }}</span>
             </MdResultTableRow>
           </MdFileEntryContextMenu>

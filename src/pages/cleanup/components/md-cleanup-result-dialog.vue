@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import MdDialogContent from '@/components/custom/md-dialog-content.vue';
@@ -10,7 +11,6 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import type { ApplicationLeftoverResult } from '@/lib/models/applications/application';
 import type { PresentedCleanupResult } from '@/lib/models/cleanup/cleanup';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const { t } = useI18n({ useScope: 'global' });
 
@@ -58,9 +58,9 @@ const resultActions = computed(() => {
       message: leftoverResult.dryRun
         ? t('cleanup.previewPassed')
         : t('applicationLeftovers.executionSummary', {
-            count: FormatUtils.integer(leftoverResult.affectedItemCount),
+            count: FormatService.integer(leftoverResult.affectedItemCount),
             size: ByteSizeService.bytes(leftoverResult.releasedBytes),
-            failed: FormatUtils.integer(leftoverResult.failedItemCount),
+            failed: FormatService.integer(leftoverResult.failedItemCount),
           }),
       name: t('applicationLeftovers.categoryTitle'),
       releasedBytes: leftoverResult.releasedBytes,
@@ -76,14 +76,14 @@ const resultStats = computed(() => [
   {
     key: 'processed-items',
     label: t('cleanup.processedItems'),
-    value: FormatUtils.integer(affectedItemCount.value),
+    value: FormatService.integer(affectedItemCount.value),
   },
   ...(failedItemCount.value
     ? [
         {
           key: 'failed-items',
           label: t('cleanup.failedItems'),
-          value: FormatUtils.integer(failedItemCount.value),
+          value: FormatService.integer(failedItemCount.value),
           tone: 'warning' as const,
         },
       ]

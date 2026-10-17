@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import MdAiWorkspace from '@/layouts/components/md-ai-workspace.vue';
 import { useAiStore } from '@/stores/ai-store';
@@ -34,7 +35,6 @@ import type { LargeFileEntry, LargeFilesResult } from '@/lib/models/storage/larg
 import * as FileTypeUtils from '@/lib/utils/filesystem/file-type';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as LargeFileEntryUtils from '@/lib/utils/storage/large-file-entry';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
@@ -160,7 +160,11 @@ const selectedBytes = computed(() => selectedEntries.value.reduce((total, entry)
 const pendingBytes = computed(() => pendingDelete.value.reduce((total, entry) => total + entry.bytes, 0));
 const pendingSummaryLabel = computed(() => {
   if (pendingDelete.value.length === 1) return pendingDelete.value[0]?.name ?? '';
-  return t('common.fileCount', { count: FormatUtils.integer(pendingDelete.value.length) }, pendingDelete.value.length);
+  return t(
+    'common.fileCount',
+    { count: FormatService.integer(pendingDelete.value.length) },
+    pendingDelete.value.length
+  );
 });
 
 watch(
@@ -307,7 +311,7 @@ function confirmDelete() {
       <MdSelectionActionBar
         :selected-label="t('largeFiles.selected')"
         :selected-value="
-          t('common.fileCount', { count: FormatUtils.integer(selectedEntries.length) }, selectedEntries.length)
+          t('common.fileCount', { count: FormatService.integer(selectedEntries.length) }, selectedEntries.length)
         "
         :space-label="t('common.estimatedRelease')"
         :space-value="ByteSizeService.bytes(selectedBytes)"
@@ -327,7 +331,7 @@ function confirmDelete() {
             t(
               'largeFiles.summaryCount',
               {
-                count: FormatUtils.integer(resultSummaryCount),
+                count: FormatService.integer(resultSummaryCount),
                 size: minimumLabel,
               },
               resultSummaryCount

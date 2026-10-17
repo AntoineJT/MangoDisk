@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import { computed, onDeactivated, ref, watch } from 'vue';
 
@@ -15,7 +16,6 @@ import type {
   DirectoryEntryInfo,
 } from '@/lib/models/storage/analysis';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 
 import MdAnalysisSunburst from './md-analysis-sunburst.vue';
 import MdAnalysisTreemap from './md-analysis-treemap.vue';
@@ -81,7 +81,7 @@ function updateDepth(value: unknown) {
           :aria-label="
             t(
               'analysis.folderSpaceSummary',
-              { folders: FormatUtils.integer(folderCount), size: ByteSizeService.bytes(result.totalBytes) },
+              { folders: FormatService.integer(folderCount), size: ByteSizeService.bytes(result.totalBytes) },
               folderCount
             )
           "

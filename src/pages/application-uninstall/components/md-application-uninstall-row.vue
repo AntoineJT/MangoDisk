@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -19,7 +20,6 @@ import type {
 } from '@/lib/models/applications/application';
 import { ICON_NAMES, type IconName } from '@/lib/models/presentation/ui';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 
 import {
@@ -85,7 +85,7 @@ function canUninstallCandidate(): boolean {
 function candidateDateText(): string {
   const timestamp =
     props.candidate.platform === 'windowsRegistry' ? props.candidate.installedAtMs : props.candidate.lastUsedAtMs;
-  if (timestamp !== null) return FormatUtils.dateTime(timestamp, locale.value);
+  if (timestamp !== null) return FormatService.dateTime(timestamp, locale.value);
   return t(
     props.candidate.platform === 'windowsRegistry'
       ? 'applicationUninstall.installDateUnavailable'

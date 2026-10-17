@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdAiWorkspace from '@/layouts/components/md-ai-workspace.vue';
 import { useAiStore } from '@/stores/ai-store';
@@ -52,7 +53,6 @@ import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { parseCommandError } from '@/lib/utils/diagnostics/error';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 
 import {
   displayedApplications,
@@ -339,8 +339,8 @@ const executionProgressValue = computed(() => {
   const completed = props.executionProgress?.completedApplicationCount ?? 0;
   const total = props.executionProgress?.totalApplicationCount ?? props.plan?.plans.length ?? 0;
   return t('applicationUninstall.executionProgressValue', {
-    completed: FormatUtils.integer(Math.min(completed, total)),
-    total: FormatUtils.integer(total),
+    completed: FormatService.integer(Math.min(completed, total)),
+    total: FormatService.integer(total),
   });
 });
 const executionItems = computed(() => {
@@ -404,8 +404,8 @@ const executionDescription = computed(() =>
   props.cancellingExecution
     ? t('applicationUninstall.cancellingBatchDescription')
     : t('applicationUninstall.executionProgressDescription', {
-        completed: FormatUtils.integer(props.executionProgress?.completedApplicationCount ?? 0),
-        total: FormatUtils.integer(props.executionProgress?.totalApplicationCount ?? props.plan?.plans.length ?? 0),
+        completed: FormatService.integer(props.executionProgress?.completedApplicationCount ?? 0),
+        total: FormatService.integer(props.executionProgress?.totalApplicationCount ?? props.plan?.plans.length ?? 0),
       })
 );
 const executionPercent = computed(() => {
@@ -558,13 +558,16 @@ watch(
     // and restart requirements. A confirmed cancellation needs no redundant explanation.
     const details: string[] = [];
     if (!onlyCancelled || cancelledApplications > 1) {
-      if (completed) details.push(t('applicationUninstall.resultCompleted', { count: FormatUtils.integer(completed) }));
-      if (failed) details.push(t('applicationUninstall.resultFailed', { count: FormatUtils.integer(failed) }));
+      if (completed)
+        details.push(t('applicationUninstall.resultCompleted', { count: FormatService.integer(completed) }));
+      if (failed) details.push(t('applicationUninstall.resultFailed', { count: FormatService.integer(failed) }));
       if (cancelledApplications)
-        details.push(t('applicationUninstall.resultCancelled', { count: FormatUtils.integer(cancelledApplications) }));
+        details.push(
+          t('applicationUninstall.resultCancelled', { count: FormatService.integer(cancelledApplications) })
+        );
       if (continuingApplications)
         details.push(
-          t('applicationUninstall.resultContinuing', { count: FormatUtils.integer(continuingApplications) })
+          t('applicationUninstall.resultContinuing', { count: FormatService.integer(continuingApplications) })
         );
       if (result.releasedBytes > 0) {
         details.push(
@@ -782,7 +785,7 @@ function confirmCancelExecution() {
           :title="
             t(
               'applicationUninstall.summary',
-              { count: FormatUtils.integer(displayCandidates.length) },
+              { count: FormatService.integer(displayCandidates.length) },
               displayCandidates.length
             )
           "
@@ -953,7 +956,7 @@ function confirmCancelExecution() {
     <template v-if="!scanning && catalog?.catalogActionable && catalog.executionSupported" #footer>
       <MdSelectionActionBar
         :selected-label="t('applicationUninstall.selectedApplicationsLabel')"
-        :selected-value="FormatUtils.integer(selectedCandidates.length)"
+        :selected-value="FormatService.integer(selectedCandidates.length)"
         :space-label="t('applicationUninstall.selectedSizeLabel')"
         :space-value="ByteSizeService.bytes(selectedBytes)"
         :clear-label="selectedCandidates.length ? t('applicationUninstall.clearSelection') : undefined"
@@ -991,7 +994,7 @@ function confirmCancelExecution() {
         executing
           ? executionTitle
           : t(nativeBatch ? 'applicationUninstall.confirmNativeBatchTitle' : 'applicationUninstall.confirmBatchTitle', {
-              count: FormatUtils.integer(preview?.selectedApplicationCount ?? selectedCandidates.length),
+              count: FormatService.integer(preview?.selectedApplicationCount ?? selectedCandidates.length),
             })
       "
       :description="
@@ -1011,7 +1014,7 @@ function confirmCancelExecution() {
           : preparing
             ? t('applicationUninstall.preparingBatchSummary')
             : t('applicationUninstall.confirmBatchSummary', {
-                count: FormatUtils.integer(preview?.previewedApplicationCount ?? 0),
+                count: FormatService.integer(preview?.previewedApplicationCount ?? 0),
               })
       "
       :summary-value="
@@ -1140,7 +1143,7 @@ function confirmCancelExecution() {
                   : closeWorkflow.selectedApplicationIds.length
                     ? t(
                         'applicationClose.closeSelectedAndContinue',
-                        { count: FormatUtils.integer(closeWorkflow.selectedApplicationIds.length) },
+                        { count: FormatService.integer(closeWorkflow.selectedApplicationIds.length) },
                         closeWorkflow.selectedApplicationIds.length
                       )
                     : t('applicationClose.skipAndContinue')

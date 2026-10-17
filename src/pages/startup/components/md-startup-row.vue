@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -16,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import type { StartupArtifact, StartupOwnerGroup } from '@/lib/models/startup/startup';
 import type { WindowsStartupTool } from '@/lib/services/startup/windows-startup-tool-service';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as StartupCommandUtils from '@/lib/utils/startup/startup-command';
 
 import {
@@ -469,7 +469,7 @@ function detailDiagnostics(artifact: StartupArtifact): string {
             </div>
             <div v-if="artifact.modifiedAtMs" class="startup-detail-row">
               <dt>{{ t('startup.detail.modified') }}</dt>
-              <dd>{{ FormatUtils.dateTime(artifact.modifiedAtMs, locale) }}</dd>
+              <dd>{{ FormatService.dateTime(artifact.modifiedAtMs, locale) }}</dd>
             </div>
             <div v-if="detailDiagnostics(artifact)" class="startup-detail-row is-warning">
               <dt>{{ t('startup.detail.diagnostics') }}</dt>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -30,7 +31,6 @@ import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
 import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup/cleanup-rule-selection';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
@@ -157,7 +157,7 @@ function categoryTitle(category: CleanupResultGroup): string {
 }
 
 function categoryItemCount(count: number): string {
-  return t('cleanup.categoryItemCount', { count: FormatUtils.integer(count) }, count);
+  return t('cleanup.categoryItemCount', { count: FormatService.integer(count) }, count);
 }
 
 function categoryRuleIds(category: CleanupResultCategory): string[] {
@@ -253,7 +253,7 @@ function loadMoreLeftoverCandidates(group: ApplicationLeftoverGroup) {
 function runningProcessWarning(rule: PresentedScanRuleResult): string {
   if (!rule.runningProcesses.length) return t('cleanup.sourceRequiresClose');
   return t('cleanup.requiresCloseProcesses', {
-    processes: FormatUtils.list(rule.runningProcesses, locale.value),
+    processes: FormatService.list(rule.runningProcesses, locale.value),
   });
 }
 
@@ -454,7 +454,7 @@ watch(
                       t(`applicationLeftovers.sources.${candidate.source}`)
                     }}</strong>
                     <MdMiddleEllipsis :text="PathUtils.display(candidate.path)" :tail-length="22" />
-                    <small>{{ t('cleanup.sourceFiles', { count: FormatUtils.integer(candidate.fileCount) }) }}</small>
+                    <small>{{ t('cleanup.sourceFiles', { count: FormatService.integer(candidate.fileCount) }) }}</small>
                   </span>
                   <span class="source-actions">
                     <MdIconAction
@@ -473,7 +473,7 @@ watch(
                   :remaining-label="
                     t(
                       'common.locationCount',
-                      { count: FormatUtils.integer(remainingLeftoverCandidateCount(group)) },
+                      { count: FormatService.integer(remainingLeftoverCandidateCount(group)) },
                       remainingLeftoverCandidateCount(group)
                     )
                   "
@@ -684,12 +684,12 @@ watch(
                   <span class="source-main">
                     <MdMiddleEllipsis :text="PathUtils.display(source.path)" :tail-length="22" />
                     <small>
-                      {{ t('cleanup.sourceFiles', { count: FormatUtils.integer(source.fileCount) }) }}
+                      {{ t('cleanup.sourceFiles', { count: FormatService.integer(source.fileCount) }) }}
                       <template v-if="source.modifiedAtMs">
                         ·
                         {{
                           t('cleanup.sourceModified', {
-                            time: FormatUtils.dateTime(source.modifiedAtMs, locale),
+                            time: FormatService.dateTime(source.modifiedAtMs, locale),
                           })
                         }}</template
                       >
@@ -713,7 +713,7 @@ watch(
                   :remaining-label="
                     t(
                       'common.locationCount',
-                      { count: FormatUtils.integer(remainingRuleSourceCount(row.rule)) },
+                      { count: FormatService.integer(remainingRuleSourceCount(row.rule)) },
                       remainingRuleSourceCount(row.rule)
                     )
                   "

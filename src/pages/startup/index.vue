@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
@@ -46,7 +47,6 @@ import {
   WindowsStartupToolService,
   type WindowsStartupTool,
 } from '@/lib/services/startup/windows-startup-tool-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
 import { startupAiContext } from './startup-ai-context';
@@ -533,9 +533,9 @@ watch(
     <MdResultWorkspace v-else>
       <template v-if="catalog" #summary>
         <MdResultSummary
-          :title="t('startup.summary.programs', { count: FormatUtils.integer(displayGroups.length) })"
+          :title="t('startup.summary.programs', { count: FormatService.integer(displayGroups.length) })"
           :metric-label="t('startup.summary.enabled')"
-          :metric-value="FormatUtils.integer(filterCounts.enabled)"
+          :metric-value="FormatService.integer(filterCounts.enabled)"
         >
           <template #actions>
             <label v-if="isWindows" class="flex items-center gap-2 whitespace-nowrap text-sm text-muted-foreground">
@@ -644,7 +644,7 @@ watch(
 
         <MdLoadMoreButton
           v-if="remainingResultCount"
-          :remaining-label="t('startup.remainingResults', { count: FormatUtils.integer(remainingResultCount) })"
+          :remaining-label="t('startup.remainingResults', { count: FormatService.integer(remainingResultCount) })"
           @load-more="loadMoreResults"
         />
       </MdResultTable>

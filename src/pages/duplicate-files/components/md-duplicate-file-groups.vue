@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { FormatService } from '@/lib/services/presentation/format-service';
 import { useI18n } from 'vue-i18n';
 import {
   computed,
@@ -38,7 +39,6 @@ import { FILE_CATEGORY_IDS, type FileCategoryId } from '@/lib/models/filesystem/
 import * as DuplicateFileSelectionUtils from '@/lib/utils/storage/duplicate-file-selection';
 import * as DuplicateFileGroupUtils from '@/lib/utils/storage/duplicate-file-group';
 import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
-import * as FormatUtils from '@/lib/utils/presentation/format';
 import * as PathUtils from '@/lib/utils/filesystem/path';
 import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
@@ -393,11 +393,11 @@ function loadMoreGroups() {
                         ? 'duplicateFiles.directoryGroupSummary'
                         : 'duplicateFiles.groupSummary',
                       {
-                        count: FormatUtils.integer(group.entries.length),
+                        count: FormatService.integer(group.entries.length),
                         size: ByteSizeService.bytes(group.bytesPerFile),
                         files: t(
                           'common.fileCount',
-                          { count: FormatUtils.integer(group.fileCountPerEntry) },
+                          { count: FormatService.integer(group.fileCountPerEntry) },
                           group.fileCountPerEntry
                         ),
                         reclaimable: ByteSizeService.bytes(group.reclaimableBytes),
@@ -444,7 +444,7 @@ function loadMoreGroups() {
                       : isGroupSelectionApplied(group)
                         ? 'duplicateFiles.groupSelectionApplied'
                         : 'duplicateFiles.selectGroup',
-                    { count: FormatUtils.integer(suggestedSelectionCount(group)) },
+                    { count: FormatService.integer(suggestedSelectionCount(group)) },
                     suggestedSelectionCount(group)
                   )
                 }}
@@ -509,7 +509,7 @@ function loadMoreGroups() {
                   </MdIconAction>
                 </span>
               </span>
-              <span class="member-date">{{ FormatUtils.dateTime(entry.modifiedAtMs, locale) }}</span>
+              <span class="member-date">{{ FormatService.dateTime(entry.modifiedAtMs, locale) }}</span>
             </MdResultTableRow>
           </MdFileEntryContextMenu>
           <MdLoadMoreButton
@@ -517,7 +517,7 @@ function loadMoreGroups() {
             :remaining-label="
               t(
                 'common.fileCount',
-                { count: FormatUtils.integer(remainingEntryCount(group)) },
+                { count: FormatService.integer(remainingEntryCount(group)) },
                 remainingEntryCount(group)
               )
             "
@@ -532,7 +532,7 @@ function loadMoreGroups() {
         category === FILE_CATEGORY_IDS.all
           ? t(
               'duplicateFiles.groupCount',
-              { count: FormatUtils.integer(remainingVisibleGroupCount) },
+              { count: FormatService.integer(remainingVisibleGroupCount) },
               remainingVisibleGroupCount
             )
           : undefined
