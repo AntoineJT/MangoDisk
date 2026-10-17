@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/i18n';
-import { LANGUAGE_IDS, LANGUAGE_OPTIONS } from '@/lib/models/settings';
-import { LanguageService } from '@/lib/services/language-service';
+import { LANGUAGE_IDS, LANGUAGE_OPTIONS } from '@/lib/models/settings/settings';
+import { LanguageService } from '@/lib/services/settings/language-service';
 import enUS from '@/locales/en-US.json';
 import jaJP from '@/locales/ja-JP.json';
 import koKR from '@/locales/ko-KR.json';

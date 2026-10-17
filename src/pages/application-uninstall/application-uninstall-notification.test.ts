@@ -7,7 +7,10 @@ import { createI18n } from 'vue-i18n';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'vue-sonner';
 
-import type { ApplicationUninstallBatchResult, ApplicationUninstallResult } from '@/lib/models/application';
+import type {
+  ApplicationUninstallBatchResult,
+  ApplicationUninstallResult,
+} from '@/lib/models/applications/application';
 import en from '@/locales/en-US.json';
 import ja from '@/locales/ja-JP.json';
 import pt from '@/locales/pt-BR.json';

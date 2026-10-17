@@ -5,17 +5,17 @@ import { computed, onDeactivated, ref, watch } from 'vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdScanExclusionLink from '@/components/custom/md-scan-exclusion-link.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ANALYSIS_CHART_MAX_DEPTH, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
+import { ANALYSIS_CHART_MAX_DEPTH, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/storage/analysis';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import type {
   AnalysisRemainderSelection,
   AnalysisResult,
   AnalysisViewId,
   DirectoryEntryInfo,
-} from '@/lib/models/analysis';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/storage/analysis';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 import MdAnalysisSunburst from './md-analysis-sunburst.vue';
 import MdAnalysisTreemap from './md-analysis-treemap.vue';

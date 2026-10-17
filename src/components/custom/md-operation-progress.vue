@@ -6,11 +6,11 @@ import MdIcon from '@/components/icons/md-icon.vue';
 import MdMiddleEllipsis from '@/components/custom/md-middle-ellipsis.vue';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ICON_NAMES, OPERATION_PROGRESS_CLOCK_INTERVAL_MS } from '@/lib/models/ui';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+import { ICON_NAMES, OPERATION_PROGRESS_CLOCK_INTERVAL_MS } from '@/lib/models/presentation/ui';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 
 const { t } = useI18n({ useScope: 'global' });
 

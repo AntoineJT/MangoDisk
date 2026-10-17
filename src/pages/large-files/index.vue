@@ -19,21 +19,25 @@ import MdSelectionActionBar from '@/components/custom/md-selection-action-bar.vu
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FILE_CATEGORY_FILTER_ORDER, FILE_CATEGORY_IDS } from '@/lib/models/file-category';
-import { LARGE_FILE_MINIMUM_PRESETS, LARGE_FILE_SCAN_MODES, type LargeFileScanMode } from '@/lib/models/large-file';
-import { STORAGE_SCOPE_IDS } from '@/lib/models/storage-scope';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { DiskInfo } from '@/lib/models/disk';
-import type { TraversalProgress } from '@/lib/models/progress';
-import type { FileCategoryId } from '@/lib/models/file-category';
-import type { LargeFileEntry, LargeFilesResult } from '@/lib/models/large-file';
-import * as FileTypeUtils from '@/lib/utils/file-type';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as LargeFileEntryUtils from '@/lib/utils/large-file-entry';
-import * as PathUtils from '@/lib/utils/path';
-import * as StorageScanPreferenceUtils from '@/lib/utils/storage-scan-preference';
+import { FILE_CATEGORY_FILTER_ORDER, FILE_CATEGORY_IDS } from '@/lib/models/filesystem/file-category';
+import {
+  LARGE_FILE_MINIMUM_PRESETS,
+  LARGE_FILE_SCAN_MODES,
+  type LargeFileScanMode,
+} from '@/lib/models/storage/large-file';
+import { STORAGE_SCOPE_IDS } from '@/lib/models/storage/storage-scope';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import type { FileCategoryId } from '@/lib/models/filesystem/file-category';
+import type { LargeFileEntry, LargeFilesResult } from '@/lib/models/storage/large-file';
+import * as FileTypeUtils from '@/lib/utils/filesystem/file-type';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as LargeFileEntryUtils from '@/lib/utils/storage/large-file-entry';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
 import { useStorageScopeStore } from '@/stores/storage-scope-store';
 import { useLargeFilesStore } from '@/stores/large-files-store';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';

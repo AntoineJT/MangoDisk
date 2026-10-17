@@ -20,32 +20,32 @@ import MdDestructiveActionDialog from '@/components/custom/md-destructive-action
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FILE_CATEGORY_FILTER_ORDER, FILE_CATEGORY_IDS } from '@/lib/models/file-category';
+import { FILE_CATEGORY_FILTER_ORDER, FILE_CATEGORY_IDS } from '@/lib/models/filesystem/file-category';
 import {
   DUPLICATE_ENTRY_DELETE_POLICIES,
   DUPLICATE_FILE_MINIMUM_PRESETS,
   DUPLICATE_KEEPER_RULE_IDS,
   DUPLICATE_SCAN_LOCATION_MODES,
-} from '@/lib/models/duplicate-file';
-import { STORAGE_SCOPE_IDS } from '@/lib/models/storage-scope';
-import { ICON_NAMES } from '@/lib/models/ui';
+} from '@/lib/models/storage/duplicate-file';
+import { STORAGE_SCOPE_IDS } from '@/lib/models/storage/storage-scope';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import type {
   DuplicateFileEntry,
   DuplicateGroup,
   DuplicateFilesResult,
   DuplicateKeeperRuleId,
   DuplicateScanLocation,
-} from '@/lib/models/duplicate-file';
-import type { DiskInfo } from '@/lib/models/disk';
-import type { TraversalProgress } from '@/lib/models/progress';
-import type { FileCategoryId } from '@/lib/models/file-category';
-import * as DuplicateFileSelectionUtils from '@/lib/utils/duplicate-file-selection';
-import * as DuplicateFileGroupUtils from '@/lib/utils/duplicate-file-group';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
-import * as StorageScanPreferenceUtils from '@/lib/utils/storage-scan-preference';
+} from '@/lib/models/storage/duplicate-file';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import type { FileCategoryId } from '@/lib/models/filesystem/file-category';
+import * as DuplicateFileSelectionUtils from '@/lib/utils/storage/duplicate-file-selection';
+import * as DuplicateFileGroupUtils from '@/lib/utils/storage/duplicate-file-group';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
 import { useDuplicateFilesStore } from '@/stores/duplicate-files-store';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';
 import { useStorageScopeStore } from '@/stores/storage-scope-store';

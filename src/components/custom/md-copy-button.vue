@@ -5,9 +5,9 @@ import { toast } from 'vue-sonner';
 import MdIconAction from '@/components/custom/md-icon-action.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ClipboardService } from '@/lib/services/clipboard-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ClipboardService } from '@/lib/services/shell/clipboard-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 const props = withDefaults(defineProps<{ text: string; showText?: boolean; label?: string; active?: boolean }>(), {
   active: true,

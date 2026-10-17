@@ -10,12 +10,12 @@ import MdStatusBadge from '@/components/custom/md-status-badge.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { DiskInfo } from '@/lib/models/disk';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 
 const props = defineProps<{
   disks: DiskInfo[];

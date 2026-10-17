@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import type { ResidentPreferences } from '@/lib/models/resident';
-import { ResidentService } from '@/lib/services/resident-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import type { ResidentPreferences } from '@/lib/models/resident/resident';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 function copy(value: ResidentPreferences): ResidentPreferences {
   return {

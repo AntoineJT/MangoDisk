@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import { METRIC_LABEL_KEYS, METRIC_STATUS_KEYS } from '@/lib/models/system-resources';
+import { METRIC_LABEL_KEYS, METRIC_STATUS_KEYS } from '@/lib/models/system-resources/system-resources';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdSwitch from '@/components/custom/md-switch.vue';
@@ -21,15 +21,15 @@ import MdTaskbarPosition from './md-taskbar-position.vue';
 import MdStatusAppearance from './md-status-appearance.vue';
 import MdFanDisplaySettings from './md-fan-display-settings.vue';
 import MdStatusColorRuleEditor from './md-status-color-rule-editor.vue';
-import type { ColorMetricId, MetricColorRule } from '@/lib/models/resident-color-rules';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { NetworkInterface, ResourceVolume } from '@/lib/models/system-resources';
-import type { ResidentPreferences, ResidentReading, ResidentDisplayMetricId } from '@/lib/models/resident';
-import { ResidentService } from '@/lib/services/resident-service';
+import type { ColorMetricId, MetricColorRule } from '@/lib/models/resident/resident-color-rules';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { NetworkInterface, ResourceVolume } from '@/lib/models/system-resources/system-resources';
+import type { ResidentPreferences, ResidentReading, ResidentDisplayMetricId } from '@/lib/models/resident/resident';
+import { ResidentService } from '@/lib/services/resident/resident-service';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
-import { currentGpuTemperature } from '@/lib/utils/gpu-temperature';
-import { LoggerService } from '@/lib/services/logger-service';
+import { currentGpuTemperature } from '@/lib/utils/system-resources/gpu-temperature';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean; openRevision?: number }>(), {
   isLinux: false,

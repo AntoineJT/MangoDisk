@@ -3,14 +3,14 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { createPinia } from 'pinia';
 import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
-import { ResidentService } from '@/lib/services/resident-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DiskDetails from './md-disk-details.vue';
 import NetworkDetails from './md-network-details.vue';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { emptyReadings } from '@/lib/utils/system-resources';
-import type { ResourceReadings } from '@/lib/models/system-resources';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
 import en from '@/locales/en-US.json';
 import zh from '@/locales/zh-CN.json';
 import tw from '@/locales/zh-TW.json';
@@ -20,10 +20,10 @@ import pt from '@/locales/pt-BR.json';
 import ru from '@/locales/ru-RU.json';
 import tr from '@/locales/tr-TR.json';
 
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
 
 const clipboard = vi.hoisted(() => ({ writeText: vi.fn().mockResolvedValue(undefined) }));
-vi.mock('@/lib/services/clipboard-service', () => ({ ClipboardService: clipboard }));
+vi.mock('@/lib/services/shell/clipboard-service', () => ({ ClipboardService: clipboard }));
 
 const wrappers: ReturnType<typeof mount>[] = [];
 beforeEach(() => vi.spyOn(OperatingSystemService, 'currentPlatform').mockReturnValue('macos'));

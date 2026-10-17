@@ -6,9 +6,11 @@ import MdCpuDetails from './md-cpu-details.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIconTrend from '@/components/icons/md-icon-trend.vue';
 import enUS from '@/locales/en-US.json';
-import type { ResourceReadings } from '@/lib/models/system-resources';
-import { emptyReadings } from '@/lib/utils/system-resources';
-vi.mock('@/lib/services/operating-system-service', () => ({ OperatingSystemService: { isMacOs: () => true } }));
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
+vi.mock('@/lib/services/settings/operating-system-service', () => ({
+  OperatingSystemService: { isMacOs: () => true },
+}));
 
 const render = (reading: ResourceReadings, temperatureEnabled = true, temperatureSupported = true) =>
   mount(MdCpuDetails, {

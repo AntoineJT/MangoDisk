@@ -2,17 +2,17 @@ import { readingFixture as reading } from '@/tests/fixtures/resident';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useTrayPanelStore } from './tray-panel-store';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import { ResidentService } from '@/lib/services/resident-service';
-import type { MemoryReleaseResult, ResidentReading } from '@/lib/models/resident';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import type { MemoryReleaseResult, ResidentReading } from '@/lib/models/resident/resident';
 
-vi.mock('@/lib/services/resident-service', () => ({
+vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: { reading: vi.fn(), refresh: vi.fn(), releaseMemory: vi.fn() },
 }));
-vi.mock('@/lib/services/preference-storage-service', () => ({
+vi.mock('@/lib/services/settings/preference-storage-service', () => ({
   PreferenceStorageService: { loadResourceSort: vi.fn(), saveResourceSort: vi.fn(async () => {}) },
 }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
 
 describe('tray panel snapshots', () => {
   beforeEach(() => {

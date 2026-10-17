@@ -5,10 +5,10 @@ import { createI18n } from 'vue-i18n';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import MdGpuDetails from './md-gpu-details.vue';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
-import { emptyReadings } from '@/lib/utils/system-resources';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 import { preferencesFixture } from '@/tests/fixtures/resident';
-import type { ResourceReadings } from '@/lib/models/system-resources';
-import { ResidentService } from '@/lib/services/resident-service';
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { ResidentService } from '@/lib/services/resident/resident-service';
 import enUS from '@/locales/en-US.json';
 import zhCN from '@/locales/zh-CN.json';
 import zhTW from '@/locales/zh-TW.json';
@@ -17,10 +17,10 @@ import koKR from '@/locales/ko-KR.json';
 import ptBR from '@/locales/pt-BR.json';
 import ruRU from '@/locales/ru-RU.json';
 import trTR from '@/locales/tr-TR.json';
-vi.mock('@/lib/services/resident-service', () => ({
+vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: { preferences: vi.fn(), savePreferences: vi.fn() },
 }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
 const messages = {
   'en-US': enUS,
   'zh-CN': zhCN,

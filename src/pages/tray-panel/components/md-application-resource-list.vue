@@ -5,11 +5,19 @@ import { useI18n } from 'vue-i18n';
 import MdApplicationResourceRow from './md-application-resource-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
-import { resourceValue, sortResourceRows, updateResourceRows } from '@/lib/utils/application-resource-list';
-import type { ResourceListRow, ResourceSort } from '@/lib/models/application-resource-list';
-import type { ProcessMemorySummary, ProcessCpuSummary, MetricStatus } from '@/lib/models/system-resources';
+import {
+  resourceValue,
+  sortResourceRows,
+  updateResourceRows,
+} from '@/lib/utils/system-resources/application-resource-list';
+import type { ResourceListRow, ResourceSort } from '@/lib/models/system-resources/application-resource-list';
+import type {
+  ProcessMemorySummary,
+  ProcessCpuSummary,
+  MetricStatus,
+} from '@/lib/models/system-resources/system-resources';
 
 const props = withDefaults(
   defineProps<{

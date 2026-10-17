@@ -13,11 +13,14 @@ import MdResultCheckbox from '@/components/custom/md-result-checkbox.vue';
 import MdResultTableHierarchy from '@/components/custom/md-result-table-hierarchy.vue';
 import MdResultTableRow from '@/components/custom/md-result-table-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import type { ApplicationUninstallCandidate, ApplicationUninstallComponentSummary } from '@/lib/models/application';
-import { ICON_NAMES, type IconName } from '@/lib/models/ui';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+import type {
+  ApplicationUninstallCandidate,
+  ApplicationUninstallComponentSummary,
+} from '@/lib/models/applications/application';
+import { ICON_NAMES, type IconName } from '@/lib/models/presentation/ui';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 
 import {
   applicationCanStartUninstall,

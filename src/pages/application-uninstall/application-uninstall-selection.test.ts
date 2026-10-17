@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ApplicationUninstallCandidate, ApplicationUninstallComponentSummary } from '@/lib/models/application';
+import type {
+  ApplicationUninstallCandidate,
+  ApplicationUninstallComponentSummary,
+} from '@/lib/models/applications/application';
 
 import {
   selectedApplicationBytes,

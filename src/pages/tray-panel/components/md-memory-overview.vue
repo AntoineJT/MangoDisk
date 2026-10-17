@@ -11,11 +11,11 @@ import {
   DropdownMenuTrigger,
 } from 'reka-ui';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { useI18n } from 'vue-i18n';
-import type { MemoryReleaseResult } from '@/lib/models/resident';
-import type { MemoryOverview, MetricStatus } from '@/lib/models/system-resources';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
+import type { MemoryReleaseResult } from '@/lib/models/resident/resident';
+import type { MemoryOverview, MetricStatus } from '@/lib/models/system-resources/system-resources';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import MdMemoryPressure from './md-memory-pressure.vue';
 
 const props = withDefaults(

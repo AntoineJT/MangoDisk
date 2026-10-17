@@ -21,13 +21,13 @@ import {
   MAX_CUSTOM_CLEANUP_RULES,
   MAX_CUSTOM_CLEANUP_TEXT_LENGTH,
   type CustomCleanupRule,
-} from '@/lib/models/custom-cleanup';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { FileManagerService } from '@/lib/services/file-manager-service';
-import { FolderSelectionService } from '@/lib/services/folder-selection-service';
-import { NativeDragDropService, type NativeDragDropEvent } from '@/lib/services/native-drag-drop-service';
-import * as PathUtils from '@/lib/utils/path';
-import * as CustomCleanupPreferenceUtils from '@/lib/utils/custom-cleanup-preference';
+} from '@/lib/models/cleanup/custom-cleanup';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
+import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
+import { NativeDragDropService, type NativeDragDropEvent } from '@/lib/services/shell/native-drag-drop-service';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as CustomCleanupPreferenceUtils from '@/lib/utils/cleanup/custom-cleanup-preference';
 import { useAppStore } from '@/stores/app-store';
 import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 import { customCleanupDraftFingerprint, customCleanupPersistedState } from '../custom-cleanup-dialog-state';

@@ -1,18 +1,18 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { DiskInfo } from '@/lib/models/disk';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { DiskService } from '@/lib/services/disk-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import { LanguageService } from '@/lib/services/language-service';
-import { ThemeService } from '@/lib/services/theme-service';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { COLOR_THEME_IDS, LANGUAGE_IDS, THEME_IDS } from '@/lib/models/settings';
-import { DUPLICATE_KEEPER_RULE_IDS } from '@/lib/models/duplicate-file';
-import { BYTE_UNIT_BASES } from '@/lib/utils/format';
-import * as AppSettingsUtils from '@/lib/utils/app-settings';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { DiskService } from '@/lib/services/storage/volume-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import { LanguageService } from '@/lib/services/settings/language-service';
+import { ThemeService } from '@/lib/services/settings/theme-service';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { COLOR_THEME_IDS, LANGUAGE_IDS, THEME_IDS } from '@/lib/models/settings/settings';
+import { DUPLICATE_KEEPER_RULE_IDS } from '@/lib/models/storage/duplicate-file';
+import { BYTE_UNIT_BASES } from '@/lib/utils/presentation/format';
+import * as AppSettingsUtils from '@/lib/utils/settings/app-settings';
 
 import { useAppStore } from './app-store';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ApplicationUninstallCandidate } from '@/lib/models/application';
+import type { ApplicationUninstallCandidate } from '@/lib/models/applications/application';
 
 import {
   applicationCatalogFilters,

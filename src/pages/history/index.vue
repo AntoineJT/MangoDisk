@@ -17,12 +17,15 @@ import MdStatusBadge from '@/components/custom/md-status-badge.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { ICON_NAMES, type IconName } from '@/lib/models/ui';
-import type { ApplicationUninstallApplicationDetails, PresentedOperationRecord } from '@/lib/models/history';
-import type { ApplicationLeftoverActionResult, ApplicationUninstallActionResult } from '@/lib/models/application';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+import { ICON_NAMES, type IconName } from '@/lib/models/presentation/ui';
+import type { ApplicationUninstallApplicationDetails, PresentedOperationRecord } from '@/lib/models/history/history';
+import type {
+  ApplicationLeftoverActionResult,
+  ApplicationUninstallActionResult,
+} from '@/lib/models/applications/application';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 

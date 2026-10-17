@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import type { ResourceReadings } from '@/lib/models/system-resources';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdResourceOverview from './md-resource-overview.vue';
 import MdResourceFacts from './md-resource-facts.vue';

@@ -1,5 +1,5 @@
-import type { ApplicationUninstallCandidate } from '@/lib/models/application';
-import * as PathUtils from '@/lib/utils/path';
+import type { ApplicationUninstallCandidate } from '@/lib/models/applications/application';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 
 export type ApplicationCatalogFilter = 'all' | 'ready' | 'requiresElevation' | 'running' | 'unavailable';
 export type ApplicationCatalogSortKey = 'name' | 'status' | 'size' | 'date';

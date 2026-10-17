@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { cpuIdentityLabel } from '@/lib/utils/cpu-identity-label';
+import { cpuIdentityLabel } from '@/lib/utils/system-resources/cpu-identity-label';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { computed } from 'vue';
 import MdResourceTrend from './md-resource-trend.vue';
 import MdMemoryPressure from './md-memory-pressure.vue';
@@ -14,9 +14,9 @@ import {
   METRIC_STATUS_KEYS,
   type MetricId,
   type ResourceReadings,
-} from '@/lib/models/system-resources';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+} from '@/lib/models/system-resources/system-resources';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 
 const props = withDefaults(
   defineProps<{

@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MdDialogContent from '@/components/custom/md-dialog-content.vue';
 import { i18n } from '@/i18n';
-import { NativeDragDropService } from '@/lib/services/native-drag-drop-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import { NativeDragDropService } from '@/lib/services/shell/native-drag-drop-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 
 import MdCleanupVolumeDialog from './md-cleanup-volume-dialog.vue';

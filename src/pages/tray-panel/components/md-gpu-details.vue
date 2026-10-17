@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { summarizeUtilizationHistory } from '@/lib/utils/utilization-history-summary';
+import { summarizeUtilizationHistory } from '@/lib/utils/system-resources/utilization-history-summary';
 import MdGpuEngineHistory from './md-gpu-engine-history.vue';
 import MdResourceFacts from './md-resource-facts.vue';
-import { customGpuActivities, summarizeGpuActivities } from '@/lib/utils/gpu-activity';
-import { gpuMemoryRows } from '@/lib/utils/gpu-memory';
+import { customGpuActivities, summarizeGpuActivities } from '@/lib/utils/system-resources/gpu-activity';
+import { gpuMemoryRows } from '@/lib/utils/system-resources/gpu-memory';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Select, SelectContent, SelectItem } from '@/components/ui/select';
 import { SelectTrigger } from 'reka-ui';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { GPU_ACTIVITY_LABEL_KEYS, GPU_FACT_LABEL_KEYS } from '@/lib/models/gpu-details';
-import type { GpuActivity } from '@/lib/models/gpu-details';
-import { METRIC_STATUS_KEYS, type ResourceReadings } from '@/lib/models/system-resources';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { GPU_ACTIVITY_LABEL_KEYS, GPU_FACT_LABEL_KEYS } from '@/lib/models/system-resources/gpu-details';
+import type { GpuActivity } from '@/lib/models/system-resources/gpu-details';
+import { METRIC_STATUS_KEYS, type ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import MdResourceTrend from './md-resource-trend.vue';
 import MdTemperatureDetails from './md-temperature-details.vue';

@@ -16,25 +16,25 @@ import MdSelectionMode, { type MdSelectionModeOption } from '@/components/custom
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { ApplicationCloseMode } from '@/lib/models/application-close';
-import type { PrivacyItem, PrivacyTimeRange } from '@/lib/models/privacy';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/macos-permissions';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ApplicationIconService } from '@/lib/services/application-icon-service';
-import { MacOsPermissionService } from '@/lib/services/macos-permission-service';
-import * as FormatUtils from '@/lib/utils/format';
+import type { ApplicationCloseMode } from '@/lib/models/applications/application-close';
+import type { PrivacyItem, PrivacyTimeRange } from '@/lib/models/privacy/privacy';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/settings/macos-permissions';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
+import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 import {
   actionablePrivacyTokens,
   privacySelectionMode,
   recommendedPrivacyTokens,
   summarizePrivacySelection,
   type PrivacySelectionMode,
-} from '@/lib/utils/privacy-selection';
+} from '@/lib/utils/privacy/privacy-selection';
 import { useAppStore } from '@/stores/app-store';
 import { usePrivacyStore } from '@/stores/privacy-store';
 
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { privacyAiContext } from './privacy-ai-context';
 import MdPrivacyResultList from './components/md-privacy-result-list.vue';
 import MdPrivacyDetailDialog from './components/md-privacy-detail-dialog.vue';

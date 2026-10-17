@@ -1,6 +1,6 @@
-import type { CleanupResultGroup, CleanupSourceSelection, PresentedScanRuleResult } from '@/lib/models/cleanup';
-import type { CleanupRuleSelectionLevel } from '@/lib/utils/cleanup-rule-selection';
-import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup-rule-selection';
+import type { CleanupResultGroup, CleanupSourceSelection, PresentedScanRuleResult } from '@/lib/models/cleanup/cleanup';
+import type { CleanupRuleSelectionLevel } from '@/lib/utils/cleanup/cleanup-rule-selection';
+import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup/cleanup-rule-selection';
 
 const CATEGORY_ORDER: readonly CleanupResultGroup[] = [
   'custom',

@@ -1,41 +1,44 @@
 <script setup lang="ts">
-import type { AnalysisScanMode } from '@/lib/models/analysis';
+import type { AnalysisScanMode } from '@/lib/models/storage/analysis';
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { toast } from 'vue-sonner';
 
-import { APP_UPDATE_STATUS_IDS } from '@/lib/models/app-update';
-import type { ApplicationLeftoverCandidate, ApplicationUninstallBatchSelection } from '@/lib/models/application';
-import type { ApplicationCloseMode } from '@/lib/models/application-close';
-import type { DirectoryEntryInfo } from '@/lib/models/analysis';
-import type { DuplicateFileEntry, DuplicateScanLocation } from '@/lib/models/duplicate-file';
-import type { LargeFileEntry, LargeFileScanMode } from '@/lib/models/large-file';
-import { CLEANUP_OPERATION_IDS, CLEANUP_SCAN_SCOPE_MODES, type CleanupScanScope } from '@/lib/models/cleanup';
+import { APP_UPDATE_STATUS_IDS } from '@/lib/models/updates/app-update';
+import type {
+  ApplicationLeftoverCandidate,
+  ApplicationUninstallBatchSelection,
+} from '@/lib/models/applications/application';
+import type { ApplicationCloseMode } from '@/lib/models/applications/application-close';
+import type { DirectoryEntryInfo } from '@/lib/models/storage/analysis';
+import type { DuplicateFileEntry, DuplicateScanLocation } from '@/lib/models/storage/duplicate-file';
+import type { LargeFileEntry, LargeFileScanMode } from '@/lib/models/storage/large-file';
+import { CLEANUP_OPERATION_IDS, CLEANUP_SCAN_SCOPE_MODES, type CleanupScanScope } from '@/lib/models/cleanup/cleanup';
 import {
   createSidebarLayoutState,
   isPageAvailableOnPlatform,
   PAGE_IDS,
   resizeSidebarLayout,
   toggleSidebarLayout,
-} from '@/lib/models/application-shell';
-import type { AppSettings } from '@/lib/models/settings';
-import type { PageId } from '@/lib/models/application-shell';
-import { ApplicationWindowService } from '@/lib/services/application-window-service';
-import type { ResidentDestination } from '@/lib/models/resident';
-import { ResidentService } from '@/lib/services/resident-service';
-import { BackgroundUpdateService } from '@/lib/services/background-update-service';
-import { DiskService } from '@/lib/services/disk-service';
-import { ApplicationMenuService } from '@/lib/services/application-menu-service';
-import { FileManagerService } from '@/lib/services/file-manager-service';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { LoggerService } from '@/lib/services/logger-service';
-import { LinkService } from '@/lib/services/link-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as CleanupRuleTextUtils from '@/lib/utils/cleanup-rule-text';
-import { type CleanupRuleMessageResolver } from '@/lib/utils/cleanup-rule-text';
-import * as CleanupScanScopeUtils from '@/lib/utils/cleanup-scan-scope';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/shell/application-shell';
+import type { AppSettings } from '@/lib/models/settings/settings';
+import type { PageId } from '@/lib/models/shell/application-shell';
+import { ApplicationWindowService } from '@/lib/services/shell/application-window-service';
+import type { ResidentDestination } from '@/lib/models/resident/resident';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { BackgroundUpdateService } from '@/lib/services/updates/background-update-service';
+import { DiskService } from '@/lib/services/storage/volume-service';
+import { ApplicationMenuService } from '@/lib/services/shell/application-menu-service';
+import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { LinkService } from '@/lib/services/shell/link-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as CleanupRuleTextUtils from '@/lib/utils/cleanup/cleanup-rule-text';
+import { type CleanupRuleMessageResolver } from '@/lib/utils/cleanup/cleanup-rule-text';
+import * as CleanupScanScopeUtils from '@/lib/utils/cleanup/cleanup-scan-scope';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 import { useAnalysisStore } from '@/stores/analysis-store';
 import { useApplicationStore } from '@/stores/application-store';
 import { useAppUpdateStore } from '@/stores/app-update-store';

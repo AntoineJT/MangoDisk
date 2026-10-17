@@ -7,12 +7,12 @@ import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
 import MdMiddleEllipsis from '@/components/custom/md-middle-ellipsis.vue';
 import MdOperationDialog from '@/components/custom/md-operation-dialog.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { CLEANUP_OPERATION_IDS } from '@/lib/models/cleanup';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as CleanupRuleTextUtils from '@/lib/utils/cleanup-rule-text';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+import { CLEANUP_OPERATION_IDS } from '@/lib/models/cleanup/cleanup';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as CleanupRuleTextUtils from '@/lib/utils/cleanup/cleanup-rule-text';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 import { useApplicationStore } from '@/stores/application-store';
 import { useCleanupStore } from '@/stores/cleanup-store';
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ApplicationUninstallCandidate } from '@/lib/models/application';
+import type { ApplicationUninstallCandidate } from '@/lib/models/applications/application';
 import fixtures from '../../../tests/fixtures/ai-context-v2.json';
 import { applicationUninstallAiContext } from './application-uninstall-ai-context';
 

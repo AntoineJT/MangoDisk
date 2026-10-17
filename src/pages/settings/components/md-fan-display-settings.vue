@@ -5,8 +5,8 @@ import MdCheckbox from '@/components/custom/md-checkbox.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Select, SelectContent, SelectItem } from '@/components/ui/select';
 import { SelectTrigger } from 'reka-ui';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { ResidentPreferences, ResidentReading } from '@/lib/models/resident';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { ResidentPreferences, ResidentReading } from '@/lib/models/resident/resident';
 
 type FanMode = ResidentPreferences['fanDisplay'];
 type FanPreferences = Pick<ResidentPreferences, 'fanDisplay' | 'fanIds'>;

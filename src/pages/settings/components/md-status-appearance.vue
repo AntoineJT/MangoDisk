@@ -6,8 +6,8 @@ import MdSettingsRow from '@/components/custom/md-settings-row.vue';
 import MdSwitch from '@/components/custom/md-switch.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { ResidentPreferences } from '@/lib/models/resident';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { ResidentPreferences } from '@/lib/models/resident/resident';
 
 const props = withDefaults(defineProps<{ preferences: ResidentPreferences; isMacOs: boolean; isLinux?: boolean }>(), {
   isLinux: false,

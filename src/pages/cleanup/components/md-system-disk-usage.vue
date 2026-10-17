@@ -4,11 +4,11 @@ import { useI18n } from 'vue-i18n';
 
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { DiskInfo } from '@/lib/models/disk';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as FormatUtils from '@/lib/utils/format';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const props = defineProps<{
   disk: DiskInfo;

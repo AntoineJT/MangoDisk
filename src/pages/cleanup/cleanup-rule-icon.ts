@@ -1,5 +1,5 @@
-import { CLEANUP_RULE_IDS, type CleanupResultGroup } from '@/lib/models/cleanup';
-import { ICON_NAMES, type IconName } from '@/lib/models/ui';
+import { CLEANUP_RULE_IDS, type CleanupResultGroup } from '@/lib/models/cleanup/cleanup';
+import { ICON_NAMES, type IconName } from '@/lib/models/presentation/ui';
 
 const CLEANUP_GROUP_ICONS: Readonly<Record<CleanupResultGroup, IconName>> = {
   custom: ICON_NAMES.folderPlus,

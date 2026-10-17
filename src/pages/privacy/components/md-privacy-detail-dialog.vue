@@ -9,9 +9,9 @@ import MdMiddleEllipsis from '@/components/custom/md-middle-ellipsis.vue';
 import MdSpinner from '@/components/custom/md-spinner.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { PrivacyDetailEntry, PrivacyDetailsPage, PrivacyItem } from '@/lib/models/privacy';
-import { PrivacyService } from '@/lib/services/privacy-service';
-import * as FormatUtils from '@/lib/utils/format';
+import type { PrivacyDetailEntry, PrivacyDetailsPage, PrivacyItem } from '@/lib/models/privacy/privacy';
+import { PrivacyService } from '@/lib/services/privacy/privacy-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const props = defineProps<{
   modelValue: boolean;

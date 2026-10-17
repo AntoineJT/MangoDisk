@@ -17,10 +17,10 @@ import { observeElementRect, useVirtualizer, type Range } from '@tanstack/vue-vi
 import MdFileEntryContextMenu from '@/components/custom/md-file-entry-context-menu.vue';
 import MdAnalysisEntryIcon from './md-analysis-entry-icon.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { DirectoryEntryInfo } from '@/lib/models/analysis';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { DirectoryEntryInfo } from '@/lib/models/storage/analysis';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const { t } = useI18n({ useScope: 'global' });
 

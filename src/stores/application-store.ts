@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import type { ApplicationCloseBatchResult, ApplicationCloseMode } from '@/lib/models/application-close';
+import type { ApplicationCloseBatchResult, ApplicationCloseMode } from '@/lib/models/applications/application-close';
 import type {
   ApplicationLeftoverCandidate,
   ApplicationLeftoverResult,
@@ -10,13 +10,13 @@ import type {
   ApplicationUninstallBatchSelection,
   ApplicationUninstallExecutionProgress,
   ApplicationUninstallScanResult,
-} from '@/lib/models/application';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { ApplicationService } from '@/lib/services/application-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { MacOsPermissionService } from '@/lib/services/macos-permission-service';
-import * as ApplicationUninstallResultUtils from '@/lib/utils/application-uninstall-result';
-import { parseCommandError } from '@/lib/utils/error';
+} from '@/lib/models/applications/application';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { ApplicationService } from '@/lib/services/applications/application-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
+import * as ApplicationUninstallResultUtils from '@/lib/utils/applications/application-uninstall-result';
+import { parseCommandError } from '@/lib/utils/diagnostics/error';
 
 import { useAppStore } from './app-store';
 import { useHistoryStore } from './history-store';

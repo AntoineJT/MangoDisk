@@ -8,10 +8,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'vue-sonner';
 
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
-import { ApplicationService } from '@/lib/services/application-service';
-import type { CommandError } from '@/lib/utils/error';
+import { ApplicationService } from '@/lib/services/applications/application-service';
+import type { CommandError } from '@/lib/utils/diagnostics/error';
 
-import type { ApplicationUninstallCandidate } from '@/lib/models/application';
+import type { ApplicationUninstallCandidate } from '@/lib/models/applications/application';
 import en from '@/locales/en-US.json';
 import ja from '@/locales/ja-JP.json';
 import ko from '@/locales/ko-KR.json';

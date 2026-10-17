@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CpuTemperature, MetricReading } from '@/lib/models/system-resources';
+import type { CpuTemperature, MetricReading } from '@/lib/models/system-resources/system-resources';
 import MdResourceTemperature from './md-resource-temperature.vue';
 withDefaults(
   defineProps<{

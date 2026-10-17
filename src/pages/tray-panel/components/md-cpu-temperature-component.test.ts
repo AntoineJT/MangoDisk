@@ -12,7 +12,7 @@ import ko from '@/locales/ko-KR.json';
 import pt from '@/locales/pt-BR.json';
 import ru from '@/locales/ru-RU.json';
 import tr from '@/locales/tr-TR.json';
-import type { CpuTemperature, MetricReading } from '@/lib/models/system-resources';
+import type { CpuTemperature, MetricReading } from '@/lib/models/system-resources/system-resources';
 const reading = (): MetricReading<CpuTemperature> => ({
   status: 'ready',
   sampledAtMs: 1000,

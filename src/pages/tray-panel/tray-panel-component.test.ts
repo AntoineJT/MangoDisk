@@ -1,13 +1,13 @@
-vi.mock('@/lib/services/operating-system-service', () => ({
+vi.mock('@/lib/services/settings/operating-system-service', () => ({
   OperatingSystemService: { isLinux: vi.fn(() => false), isWindows: vi.fn(() => false), isMacOs: () => true },
 }));
-vi.mock('@/lib/services/memory-release-service', () => ({
+vi.mock('@/lib/services/system-resources/memory-release-service', () => ({
   MemoryReleaseService: {
     onPreferences: vi.fn().mockResolvedValue(() => {}),
     preferences: vi.fn().mockResolvedValue({ revision: 0, automatic: false, exclusions: [] }),
   },
 }));
-import { emptyReadings } from '@/lib/utils/system-resources';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 // @vitest-environment happy-dom
 import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia } from 'pinia';
@@ -28,18 +28,18 @@ import TrayPanelPage from './index.vue';
 import MemoryOverview from './components/md-memory-overview.vue';
 import ResourceOverview from './components/md-resource-overview.vue';
 import ApplicationList from './components/md-application-resource-list.vue';
-import { FileManagerService } from '@/lib/services/file-manager-service';
-import { FileIconService } from '@/lib/services/file-icon-service';
-import { ResidentService } from '@/lib/services/resident-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
+import { FileIconService } from '@/lib/services/filesystem/file-icon-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
-import type { ResidentReading } from '@/lib/models/resident';
+import type { ResidentReading } from '@/lib/models/resident/resident';
 import { preferencesFixture } from '@/tests/fixtures/resident';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
 
-vi.mock('@/lib/services/resident-service', () => ({
+vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: {
     preferences: vi.fn(),
     onReading: vi.fn(),
@@ -58,12 +58,14 @@ vi.mock('@/lib/services/resident-service', () => ({
   },
 }));
 vi.mock('@/stores/app-store', () => ({ useAppStore: () => ({ loadSettings: vi.fn().mockResolvedValue(undefined) }) }));
-vi.mock('@/lib/services/file-icon-service', () => ({
+vi.mock('@/lib/services/filesystem/file-icon-service', () => ({
   FileIconService: { peek: vi.fn(() => 'cached'), resolve: vi.fn() },
 }));
-vi.mock('@/lib/services/file-manager-service', () => ({ FileManagerService: { reveal: vi.fn() } }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
-vi.mock('@/lib/services/byte-size-service', () => ({ ByteSizeService: { memory: (bytes: number) => `${bytes} B` } }));
+vi.mock('@/lib/services/filesystem/file-manager-service', () => ({ FileManagerService: { reveal: vi.fn() } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/settings/byte-size-service', () => ({
+  ByteSizeService: { memory: (bytes: number) => `${bytes} B` },
+}));
 
 const memory = {
   totalBytes: 100,

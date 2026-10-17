@@ -13,11 +13,11 @@ import MdResultTableHierarchy from '@/components/custom/md-result-table-hierarch
 import MdResultTableRow from '@/components/custom/md-result-table-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
-import type { StartupArtifact, StartupOwnerGroup } from '@/lib/models/startup';
-import type { WindowsStartupTool } from '@/lib/services/windows-startup-tool-service';
-import { ICON_NAMES } from '@/lib/models/ui';
-import * as FormatUtils from '@/lib/utils/format';
-import * as StartupCommandUtils from '@/lib/utils/startup-command';
+import type { StartupArtifact, StartupOwnerGroup } from '@/lib/models/startup/startup';
+import type { WindowsStartupTool } from '@/lib/services/startup/windows-startup-tool-service';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as StartupCommandUtils from '@/lib/utils/startup/startup-command';
 
 import {
   canManageStartupArtifact,

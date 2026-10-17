@@ -229,8 +229,8 @@ import MdIconXmind from '@/components/icons/md-icon-xmind.vue';
 import MdIconXunlei from '@/components/icons/md-icon-xunlei.vue';
 import MdIconYoudaoNote from '@/components/icons/md-icon-youdao-note.vue';
 import MdIconYouku from '@/components/icons/md-icon-youku.vue';
-import type { IconName } from '@/lib/models/ui';
-import { LoggerService } from '@/lib/services/logger-service';
+import type { IconName } from '@/lib/models/presentation/ui';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 type IconFamily = 'custom' | 'lucide' | 'simpleBrand' | 'tabler';
 interface IconDefinition {

@@ -2,21 +2,21 @@ import { isReactive } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PAGE_IDS } from '@/lib/models/application-shell';
+import { PAGE_IDS } from '@/lib/models/shell/application-shell';
 import {
   ANALYSIS_RESULT_CACHE_LIMIT,
   type AnalysisDeleteResult,
   type AnalysisResult,
   type DirectoryEntryInfo,
-} from '@/lib/models/analysis';
-import { AnalysisService } from '@/lib/services/analysis-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as AnalysisCacheUtils from '@/lib/utils/analysis-cache';
+} from '@/lib/models/storage/analysis';
+import { AnalysisService } from '@/lib/services/storage/analysis-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as AnalysisCacheUtils from '@/lib/utils/storage/analysis-cache';
 
 import { useAnalysisStore } from './analysis-store';
 import { useAppStore } from './app-store';
 import { useStorageScanPreferencesStore } from './storage-scan-preferences-store';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
 
 const result: AnalysisResult = {
   scanId: 7,

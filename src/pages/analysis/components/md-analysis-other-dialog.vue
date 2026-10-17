@@ -15,13 +15,13 @@ import type {
   AnalysisRemainderSelection,
   AnalysisScanMode,
   DirectoryEntryInfo,
-} from '@/lib/models/analysis';
-import { ANALYSIS_SCAN_MODES } from '@/lib/models/analysis';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { AnalysisService } from '@/lib/services/analysis-service';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/storage/analysis';
+import { ANALYSIS_SCAN_MODES } from '@/lib/models/storage/analysis';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { AnalysisService } from '@/lib/services/storage/analysis-service';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 import MdAnalysisEntryIcon from './md-analysis-entry-icon.vue';
 
 const props = defineProps<{

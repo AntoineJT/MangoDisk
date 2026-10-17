@@ -1,4 +1,4 @@
-import type { TrendPoint } from '@/lib/models/system-resources';
+import type { TrendPoint } from '@/lib/models/system-resources/system-resources';
 
 export const TREND_WINDOW_MS = 60_000;
 

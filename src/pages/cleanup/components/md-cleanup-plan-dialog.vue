@@ -8,15 +8,15 @@ import MdDialogFooter from '@/components/custom/md-dialog-footer.vue';
 import MdDialogHeader from '@/components/custom/md-dialog-header.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { PresentedScanRuleResult } from '@/lib/models/cleanup';
-import type { CleanupApplicationCloseIdentity, CleanupApplicationIcon } from '@/lib/models/cleanup';
+import type { PresentedScanRuleResult } from '@/lib/models/cleanup/cleanup';
+import type { CleanupApplicationCloseIdentity, CleanupApplicationIcon } from '@/lib/models/cleanup/cleanup';
 import type {
   ApplicationCloseBatchResult,
   ApplicationCloseItem,
   ApplicationCloseMode,
-} from '@/lib/models/application-close';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/applications/application-close';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 import { cleanupApplicationCloseGroups, cleanupApplicationCloseRetry } from '../cleanup-application-close';
 
 const { t } = useI18n({ useScope: 'global' });

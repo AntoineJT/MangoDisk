@@ -5,9 +5,9 @@ import { createPinia, setActivePinia } from 'pinia';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/i18n';
-import type { CustomCleanupRule } from '@/lib/models/custom-cleanup';
-import { FolderSelectionService } from '@/lib/services/folder-selection-service';
-import { NativeDragDropService, type NativeDragDropEvent } from '@/lib/services/native-drag-drop-service';
+import type { CustomCleanupRule } from '@/lib/models/cleanup/custom-cleanup';
+import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
+import { NativeDragDropService, type NativeDragDropEvent } from '@/lib/services/shell/native-drag-drop-service';
 import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 
 import MdCustomCleanupDialog from './md-custom-cleanup-dialog.vue';

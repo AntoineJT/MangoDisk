@@ -15,9 +15,9 @@ import type {
   ApplicationCloseBatchResult,
   ApplicationCloseItem,
   ApplicationCloseMode,
-} from '@/lib/models/application-close';
-import type { PrivacyBrowserStatusResult, PrivacyDataKind, PrivacyExecutionPlan } from '@/lib/models/privacy';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/applications/application-close';
+import type { PrivacyBrowserStatusResult, PrivacyDataKind, PrivacyExecutionPlan } from '@/lib/models/privacy/privacy';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 import {
   privacyBrowserCloseItems,

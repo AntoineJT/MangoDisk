@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import type { ResidentPreferences } from '@/lib/models/resident';
+import type { ResidentPreferences } from '@/lib/models/resident/resident';
 defineProps<{ preferences: ResidentPreferences }>();
 const emit = defineEmits<{
   position: [position: ResidentPreferences['taskbarPosition']];

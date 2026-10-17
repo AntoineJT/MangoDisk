@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onDeactivated, ref, watch } from 'vue';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { TOOLTIP_OPEN_DELAY_MS } from '@/lib/models/ui';
+import { TOOLTIP_OPEN_DELAY_MS } from '@/lib/models/presentation/ui';
 
 defineOptions({ inheritAttrs: false });
 const props = withDefaults(

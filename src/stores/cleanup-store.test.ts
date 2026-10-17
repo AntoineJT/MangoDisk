@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ApplicationCloseBatchResult } from '@/lib/models/application-close';
+import type { ApplicationCloseBatchResult } from '@/lib/models/applications/application-close';
 import {
   CLEANUP_RULE_IDS,
   CLEANUP_SCAN_SCOPE_MODES,
@@ -12,12 +12,12 @@ import {
   type CleanupScanResult,
   type CleanupSourceDetail,
   type ScanRuleResult,
-} from '@/lib/models/cleanup';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { CleanupService } from '@/lib/services/cleanup-service';
-import { DiskService } from '@/lib/services/disk-service';
-import { LoggerService } from '@/lib/services/logger-service';
+} from '@/lib/models/cleanup/cleanup';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { CleanupService } from '@/lib/services/cleanup/cleanup-service';
+import { DiskService } from '@/lib/services/storage/volume-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 import { useAppStore } from './app-store';
 import { useCleanupStore } from './cleanup-store';

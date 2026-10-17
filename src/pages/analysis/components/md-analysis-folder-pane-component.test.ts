@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }));
 
 import { i18n } from '@/i18n';
-import { LANGUAGE_IDS } from '@/lib/models/settings';
+import { LANGUAGE_IDS } from '@/lib/models/settings/settings';
 
 import MdAnalysisFolderPane from './md-analysis-folder-pane.vue';
 

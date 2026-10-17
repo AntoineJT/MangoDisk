@@ -14,9 +14,9 @@ import { useI18n } from 'vue-i18n';
 
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
-import { DUPLICATE_KEEPER_RULE_IDS, type DuplicateKeeperRuleId } from '@/lib/models/duplicate-file';
-import { ICON_NAMES } from '@/lib/models/ui';
-import * as FormatUtils from '@/lib/utils/format';
+import { DUPLICATE_KEEPER_RULE_IDS, type DuplicateKeeperRuleId } from '@/lib/models/storage/duplicate-file';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 defineProps<{
   keeperRule: DuplicateKeeperRuleId;

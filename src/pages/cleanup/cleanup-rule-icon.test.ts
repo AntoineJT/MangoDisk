@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { CLEANUP_RULE_IDS } from '@/lib/models/cleanup';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { CLEANUP_RULE_IDS } from '@/lib/models/cleanup/cleanup';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import zhCN from '@/locales/zh-CN.json';
 
 import { cleanupGroupIcon, cleanupRuleIcon, hasCleanupRuleIcon } from './cleanup-rule-icon';

@@ -7,12 +7,12 @@ import Settings from './md-status-display-settings.vue';
 import TaskbarPosition from './md-taskbar-position.vue';
 import { Select } from '@/components/ui/select';
 import WindowsFeedback from './md-windows-display-feedback.vue';
-import { ResidentService } from '@/lib/services/resident-service';
-import { WindowsMonitoringService } from '@/lib/services/windows-monitoring-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { WindowsMonitoringService } from '@/lib/services/system-resources/windows-monitoring-service';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
 import { preferencesFixture, readingFixture } from '@/tests/fixtures/resident';
 
-vi.mock('@/lib/services/resident-service', () => ({
+vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: {
     preferences: vi.fn(),
     savePreferences: vi.fn(),
@@ -27,12 +27,14 @@ vi.mock('@/lib/services/resident-service', () => ({
     openPanel: vi.fn(),
   },
 }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
-vi.mock('@/lib/services/windows-monitoring-service', () => ({
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/system-resources/windows-monitoring-service', () => ({
   WindowsMonitoringService: { observe: vi.fn(), install: vi.fn(), uninstall: vi.fn() },
 }));
 vi.mock('vue-sonner', () => ({ toast: { error: vi.fn(), warning: vi.fn() } }));
-vi.mock('@/lib/services/byte-size-service', () => ({ ByteSizeService: { memory: (value: number) => `${value} B` } }));
+vi.mock('@/lib/services/settings/byte-size-service', () => ({
+  ByteSizeService: { memory: (value: number) => `${value} B` },
+}));
 // Reka's modal accessibility checks require the rendered content to belong to document.body.
 // Keeping every wrapper attached also prevents aria-hidden from serializing a detached DOM tree
 // to stderr, which can make otherwise fast interaction tests exceed their timeout.

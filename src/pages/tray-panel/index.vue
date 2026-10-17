@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { MemoryReleaseService } from '@/lib/services/memory-release-service';
+import { MemoryReleaseService } from '@/lib/services/system-resources/memory-release-service';
 import { useMemoryReleaseStore } from '@/stores/memory-release-store';
-import { METRIC_STATUS_KEYS } from '@/lib/models/system-resources';
+import { METRIC_STATUS_KEYS } from '@/lib/models/system-resources/system-resources';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import MdIcon from '@/components/icons/md-icon.vue';
 import MdMainShortcut from './components/md-main-shortcut.vue';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { type MetricId } from '@/lib/models/system-resources';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { type MetricId } from '@/lib/models/system-resources/system-resources';
 import MdResourceOverview from './components/md-resource-overview.vue';
 import MdCpuDetails from './components/md-cpu-details.vue';
 import MdDiskDetails from './components/md-disk-details.vue';
@@ -16,9 +16,9 @@ import MdNetworkDetails from './components/md-network-details.vue';
 import MdGpuDetails from './components/md-gpu-details.vue';
 import MdMemoryOverview from './components/md-memory-overview.vue';
 import MdApplicationResourceList from './components/md-application-resource-list.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { ResidentDestination } from '@/lib/models/resident';
-import { ResidentService } from '@/lib/services/resident-service';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { ResidentDestination } from '@/lib/models/resident/resident';
+import { ResidentService } from '@/lib/services/resident/resident-service';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';

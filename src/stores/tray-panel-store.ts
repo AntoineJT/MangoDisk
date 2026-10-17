@@ -1,13 +1,13 @@
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import { defaultResourceSort, parseResourceSort } from '@/lib/utils/application-resource-list';
-import type { ResourceMetric, ResourceSort } from '@/lib/models/application-resource-list';
-import { emptyReadings, retainSampleValue } from '@/lib/utils/system-resources';
-import type { MetricId } from '@/lib/models/system-resources';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import { defaultResourceSort, parseResourceSort } from '@/lib/utils/system-resources/application-resource-list';
+import type { ResourceMetric, ResourceSort } from '@/lib/models/system-resources/application-resource-list';
+import { emptyReadings, retainSampleValue } from '@/lib/utils/system-resources/system-resources';
+import type { MetricId } from '@/lib/models/system-resources/system-resources';
 import { defineStore } from 'pinia';
 
-import type { MemoryReleaseResult, ResidentReading } from '@/lib/models/resident';
-import { ResidentService } from '@/lib/services/resident-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import type { MemoryReleaseResult, ResidentReading } from '@/lib/models/resident/resident';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 export const useTrayPanelStore = defineStore('tray-panel', {
   state: () => ({

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import MdIconTrend from '@/components/icons/md-icon-trend.vue';
-import type { TrendPoint } from '@/lib/models/system-resources';
+import type { TrendPoint } from '@/lib/models/system-resources/system-resources';
 import { ResourceTrendTimeline } from './resource-trend-timeline';
 import { ResourceTrendScale } from './resource-trend-scale';
 

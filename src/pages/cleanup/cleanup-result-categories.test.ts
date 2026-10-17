@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { PresentedScanRuleResult } from '@/lib/models/cleanup';
+import type { PresentedScanRuleResult } from '@/lib/models/cleanup/cleanup';
 
 import { buildCleanupResultCategories, countSelectedCleanupGroups } from './cleanup-result-categories';
 

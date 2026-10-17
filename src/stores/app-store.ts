@@ -1,24 +1,24 @@
 import { defineStore } from 'pinia';
 
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { PAGE_IDS } from '@/lib/models/application-shell';
-import type { AppSettings } from '@/lib/models/settings';
-import type { DiskInfo } from '@/lib/models/disk';
-import type { PageId } from '@/lib/models/application-shell';
-import { DiskService } from '@/lib/services/disk-service';
-import { LanguageService } from '@/lib/services/language-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import { ThemeService } from '@/lib/services/theme-service';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as AppSettingsUtils from '@/lib/utils/app-settings';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { PAGE_IDS } from '@/lib/models/shell/application-shell';
+import type { AppSettings } from '@/lib/models/settings/settings';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { PageId } from '@/lib/models/shell/application-shell';
+import { DiskService } from '@/lib/services/storage/volume-service';
+import { LanguageService } from '@/lib/services/settings/language-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import { ThemeService } from '@/lib/services/settings/theme-service';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as AppSettingsUtils from '@/lib/utils/settings/app-settings';
 import {
   normalizeError,
   parseCommandError,
   parseCommandErrorReason,
   type CommandErrorCode,
   type CommandErrorReason,
-} from '@/lib/utils/error';
+} from '@/lib/utils/diagnostics/error';
 
 interface AppState {
   currentPage: PageId;

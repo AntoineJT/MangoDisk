@@ -4,8 +4,8 @@ import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { i18n } from '@/i18n';
-import type { DiskInfo } from '@/lib/models/disk';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 
 import MdSystemDiskUsage from './md-system-disk-usage.vue';
 

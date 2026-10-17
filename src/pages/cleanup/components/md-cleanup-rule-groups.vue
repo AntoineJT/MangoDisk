@@ -16,27 +16,30 @@ import MdResultTableHierarchy from '@/components/custom/md-result-table-hierarch
 import MdResultTableRow from '@/components/custom/md-result-table-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
-import type { ApplicationLeftoverCandidate, ApplicationLeftoverScanResult } from '@/lib/models/application';
+import type {
+  ApplicationLeftoverCandidate,
+  ApplicationLeftoverScanResult,
+} from '@/lib/models/applications/application';
 import {
   CLEANUP_RULE_IDS,
   type CleanupResultGroup,
   type CleanupSourceSelection,
   type PresentedScanRuleResult,
-} from '@/lib/models/cleanup';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ApplicationIconService } from '@/lib/services/application-icon-service';
-import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup-rule-selection';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
-import * as RenderBatchUtils from '@/lib/utils/render-batch';
+} from '@/lib/models/cleanup/cleanup';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
+import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup/cleanup-rule-selection';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
 import { applicationLeftoverGroupSelection, groupApplicationLeftovers } from '../application-leftover-groups';
 import { hasCleanupRuleDetails, isAggregateOnlyCleanupRule } from '../cleanup-rule-details';
 import { cleanupGroupIcon, cleanupRuleIcon } from '../cleanup-rule-icon';
 import { buildCleanupResultCategories, type CleanupResultCategory } from '../cleanup-result-categories';
 import MdAiAction from '@/layouts/components/md-ai-action.vue';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { cleanupAiContext } from '../cleanup-ai-context';
 import { useAiStore } from '@/stores/ai-store';
 

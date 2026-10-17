@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TrendPoint } from '@/lib/models/system-resources';
+import type { TrendPoint } from '@/lib/models/system-resources/system-resources';
 import MdResourceTrend from './md-resource-trend.vue';
 defineProps<{ history: TrendPoint[]; observedAtMs: number; active: boolean; label: string; identity: string }>();
 </script>

@@ -11,11 +11,11 @@ import MdSelectionActionBar from '@/components/custom/md-selection-action-bar.vu
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
 import MdResultSearch from '@/components/custom/md-result-search.vue';
 import MdCategoryFilter from '@/components/custom/md-category-filter.vue';
-import { AiService } from '@/lib/services/ai-service';
-import { ApplicationService } from '@/lib/services/application-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import { AiService } from '@/lib/services/ai/ai-service';
+import { ApplicationService } from '@/lib/services/applications/application-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { useAiStore } from '@/stores/ai-store';
-import type { ApplicationUninstallCandidate } from '@/lib/models/application';
+import type { ApplicationUninstallCandidate } from '@/lib/models/applications/application';
 import en from '@/locales/en-US.json';
 import Page from './index.vue';
 import Row from './components/md-application-uninstall-row.vue';

@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useResidentSettingsStore } from './resident-settings-store';
-import { ResidentService } from '@/lib/services/resident-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
 import { preferencesFixture } from '@/tests/fixtures/resident';
-import type { ResidentPreferences } from '@/lib/models/resident';
+import type { ResidentPreferences } from '@/lib/models/resident/resident';
 
-vi.mock('@/lib/services/resident-service', () => ({
+vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: { preferences: vi.fn(), savePreferences: vi.fn() },
 }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: vi.fn() } }));
 
 describe('resident preference transactions', () => {
   beforeEach(() => {

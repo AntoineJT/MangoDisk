@@ -1,6 +1,6 @@
 import { createI18n } from 'vue-i18n';
 
-import { LANGUAGE_IDS, type LanguageId } from '@/lib/models/settings';
+import { LANGUAGE_IDS, type LanguageId } from '@/lib/models/settings/settings';
 import enUS from '@/locales/modules/en-us';
 import jaJP from '@/locales/modules/ja-jp';
 import koKR from '@/locales/modules/ko-kr';

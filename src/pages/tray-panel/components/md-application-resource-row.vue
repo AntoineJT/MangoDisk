@@ -2,19 +2,19 @@
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { computed, ref, watch } from 'vue';
 import { useMemoryReleaseStore } from '@/stores/memory-release-store';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import { useI18n } from 'vue-i18n';
 import MdNativeFileIcon from '@/components/custom/md-native-file-icon.vue';
 import MdApplicationIcon from '@/components/custom/md-application-icon.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import type { ResourceListRow } from '@/lib/models/application-resource-list';
-import type { ApplicationQuitStatus } from '@/lib/models/resident';
-import type { ApplicationMemory, ApplicationCpu } from '@/lib/models/system-resources';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { ResidentService } from '@/lib/services/resident-service';
-import { FileManagerService } from '@/lib/services/file-manager-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import type { ResourceListRow } from '@/lib/models/system-resources/application-resource-list';
+import type { ApplicationQuitStatus } from '@/lib/models/resident/resident';
+import type { ApplicationMemory, ApplicationCpu } from '@/lib/models/system-resources/system-resources';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 
 const props = withDefaults(
   defineProps<{

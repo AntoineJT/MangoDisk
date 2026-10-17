@@ -1,15 +1,22 @@
 import { defineStore } from 'pinia';
 
-import { MAX_DIRECTORY_ENTRIES_PER_REQUEST } from '@/lib/models/folder-selection';
-import type { DiskInfo } from '@/lib/models/disk';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { STORAGE_SCOPE_IDS, type StorageScopeId, type StorageScopePreferences } from '@/lib/models/storage-scope';
-import { FolderSelectionService } from '@/lib/services/folder-selection-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import { StandardScanFolderService, type StandardScanFolder } from '@/lib/services/standard-scan-folder-service';
-import * as PathUtils from '@/lib/utils/path';
-import * as StorageScopePreferenceUtils from '@/lib/utils/storage-scope-preference';
+import { MAX_DIRECTORY_ENTRIES_PER_REQUEST } from '@/lib/models/storage/folder-selection';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import {
+  STORAGE_SCOPE_IDS,
+  type StorageScopeId,
+  type StorageScopePreferences,
+} from '@/lib/models/storage/storage-scope';
+import { FolderSelectionService } from '@/lib/services/storage/folder-selection-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import {
+  StandardScanFolderService,
+  type StandardScanFolder,
+} from '@/lib/services/storage/standard-scan-folder-service';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as StorageScopePreferenceUtils from '@/lib/utils/storage/storage-scope-preference';
 
 interface StorageScopeState extends StorageScopePreferences {
   initialized: boolean;

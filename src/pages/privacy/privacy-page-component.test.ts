@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'vue-sonner';
 
 import { i18n } from '@/i18n';
-import type { PrivacyExecutionPlan, PrivacyExecutionResult, PrivacyScanResult } from '@/lib/models/privacy';
+import type { PrivacyExecutionPlan, PrivacyExecutionResult, PrivacyScanResult } from '@/lib/models/privacy/privacy';
 import { useAppStore } from '@/stores/app-store';
 import { usePrivacyStore } from '@/stores/privacy-store';
 
@@ -26,11 +26,11 @@ const serviceMocks = vi.hoisted(() => ({
 
 vi.mock('vue-sonner', () => ({ toast: { warning: vi.fn(), success: vi.fn() } }));
 
-vi.mock('@/lib/services/privacy-service', () => ({ PrivacyService: serviceMocks }));
-vi.mock('@/lib/services/application-icon-service', () => ({
+vi.mock('@/lib/services/privacy/privacy-service', () => ({ PrivacyService: serviceMocks }));
+vi.mock('@/lib/services/applications/application-icon-service', () => ({
   ApplicationIconService: { resolveIncrementally: vi.fn().mockResolvedValue(new Map()) },
 }));
-vi.mock('@/lib/services/macos-permission-service', () => ({
+vi.mock('@/lib/services/settings/macos-permission-service', () => ({
   MacOsPermissionService: { isMacOs: () => false, openPrivacySettings: vi.fn() },
 }));
 

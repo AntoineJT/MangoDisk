@@ -8,7 +8,7 @@ import type {
   StartupCatalog,
   StartupChangeFailureReason,
   StartupChangeResult,
-} from '@/lib/models/startup';
+} from '@/lib/models/startup/startup';
 import en from '@/locales/en-US.json';
 import ja from '@/locales/ja-JP.json';
 import pt from '@/locales/pt-BR.json';

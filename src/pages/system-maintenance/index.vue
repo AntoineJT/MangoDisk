@@ -26,8 +26,8 @@ import type {
   SystemMaintenanceCategory,
   SystemMaintenanceItem,
   SystemMaintenanceJob,
-} from '@/lib/models/system-maintenance';
-import { ICON_NAMES, OPERATION_PROGRESS_CLOCK_INTERVAL_MS } from '@/lib/models/ui';
+} from '@/lib/models/system-maintenance/system-maintenance';
+import { ICON_NAMES, OPERATION_PROGRESS_CLOCK_INTERVAL_MS } from '@/lib/models/presentation/ui';
 import { useSystemMaintenanceStore } from '@/stores/system-maintenance-store';
 
 const { t, locale } = useI18n({ useScope: 'global' });

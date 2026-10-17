@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import type { MemoryPressure, MetricStatus } from '@/lib/models/system-resources';
+import type { MemoryPressure, MetricStatus } from '@/lib/models/system-resources/system-resources';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 

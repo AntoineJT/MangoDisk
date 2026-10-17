@@ -11,8 +11,8 @@ import ko from '@/locales/ko-KR.json';
 import ru from '@/locales/ru-RU.json';
 import pt from '@/locales/pt-BR.json';
 import tr from '@/locales/tr-TR.json';
-import { colorMetricLimit, colorMetricUnit, defaultColorRule } from '@/lib/models/resident-color-rules';
-import type { MetricColorRule } from '@/lib/models/resident-color-rules';
+import { colorMetricLimit, colorMetricUnit, defaultColorRule } from '@/lib/models/resident/resident-color-rules';
+import type { MetricColorRule } from '@/lib/models/resident/resident-color-rules';
 
 const locales = { en, zh, tw, ja, ko, ru, pt, tr };
 const wrappers: VueWrapper[] = [];

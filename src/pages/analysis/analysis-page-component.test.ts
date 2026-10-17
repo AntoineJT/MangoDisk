@@ -2,7 +2,7 @@
 
 import { flushPromises, mount, shallowMount } from '@vue/test-utils';
 import { defineComponent, h } from 'vue';
-import { AnalysisService } from '@/lib/services/analysis-service';
+import { AnalysisService } from '@/lib/services/storage/analysis-service';
 import { useAnalysisStore } from '@/stores/analysis-store';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';
 import MdAnalysisSunburst from './components/md-analysis-sunburst.vue';
@@ -11,7 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MdDelayedOperationWorkspace from '@/components/custom/md-delayed-operation-workspace.vue';
 import MdOperationProgress from '@/components/custom/md-operation-progress.vue';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
 import MdAnalysisBrowserToolbar from './components/md-analysis-browser-toolbar.vue';
 import MdAnalysisFolderPane from './components/md-analysis-folder-pane.vue';
 import MdAnalysisVisualPane from './components/md-analysis-visual-pane.vue';
@@ -19,11 +19,11 @@ import MdAnalysisScanButton from './components/md-analysis-scan-button.vue';
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
 import { i18n } from '@/i18n';
 import { Select } from '@/components/ui/select';
-import type { AnalysisDeleteResult, AnalysisResult } from '@/lib/models/analysis';
+import type { AnalysisDeleteResult, AnalysisResult } from '@/lib/models/storage/analysis';
 
 import AnalysisPage from './index.vue';
 import { useAppStore } from '@/stores/app-store';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
 
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: () => 'macos' }));
 

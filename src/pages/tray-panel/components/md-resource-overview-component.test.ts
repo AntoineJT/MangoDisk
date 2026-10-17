@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Overview from './md-resource-overview.vue';
-import { emptyReadings } from '@/lib/utils/system-resources';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 import en from '@/locales/en-US.json';
 import zh from '@/locales/zh-CN.json';
 import tw from '@/locales/zh-TW.json';
@@ -13,8 +13,8 @@ import pt from '@/locales/pt-BR.json';
 import ru from '@/locales/ru-RU.json';
 import tr from '@/locales/tr-TR.json';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-vi.mock('@/lib/services/byte-size-service', () => ({
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+vi.mock('@/lib/services/settings/byte-size-service', () => ({
   ByteSizeService: {
     bytes: (value: number) => `${value} B`,
     diskCapacity: (value: number) => `${value} B`,

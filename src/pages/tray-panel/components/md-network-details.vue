@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
-import { ResidentService } from '@/lib/services/resident-service';
-import { LoggerService } from '@/lib/services/logger-service';
+import { ResidentService } from '@/lib/services/resident/resident-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
 import { useTrayPanelStore } from '@/stores/tray-panel-store';
 import { useI18n } from 'vue-i18n';
-import type { ResourceReadings } from '@/lib/models/system-resources';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdResourceOverview from './md-resource-overview.vue';
 import MdResourceFacts from './md-resource-facts.vue';

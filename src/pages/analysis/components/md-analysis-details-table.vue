@@ -20,14 +20,14 @@ import MdIconAction from '@/components/custom/md-icon-action.vue';
 import MdResultTable from '@/components/custom/md-result-table.vue';
 import MdResultTableRow from '@/components/custom/md-result-table-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ANALYSIS_SORT_KEYS } from '@/lib/models/analysis';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { DirectoryEntryInfo } from '@/lib/models/analysis';
-import { SORT_DIRECTIONS } from '@/lib/models/sort';
-import * as AnalysisEntryUtils from '@/lib/utils/analysis-entry';
-import { type AnalysisSortKey, type SortDirection } from '@/lib/utils/analysis-entry';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+import { ANALYSIS_SORT_KEYS } from '@/lib/models/storage/analysis';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type { DirectoryEntryInfo } from '@/lib/models/storage/analysis';
+import { SORT_DIRECTIONS } from '@/lib/models/presentation/sort';
+import * as AnalysisEntryUtils from '@/lib/utils/storage/analysis-entry';
+import { type AnalysisSortKey, type SortDirection } from '@/lib/utils/storage/analysis-entry';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 

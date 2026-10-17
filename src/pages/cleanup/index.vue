@@ -15,30 +15,34 @@ import type {
   ApplicationLeftoverCandidate,
   ApplicationLeftoverResult,
   ApplicationLeftoverScanResult,
-} from '@/lib/models/application';
-import type { ApplicationCloseBatchResult, ApplicationCloseMode } from '@/lib/models/application-close';
+} from '@/lib/models/applications/application';
+import type { ApplicationCloseBatchResult, ApplicationCloseMode } from '@/lib/models/applications/application-close';
 import {
   CLEANUP_OPERATION_IDS,
   CLEANUP_SCAN_SCOPE_MODES,
   STANDARD_CLEANUP_SCAN_SCOPE,
   type CleanupScanScope,
   type CleanupSourceSelection,
-} from '@/lib/models/cleanup';
-import type { DiskInfo } from '@/lib/models/disk';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/macos-permissions';
-import type { CleanupOperationId, PresentedCleanupResult, PresentedCleanupScanResult } from '@/lib/models/cleanup';
-import type { TraversalProgress } from '@/lib/models/progress';
-import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup-rule-selection';
-import type { CleanupSelectionMode } from '@/lib/utils/cleanup-rule-selection';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { DiskService } from '@/lib/services/disk-service';
-import { FileManagerService } from '@/lib/services/file-manager-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { MacOsPermissionService } from '@/lib/services/macos-permission-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
+} from '@/lib/models/cleanup/cleanup';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/settings/macos-permissions';
+import type {
+  CleanupOperationId,
+  PresentedCleanupResult,
+  PresentedCleanupScanResult,
+} from '@/lib/models/cleanup/cleanup';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import * as CleanupRuleSelectionUtils from '@/lib/utils/cleanup/cleanup-rule-selection';
+import type { CleanupSelectionMode } from '@/lib/utils/cleanup/cleanup-rule-selection';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { DiskService } from '@/lib/services/storage/volume-service';
+import { FileManagerService } from '@/lib/services/filesystem/file-manager-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
 import { useCustomCleanupStore } from '@/stores/custom-cleanup-store';
 import { useCleanupStore } from '@/stores/cleanup-store';
 import { useAppStore } from '@/stores/app-store';

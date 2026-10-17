@@ -7,10 +7,10 @@ import MdDialogHeader from '@/components/custom/md-dialog-header.vue';
 import MdOperationResultDetails from '@/components/custom/md-operation-result-details.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { ApplicationLeftoverResult } from '@/lib/models/application';
-import type { PresentedCleanupResult } from '@/lib/models/cleanup';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
+import type { ApplicationLeftoverResult } from '@/lib/models/applications/application';
+import type { PresentedCleanupResult } from '@/lib/models/cleanup/cleanup';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const { t } = useI18n({ useScope: 'global' });
 

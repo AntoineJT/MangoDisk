@@ -8,8 +8,8 @@ import MdDialogHeader from '@/components/custom/md-dialog-header.vue';
 import MdOperationResultDetails from '@/components/custom/md-operation-result-details.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { PrivacyExecutionPlan, PrivacyExecutionResult } from '@/lib/models/privacy';
-import * as FormatUtils from '@/lib/utils/format';
+import type { PrivacyExecutionPlan, PrivacyExecutionResult } from '@/lib/models/privacy/privacy';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 const props = defineProps<{
   modelValue: boolean;

@@ -5,10 +5,10 @@ import MdCpuTemperature from './md-cpu-temperature.vue';
 import MdTemperatureDetails from './md-temperature-details.vue';
 import MdResourceOverview from './md-resource-overview.vue';
 import { useI18n } from 'vue-i18n';
-import { summarizeUtilizationHistory } from '@/lib/utils/utilization-history-summary';
-import type { ResourceReadings } from '@/lib/models/system-resources';
-import { METRIC_STATUS_KEYS } from '@/lib/models/system-resources';
-import { currentCpuTemperature } from '@/lib/utils/cpu-temperature';
+import { summarizeUtilizationHistory } from '@/lib/utils/system-resources/utilization-history-summary';
+import type { ResourceReadings } from '@/lib/models/system-resources/system-resources';
+import { METRIC_STATUS_KEYS } from '@/lib/models/system-resources/system-resources';
+import { currentCpuTemperature } from '@/lib/utils/system-resources/cpu-temperature';
 const props = withDefaults(
   defineProps<{
     reading: ResourceReadings;

@@ -32,19 +32,22 @@ import type {
   StartupChangeResult,
   StartupDesiredState,
   StartupOwnerGroup,
-} from '@/lib/models/startup';
-import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/macos-permissions';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ApplicationIconService } from '@/lib/services/application-icon-service';
-import { ClipboardService } from '@/lib/services/clipboard-service';
-import { MacOsPermissionService } from '@/lib/services/macos-permission-service';
-import { MacOsSystemSettingsService } from '@/lib/services/macos-system-settings-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { WindowsStartupToolService, type WindowsStartupTool } from '@/lib/services/windows-startup-tool-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as RenderBatchUtils from '@/lib/utils/render-batch';
+} from '@/lib/models/startup/startup';
+import { MACOS_PRIVACY_DESTINATION_IDS } from '@/lib/models/settings/macos-permissions';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
+import { ClipboardService } from '@/lib/services/shell/clipboard-service';
+import { MacOsPermissionService } from '@/lib/services/settings/macos-permission-service';
+import { MacOsSystemSettingsService } from '@/lib/services/system-settings/macos-system-settings-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import {
+  WindowsStartupToolService,
+  type WindowsStartupTool,
+} from '@/lib/services/startup/windows-startup-tool-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
 import { startupAiContext } from './startup-ai-context';
 import MdStartupRow from './components/md-startup-row.vue';

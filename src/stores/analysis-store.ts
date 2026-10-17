@@ -1,26 +1,26 @@
-import type { ScanNameExclusion } from '@/lib/models/storage-scan';
+import type { ScanNameExclusion } from '@/lib/models/storage/storage-scan';
 import { markRaw } from 'vue';
 import { defineStore } from 'pinia';
 
-import { ANALYSIS_RESULT_CACHE_LIMIT, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
-import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/telemetry';
+import { ANALYSIS_RESULT_CACHE_LIMIT, ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/storage/analysis';
+import { LOG_DOMAINS, LOG_EVENTS } from '@/lib/models/diagnostics/telemetry';
 import type {
   AnalysisResult,
   AnalysisScanMode,
   AnalysisViewId,
   AnalysisViewPreferences,
   DirectoryEntryInfo,
-} from '@/lib/models/analysis';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { AnalysisService } from '@/lib/services/analysis-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { PreferenceStorageService } from '@/lib/services/preference-storage-service';
-import * as AnalysisViewPreferenceUtils from '@/lib/utils/analysis-view-preference';
-import * as AnalysisCacheUtils from '@/lib/utils/analysis-cache';
-import * as PathUtils from '@/lib/utils/path';
-import { parseCommandError } from '@/lib/utils/error';
-import * as StorageScanPreferenceUtils from '@/lib/utils/storage-scan-preference';
+} from '@/lib/models/storage/analysis';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { AnalysisService } from '@/lib/services/storage/analysis-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { PreferenceStorageService } from '@/lib/services/settings/preference-storage-service';
+import * as AnalysisViewPreferenceUtils from '@/lib/utils/storage/analysis-view-preference';
+import * as AnalysisCacheUtils from '@/lib/utils/storage/analysis-cache';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import { parseCommandError } from '@/lib/utils/diagnostics/error';
+import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
 
 import { useAppStore } from './app-store';
 import { useStorageScanPreferencesStore } from './storage-scan-preferences-store';

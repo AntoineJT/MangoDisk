@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ScanNameExclusion } from '@/lib/models/storage-scan';
+import type { ScanNameExclusion } from '@/lib/models/storage/storage-scan';
 import { useI18n } from 'vue-i18n';
 import { computed, nextTick, onDeactivated, ref, watch } from 'vue';
 
@@ -9,18 +9,23 @@ import MdEmptyState from '@/components/custom/md-empty-state.vue';
 import MdOperationProgress from '@/components/custom/md-operation-progress.vue';
 import MdPageShell from '@/components/custom/md-page-shell.vue';
 import MdDestructiveActionDialog from '@/components/custom/md-destructive-action-dialog.vue';
-import { ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/analysis';
-import { STORAGE_SCOPE_IDS } from '@/lib/models/storage-scope';
-import { ICON_NAMES } from '@/lib/models/ui';
-import type { AnalysisResult, AnalysisScanMode, AnalysisViewId, DirectoryEntryInfo } from '@/lib/models/analysis';
-import type { DiskInfo } from '@/lib/models/disk';
-import type { TraversalProgress } from '@/lib/models/progress';
-import * as AnalysisBreadcrumbUtils from '@/lib/utils/analysis-breadcrumb';
-import * as DiskUtils from '@/lib/utils/disk';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import * as PathUtils from '@/lib/utils/path';
-import * as StorageScanPreferenceUtils from '@/lib/utils/storage-scan-preference';
+import { ANALYSIS_SCAN_MODES, ANALYSIS_VIEW_IDS } from '@/lib/models/storage/analysis';
+import { STORAGE_SCOPE_IDS } from '@/lib/models/storage/storage-scope';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import type {
+  AnalysisResult,
+  AnalysisScanMode,
+  AnalysisViewId,
+  DirectoryEntryInfo,
+} from '@/lib/models/storage/analysis';
+import type { DiskInfo } from '@/lib/models/storage/volume';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import * as AnalysisBreadcrumbUtils from '@/lib/utils/storage/analysis-breadcrumb';
+import * as DiskUtils from '@/lib/utils/storage/volume';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as StorageScanPreferenceUtils from '@/lib/utils/storage/storage-scan-preference';
 import { useStorageScanPreferencesStore } from '@/stores/storage-scan-preferences-store';
 import { useStorageScopeStore } from '@/stores/storage-scope-store';
 import { useAnalysisStore } from '@/stores/analysis-store';

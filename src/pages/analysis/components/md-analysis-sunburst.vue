@@ -4,12 +4,12 @@ import { useI18n } from 'vue-i18n';
 
 import MdFileEntryContextMenu from '@/components/custom/md-file-entry-context-menu.vue';
 import MdIconSunburst from '@/components/icons/md-icon-sunburst.vue';
-import type { AnalysisRemainderSelection, AnalysisResult, DirectoryEntryInfo } from '@/lib/models/analysis';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
-import * as SunburstLayoutUtils from '@/lib/utils/sunburst-layout';
-import type { SunburstSector } from '@/lib/utils/sunburst-layout';
+import type { AnalysisRemainderSelection, AnalysisResult, DirectoryEntryInfo } from '@/lib/models/storage/analysis';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as SunburstLayoutUtils from '@/lib/utils/presentation/sunburst-layout';
+import type { SunburstSector } from '@/lib/utils/presentation/sunburst-layout';
 
 const { t } = useI18n({ useScope: 'global' });
 const props = defineProps<{

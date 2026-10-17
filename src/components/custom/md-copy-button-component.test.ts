@@ -5,8 +5,8 @@ import { i18n } from '@/i18n';
 import MdCopyButton from './md-copy-button.vue';
 
 const mocks = vi.hoisted(() => ({ writeText: vi.fn(), error: vi.fn(), warn: vi.fn() }));
-vi.mock('@/lib/services/clipboard-service', () => ({ ClipboardService: { writeText: mocks.writeText } }));
-vi.mock('@/lib/services/logger-service', () => ({ LoggerService: { warn: mocks.warn } }));
+vi.mock('@/lib/services/shell/clipboard-service', () => ({ ClipboardService: { writeText: mocks.writeText } }));
+vi.mock('@/lib/services/diagnostics/logger-service', () => ({ LoggerService: { warn: mocks.warn } }));
 vi.mock('vue-sonner', () => ({ toast: { error: mocks.error } }));
 function mountButton(text = 'Visible answer', showText = false) {
   return mount(MdCopyButton, {

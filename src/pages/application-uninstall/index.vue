@@ -38,21 +38,21 @@ import type {
   ApplicationUninstallComponentSummary,
   ApplicationUninstallExecutionProgress,
   ApplicationUninstallScanResult,
-} from '@/lib/models/application';
+} from '@/lib/models/applications/application';
 import type {
   ApplicationCloseBatchResult,
   ApplicationCloseItem,
   ApplicationCloseMode,
-} from '@/lib/models/application-close';
-import type { TraversalProgress } from '@/lib/models/progress';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { ApplicationService } from '@/lib/services/application-service';
-import { ApplicationIconService } from '@/lib/services/application-icon-service';
-import { LoggerService } from '@/lib/services/logger-service';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import { OperatingSystemService } from '@/lib/services/operating-system-service';
-import { parseCommandError } from '@/lib/utils/error';
-import * as FormatUtils from '@/lib/utils/format';
+} from '@/lib/models/applications/application-close';
+import type { TraversalProgress } from '@/lib/models/presentation/progress';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { ApplicationService } from '@/lib/services/applications/application-service';
+import { ApplicationIconService } from '@/lib/services/applications/application-icon-service';
+import { LoggerService } from '@/lib/services/diagnostics/logger-service';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import { OperatingSystemService } from '@/lib/services/settings/operating-system-service';
+import { parseCommandError } from '@/lib/utils/diagnostics/error';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 
 import {
   displayedApplications,

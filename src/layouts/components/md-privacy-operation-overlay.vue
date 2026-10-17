@@ -5,9 +5,9 @@ import { useI18n } from 'vue-i18n';
 import MdConfirmDialog from '@/components/custom/md-confirm-dialog.vue';
 import MdOperationDialog from '@/components/custom/md-operation-dialog.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import type { PrivacyExecutionItemResult } from '@/lib/models/privacy';
-import { ICON_NAMES } from '@/lib/models/ui';
-import * as FormatUtils from '@/lib/utils/format';
+import type { PrivacyExecutionItemResult } from '@/lib/models/privacy/privacy';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import * as FormatUtils from '@/lib/utils/presentation/format';
 import { usePrivacyStore } from '@/stores/privacy-store';
 
 const emit = defineEmits<{ cancel: [] }>();

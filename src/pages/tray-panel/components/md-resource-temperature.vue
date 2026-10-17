@@ -3,15 +3,15 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
-import { ICON_NAMES } from '@/lib/models/ui';
-import { currentCpuTemperature } from '@/lib/utils/cpu-temperature';
-import { currentGpuTemperature } from '@/lib/utils/gpu-temperature';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
+import { currentCpuTemperature } from '@/lib/utils/system-resources/cpu-temperature';
+import { currentGpuTemperature } from '@/lib/utils/system-resources/gpu-temperature';
 import {
   METRIC_STATUS_KEYS,
   type CpuTemperature,
   type GpuTemperature,
   type MetricReading,
-} from '@/lib/models/system-resources';
+} from '@/lib/models/system-resources/system-resources';
 
 const props = withDefaults(
   defineProps<{

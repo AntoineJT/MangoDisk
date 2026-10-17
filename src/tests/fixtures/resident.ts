@@ -1,6 +1,6 @@
-import { defaultColorRules } from '@/lib/models/resident-color-rules';
-import type { ResidentPreferences, ResidentReading } from '@/lib/models/resident';
-import { emptyReadings } from '@/lib/utils/system-resources';
+import { defaultColorRules } from '@/lib/models/resident/resident-color-rules';
+import type { ResidentPreferences, ResidentReading } from '@/lib/models/resident/resident';
+import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 
 export function preferencesFixture(): ResidentPreferences {
   return {

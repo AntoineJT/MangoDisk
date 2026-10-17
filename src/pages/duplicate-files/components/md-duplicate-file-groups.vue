@@ -24,7 +24,7 @@ import MdResultTable from '@/components/custom/md-result-table.vue';
 import MdResultTableRow from '@/components/custom/md-result-table-row.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
 import { Button } from '@/components/ui/button';
-import { ICON_NAMES } from '@/lib/models/ui';
+import { ICON_NAMES } from '@/lib/models/presentation/ui';
 import {
   DUPLICATE_ENTRY_DELETE_POLICIES,
   DUPLICATE_GROUP_KINDS,
@@ -33,14 +33,14 @@ import {
   type DuplicateFileEntry,
   type DuplicateGroup,
   type DuplicateKeeperRuleId,
-} from '@/lib/models/duplicate-file';
-import { FILE_CATEGORY_IDS, type FileCategoryId } from '@/lib/models/file-category';
-import * as DuplicateFileSelectionUtils from '@/lib/utils/duplicate-file-selection';
-import * as DuplicateFileGroupUtils from '@/lib/utils/duplicate-file-group';
-import { ByteSizeService } from '@/lib/services/byte-size-service';
-import * as FormatUtils from '@/lib/utils/format';
-import * as PathUtils from '@/lib/utils/path';
-import * as RenderBatchUtils from '@/lib/utils/render-batch';
+} from '@/lib/models/storage/duplicate-file';
+import { FILE_CATEGORY_IDS, type FileCategoryId } from '@/lib/models/filesystem/file-category';
+import * as DuplicateFileSelectionUtils from '@/lib/utils/storage/duplicate-file-selection';
+import * as DuplicateFileGroupUtils from '@/lib/utils/storage/duplicate-file-group';
+import { ByteSizeService } from '@/lib/services/settings/byte-size-service';
+import * as FormatUtils from '@/lib/utils/presentation/format';
+import * as PathUtils from '@/lib/utils/filesystem/path';
+import * as RenderBatchUtils from '@/lib/utils/presentation/render-batch';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 
