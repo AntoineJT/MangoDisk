@@ -1,3 +1,5 @@
+use crate::system_inventory::SystemInventoryContext;
+
 use std::collections::{HashMap, HashSet};
 #[cfg(target_os = "macos")]
 use std::path::Path;
@@ -26,7 +28,7 @@ use crate::filesystem::permanent_delete::{
 use crate::shared::operation::OPERATION_CANCELLED_ERROR;
 use crate::{
     applications::{
-        catalog::{ProcessSnapshot, ScanContext},
+        catalog::ProcessSnapshot,
         process_control::{close_resolved_applications, ResolvedApplicationCloseTarget},
     },
     filesystem::metadata::display_path,
@@ -1453,7 +1455,7 @@ fn scan_without_guard(
     let platform_cancellation =
         PlatformCancellation::new(move || platform_cancellation_flag.load(Ordering::Relaxed));
     let (mut context, mut revision_before) =
-        ScanContext::capture_with_revision_and_cancellation(&platform_cancellation);
+        SystemInventoryContext::capture_with_revision_and_cancellation(&platform_cancellation);
     let mut inventory_elapsed_ms = inventory_started.elapsed().as_millis();
     ensure_scan_not_cancelled(&cancellation)?;
     if let Some(progress) = &progress {
@@ -1474,7 +1476,7 @@ fn scan_without_guard(
     // machine has no applications. A second mismatch still fails closed via
     // `inventory_complete` below and remains visible to the adapter.
     if should_retry_changed_inventory(
-        context.inventory.application_inventory_complete(),
+        context.inventory.applications.applications_complete(),
         processes.is_ok(),
         revision_before.as_deref(),
         revision_after.as_deref(),
@@ -1490,7 +1492,7 @@ fn scan_without_guard(
         }
         let retry_inventory_started = Instant::now();
         (context, revision_before) =
-            ScanContext::capture_with_revision_and_cancellation(&platform_cancellation);
+            SystemInventoryContext::capture_with_revision_and_cancellation(&platform_cancellation);
         inventory_elapsed_ms =
             inventory_elapsed_ms.saturating_add(retry_inventory_started.elapsed().as_millis());
         ensure_scan_not_cancelled(&cancellation)?;
@@ -1516,11 +1518,11 @@ fn scan_without_guard(
     let candidate_build_started = Instant::now();
     let catalog_stable = revision_before.is_some() && revision_before == revision_after;
     let process_snapshot_complete = processes.is_ok();
-    let inventory_complete = context.inventory.application_inventory_complete()
+    let inventory_complete = context.inventory.applications.applications_complete()
         && catalog_stable
         && process_snapshot_complete;
     let catalog_actionable = catalog_is_actionable(
-        context.inventory.application_inventory_complete(),
+        context.inventory.applications.applications_complete(),
         catalog_stable,
         process_snapshot_complete,
     );
@@ -1528,7 +1530,7 @@ fn scan_without_guard(
     // A partial macOS inventory can still contain verified application
     // bundles. Exclude unreadable bundles while preserving the normal
     // uninstall behavior of every candidate whose identity can be verified.
-    let installed_applications = context.inventory.installed_applications();
+    let installed_applications = context.inventory.applications.installed_applications();
     let self_excluded_count = installed_applications
         .iter()
         .filter(|application| is_current_application(application))

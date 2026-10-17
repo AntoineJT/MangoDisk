@@ -1,10 +1,10 @@
 use super::*;
 use crate::{
-    applications::catalog::ScanContext,
     cleanup::{
         source_selection::SourceSelectionPolicy, CleanupSourceSelection, CleanupSourceSelectionMode,
     },
     shared::operation::{test_operation_lock, CoordinatedOperationKind},
+    system_inventory::SystemInventoryContext,
 };
 
 struct CacheFixture {
@@ -12,7 +12,7 @@ struct CacheFixture {
     home: PathBuf,
     cache_root: PathBuf,
     candidates: Vec<CacheCandidate>,
-    inventory: ApplicationInventory,
+    inventory: SystemInventorySnapshot,
 }
 
 impl CacheFixture {
@@ -44,7 +44,7 @@ impl CacheFixture {
             home,
             cache_root,
             candidates,
-            inventory: ScanContext::empty().inventory,
+            inventory: SystemInventoryContext::empty().inventory,
         }
     }
 

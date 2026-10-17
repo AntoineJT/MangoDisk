@@ -1,4 +1,5 @@
 use crate::filesystem::ScanExclusionOptions;
+use crate::system_inventory::SystemInventoryContext;
 use std::{
     collections::{HashMap, HashSet},
     path::Path,
@@ -19,7 +20,7 @@ use crate::{
 
 use crate::{
     applications::{
-        catalog::{ProcessSnapshot, ScanContext},
+        catalog::ProcessSnapshot,
         process_control::{close_resolved_applications, ResolvedApplicationCloseTarget},
     },
     cleanup::applicability::{evaluate_rule, rule_requires_process, Applicability},
@@ -256,9 +257,11 @@ impl CleanupService {
                 if crate::applications::process_control::requires_exact_close_identity(
                     &rule.required_stopped_processes,
                 ) {
-                    let context = close_inventory.get_or_insert_with(ScanContext::capture);
+                    let context =
+                        close_inventory.get_or_insert_with(SystemInventoryContext::capture);
                     context
                         .inventory
+                        .applications
                         .application_executable_paths_for_identifiers(
                             &super::applicability::cleanup_rule_application_identifiers(
                                 &rule.applicability,
@@ -564,9 +567,9 @@ impl CleanupService {
         let mut progress = ExecutionProgressReporter::new(planned_rule_ids, progress);
         let validation_started = Instant::now();
         let applicability_context = if include_standard_rules {
-            ScanContext::capture()
+            SystemInventoryContext::capture()
         } else {
-            ScanContext::empty()
+            SystemInventoryContext::empty()
         };
         let applicability_process_snapshot = if rules.iter().any(rule_requires_process) {
             match ProcessSnapshot::capture() {

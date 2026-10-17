@@ -9,6 +9,8 @@ mod reporting;
 mod shared;
 mod startup;
 mod storage;
+mod system_capabilities;
+pub(crate) mod system_inventory;
 mod system_maintenance;
 pub mod system_resources;
 mod system_settings;

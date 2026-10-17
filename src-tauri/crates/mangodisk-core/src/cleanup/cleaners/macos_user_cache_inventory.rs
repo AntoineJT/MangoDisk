@@ -10,7 +10,7 @@ use std::{
 use mangodisk_platform::{current_platform, Platform, ScanPurpose};
 
 use crate::{
-    applications::catalog::{ApplicationInventory, ProcessSnapshot},
+    applications::catalog::ProcessSnapshot,
     cleanup::rules::root_validation::validate_automatic_cleanup_root,
     cleanup::source_selection::SourceScope,
     cleanup::{
@@ -26,6 +26,7 @@ use crate::{
         permanent_delete::{delete_path_permanently, prepare_path_for_permanent_delete},
     },
     shared::operation::OperationGuard,
+    system_inventory::SystemInventorySnapshot,
 };
 
 pub(super) const CLEANER_ID: &str = "special.additional-user-caches";
@@ -57,7 +58,7 @@ struct Discovery {
 }
 
 struct CacheValidationContext<'a> {
-    inventory: &'a ApplicationInventory,
+    inventory: &'a SystemInventorySnapshot,
     processes: &'a ProcessSnapshot,
     declared_roots: &'a [PathBuf],
     home: &'a Path,
@@ -65,7 +66,7 @@ struct CacheValidationContext<'a> {
 }
 
 struct SandboxDiscoveryContext<'a> {
-    inventory: &'a ApplicationInventory,
+    inventory: &'a SystemInventorySnapshot,
     processes: &'a ProcessSnapshot,
     declared_roots: &'a [PathBuf],
     is_cancelled: &'a (dyn Fn() -> bool + Sync),
@@ -74,7 +75,7 @@ struct SandboxDiscoveryContext<'a> {
 }
 
 pub(super) fn preview(
-    inventory: &ApplicationInventory,
+    inventory: &SystemInventorySnapshot,
     declared_roots: &[PathBuf],
     is_cancelled: &(dyn Fn() -> bool + Sync),
     report_path: &(dyn Fn(&Path) + Sync),
@@ -216,7 +217,7 @@ fn limited_rule_with_elapsed(elapsed_ms: u64) -> ScanRuleResult {
 }
 
 pub(super) fn execute(
-    inventory: &ApplicationInventory,
+    inventory: &SystemInventorySnapshot,
     declared_roots: &[PathBuf],
     source_scope: Option<&SourceScope>,
     dry_run: bool,
@@ -432,7 +433,7 @@ fn log_candidate_failure(
 }
 
 fn discover(
-    inventory: &ApplicationInventory,
+    inventory: &SystemInventorySnapshot,
     processes: &ProcessSnapshot,
     declared_roots: &[PathBuf],
     is_cancelled: &(dyn Fn() -> bool + Sync),
@@ -677,11 +678,11 @@ fn overlaps_declared_root(candidate: &Path, declared_roots: &[PathBuf]) -> bool 
 
 fn cache_is_active(
     cache_name: &str,
-    inventory: &ApplicationInventory,
+    inventory: &SystemInventorySnapshot,
     processes: &ProcessSnapshot,
 ) -> bool {
     let mut names = vec![cache_name.to_string()];
-    for application in inventory.installed_applications() {
+    for application in inventory.applications.installed_applications() {
         if application.name.eq_ignore_ascii_case(cache_name)
             || application
                 .identifiers
@@ -880,7 +881,7 @@ mod tests {
             fingerprint: "reviewed".into(),
         };
         replace_last_preview(Some(vec![candidate])).unwrap();
-        let context = crate::applications::catalog::ScanContext::empty();
+        let context = crate::system_inventory::SystemInventoryContext::empty();
         for _ in 0..2 {
             let operation =
                 OperationGuard::start(crate::shared::operation::CoordinatedOperationKind::Cleanup)
@@ -1021,7 +1022,7 @@ mod tests {
     #[ignore = "reads the current user's real cache directory without modifying it"]
     fn real_preview_and_dry_run_preserve_all_reviewed_cache_directories() {
         let _operation_lock = crate::shared::operation::test_operation_lock();
-        let context = crate::applications::catalog::ScanContext::capture();
+        let context = crate::system_inventory::SystemInventoryContext::capture();
         let declared_roots = crate::cleanup::rules::registry()
             .expect("the rule catalog should compile")
             .into_iter()

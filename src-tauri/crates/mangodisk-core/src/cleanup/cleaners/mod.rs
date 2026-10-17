@@ -35,13 +35,13 @@ use std::{
 
 use crate::{
     applications::binary_optimization::macos_universal_binaries,
-    applications::catalog::ApplicationInventory,
     cleanup::{
         exclusions::CleanupExclusions, source_selection::SourceSelectionPolicy, CleanupActionKind,
         CleanupActionReason, CleanupActionResult, CleanupActionStatus, CleanupCategory,
         CleanupGroup, RiskLevel, ScanItemStatus, ScanRuleResult,
     },
     shared::operation::OperationGuard,
+    system_inventory::SystemInventorySnapshot,
 };
 use mangodisk_platform::ControlledExecutable;
 
@@ -54,7 +54,7 @@ static CLEANERS: [&dyn CleanupCleaner; 2] = [&CONDA_CACHE_CLEANER, &DOCKER_BUILD
 
 pub(crate) struct CleanerExecutionRequest<'a> {
     pub(crate) rule_ids: &'a [String],
-    pub(crate) inventory: &'a ApplicationInventory,
+    pub(crate) inventory: &'a SystemInventorySnapshot,
     pub(crate) declared_roots: &'a [PathBuf],
     pub(crate) project_roots: &'a [String],
     pub(crate) selected_volume_scope: bool,
@@ -65,7 +65,7 @@ pub(crate) struct CleanerExecutionRequest<'a> {
 }
 
 pub(super) struct CleanerPreviewRequest<'a> {
-    pub(super) inventory: &'a ApplicationInventory,
+    pub(super) inventory: &'a SystemInventorySnapshot,
     pub(super) declared_roots: &'a [PathBuf],
     pub(super) project_roots: &'a [String],
     pub(super) deep_project_discovery: bool,
@@ -108,15 +108,15 @@ trait CleanupCleaner: Send + Sync {
 
     fn preview_for_inventory(
         &self,
-        inventory: &ApplicationInventory,
+        inventory: &SystemInventorySnapshot,
         is_cancelled: &(dyn Fn() -> bool + Sync),
     ) -> ScanRuleResult {
         let started = Instant::now();
-        let Some(executable) = inventory.executable(self.executable_aliases()) else {
+        let Some(executable) = inventory.capabilities.executable(self.executable_aliases()) else {
             return self.to_scan_rule(CleanerPreview {
                 // A missing executable is definitive only when inventory capture
                 // completed. Partial inventory must fail closed as Limited.
-                status: if inventory.executable_inventory_complete() {
+                status: if inventory.capabilities.executable_inventory_complete() {
                     CleanerPreviewStatus::NotApplicable
                 } else {
                     CleanerPreviewStatus::Limited
@@ -131,11 +131,11 @@ trait CleanupCleaner: Send + Sync {
 
     fn execute_for_inventory(
         &self,
-        inventory: &ApplicationInventory,
+        inventory: &SystemInventorySnapshot,
         dry_run: bool,
         operation: &OperationGuard,
     ) -> CleanupActionResult {
-        let Some(executable) = inventory.executable(self.executable_aliases()) else {
+        let Some(executable) = inventory.capabilities.executable(self.executable_aliases()) else {
             return CleanupActionResult {
                 rule_id: self.id().to_string(),
                 action_kind: CleanupActionKind::Command,
@@ -506,7 +506,7 @@ fn windows_system_cleaner_contains(_id: &str) -> bool {
 #[cfg(test)]
 pub(crate) fn execute_selected(
     ids: &[String],
-    inventory: &ApplicationInventory,
+    inventory: &SystemInventorySnapshot,
     declared_roots: &[PathBuf],
     project_roots: &[String],
     source_selections: &SourceSelectionPolicy,
@@ -920,7 +920,7 @@ mod tests {
     #[ignore = "requires Docker with a running local daemon"]
     fn real_docker_preview_and_dry_run_do_not_delete() {
         let _operation_lock = crate::shared::operation::test_operation_lock();
-        let context = crate::applications::catalog::ScanContext::capture();
+        let context = crate::system_inventory::SystemInventoryContext::capture();
         let cancellation = mangodisk_platform::PlatformCancellation::new(|| false);
         let rules = preview_all(CleanerPreviewRequest {
             inventory: &context.inventory,
@@ -975,7 +975,7 @@ mod tests {
     #[ignore = "requires Conda installed on the test host"]
     fn real_conda_preview_and_dry_run_do_not_delete() {
         let _operation_lock = crate::shared::operation::test_operation_lock();
-        let context = crate::applications::catalog::ScanContext::capture();
+        let context = crate::system_inventory::SystemInventoryContext::capture();
         let cancellation = mangodisk_platform::PlatformCancellation::new(|| false);
         let rules = preview_all(CleanerPreviewRequest {
             inventory: &context.inventory,

@@ -6,7 +6,6 @@ use std::{
 use mangodisk_platform::{current_platform, Platform};
 
 use crate::{
-    applications::catalog::ScanContext,
     history::{
         summarize_deep_cleanup, ApplicationLeftoverOperationDetails, DeepCleanupOperationDetails,
         HistoryService,
@@ -15,6 +14,7 @@ use crate::{
         operation::{CoordinatedOperationKind, OperationCancellationToken, OperationGuard},
         CoreError, CoreResult,
     },
+    system_inventory::SystemInventoryContext,
 };
 
 #[cfg(target_os = "macos")]
@@ -321,7 +321,7 @@ impl ApplicationLeftoverService {
 fn scan_without_guard() -> Result<InternalScan, String> {
     let started = Instant::now();
     let revision_before = current_platform().system_inventory_revision().ok();
-    let context = ScanContext::capture();
+    let context = SystemInventoryContext::capture();
     #[cfg(target_os = "macos")]
     let (processes, processes_complete) = match ProcessSnapshot::capture() {
         Ok(processes) => (processes, true),
@@ -337,7 +337,7 @@ fn scan_without_guard() -> Result<InternalScan, String> {
     let processes_complete = true;
     let revision_after = current_platform().system_inventory_revision().ok();
     let stable_inventory = revision_before.is_some() && revision_before == revision_after;
-    let inventory_complete = context.inventory.application_inventory_complete()
+    let inventory_complete = context.inventory.applications.applications_complete()
         && stable_inventory
         && processes_complete;
 
