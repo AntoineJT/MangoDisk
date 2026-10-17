@@ -21,6 +21,19 @@ application termination, or memory-reclamation algorithms.
 | Vue resident settings store | Serialized optimistic edits and rollback to committed preferences |
 | Vue settings / tray panel | Configuration preview and presentation of actual readings |
 
+## Validation
+
+`pnpm rust:test:desktop` builds the required desktop helper and runs the desktop
+host's library tests, including resident preference migrations, native display
+calculations, sampling demand and publication ordering. `pnpm rust:test` includes
+this entry point, so `pnpm check` and `pnpm build` also execute the host tests.
+Core tests remain responsible for resource calculations and memory use cases.
+
+Display formatting and preference decoding remain desktop-owned pure modules.
+They do not depend on a running Tauri application, and they do not move native
+UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
+and native presentation remain explicit desktop adapters.
+
 ## Contracts and cadence
 
 Fresh installations enable resident display with Logo, CPU and memory selected;

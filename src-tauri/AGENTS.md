@@ -64,6 +64,7 @@ For Rust changes, run:
 pnpm rust:fmt:check
 pnpm rust:clippy
 pnpm rust:check
+pnpm rust:test:desktop
 cargo test --manifest-path src-tauri/Cargo.toml -p mangodisk-core
 ```
 
