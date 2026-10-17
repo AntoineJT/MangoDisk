@@ -160,7 +160,7 @@ pub fn run() {
             Some(vec![resident::main_window::BACKGROUND_ARGUMENT]),
         ))
         .manage(ApplicationUninstallCatalogCache::default())
-        .manage(commands::ai::AiRuntime::default())
+        .manage(services::ai_runtime::AiRuntime::default())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(
