@@ -12,7 +12,10 @@ application termination, or memory-reclamation algorithms.
 | Core `system_resources` | CPU/network/disk I/O deltas, selection policy, freshness, bounded trends and memory use cases |
 | `sampling_workers` / `sampling_schedule` | Bounded overview workers, demand, deadlines and generation checks |
 | `process_cpu_sampling` | Independent application CPU cadence and coalesced immediate refresh |
-| `runtime` | Cached snapshots, status transitions and sampling coordination |
+| `runtime` | Tauri-managed desktop state and application lifecycle wiring |
+| `runtime/demand` | Sampling demand derived from committed preferences and panel visibility |
+| `runtime/coordinator` | Worker scheduling, generation checks, expiry and publication cadence |
+| `runtime/observation` | Accepted observation application and bounded CPU/GPU recovery state |
 | `presentation` | Bounded, coalesced visible-window publication and native display updates |
 | `tray_display/display_entry` | Native display models shared by the tray, menu bar, taskbar and panel |
 | `tray_display/display`, `format`, `temperature`, `power`, `fan` | Pure display assembly, numeric formatting and source-aware metric presentation |
@@ -73,15 +76,19 @@ versions are rejected for writes. Memory snapshots use version 4; release result
 CPU overview samples every 2 seconds on both platforms, whether visible or hidden. Memory samples every
 3 seconds, network every 1 and disk every 30.
 Their freshness limits are respectively 5, 10, 5 and 90 seconds. CPU, memory, network and disk remain active while resident display is enabled,
-regardless of native selections or panel visibility. GPU acquires its reader only
-while selected for native display or while the panel is open; unselected hidden
-GPU monitoring has no native sampling cost. Disabling resident mode stops periodic collection;
-explicit device-catalogue requests may still read network and disk metadata.
+regardless of native selections or panel visibility. On macOS and Windows, GPU
+usage and temperature sampling also remain active while resident mode is enabled,
+so hiding the panel or changing display selections does not interrupt histories.
+On other platforms, GPU demand follows native display selection and panel visibility.
+Disabling resident mode stops its overview demand. On Windows, explicit CPU
+temperature consent can independently keep CPU sampling active. Explicit
+device-catalogue requests may still read network and disk metadata.
 Each overview worker creates its native reader only when demanded and drops it on
 the same worker after demand stops and any in-flight query finishes. This releases
 memory-process metadata, Windows network-change subscriptions, and CPU counters.
 Re-enabling reacquires readers; hiding the panel preserves demanded readers and cached
-rankings, releasing GPU resources when its native display is unselected. Resource acquisition/release logs record transitions rather than samples.
+rankings. Detailed GPU observations follow the selected panel page, independently
+of the overview reader's demand. Resource acquisition/release logs record transitions rather than samples.
 The panel has an overview of all five base readings on macOS/Windows (four on Linux),
 with CPU, GPU, memory, disk and network detail pages on macOS/Windows. All pages retain
 a uniform 610 logical-pixel height.

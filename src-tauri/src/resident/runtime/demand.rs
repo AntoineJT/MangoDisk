@@ -1,0 +1,83 @@
+//! Desktop demand policy derived from committed preferences and panel visibility.
+use super::ResidentState;
+use crate::resident::sampling_schedule::Demand;
+use mangodisk_core::system_resources::metrics::MetricId;
+use std::sync::atomic::Ordering;
+
+impl ResidentState {
+    pub(super) fn disk_activity_demand(&self) -> Demand {
+        Demand {
+            // I/O history must survive closing the popup and switching tabs.
+            // Read lightweight counters while resident mode is enabled; detailed
+            // memory process enumeration remains restricted to its detail panel.
+            active: self.enabled(),
+            ..Default::default()
+        }
+    }
+
+    pub(super) fn cpu_processes_visible(&self) -> bool {
+        self.panel_open.load(Ordering::Relaxed)
+            && *self.panel_metric.lock().unwrap_or_else(|e| e.into_inner()) == MetricId::Cpu
+    }
+
+    pub(super) fn demands(&self, warm_icons: bool) -> [Demand; 5] {
+        let preferences = self
+            .preferences
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let panel_open = self.panel_open.load(Ordering::Relaxed);
+        let selected = *self
+            .panel_metric
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let catalogue = self.catalogue.load(Ordering::Relaxed);
+        // Keep usage and temperature histories continuous while resident monitoring
+        // is enabled. Display choices and panel visibility only affect presentation.
+        let gpu_sampling = preferences.enabled
+            && (cfg!(any(target_os = "macos", windows))
+                || preferences.shows(MetricId::Gpu)
+                || panel_open);
+        // Display selection must not interrupt real temperature history. Windows
+        // requires explicit capability consent even when resident display is hidden.
+        let temperature_sampling = (cfg!(windows) && preferences.windows_cpu_temperature_enabled)
+            || (cfg!(target_os = "macos") && preferences.enabled);
+        MetricId::ALL.map(|metric| Demand {
+            fan_speed: metric == MetricId::Cpu
+                && preferences.enabled
+                && preferences.shows_fan_speed(),
+            system_power: metric == MetricId::Cpu
+                && preferences.enabled
+                && preferences.shows_system_power(),
+            battery: metric == MetricId::Cpu && preferences.enabled && preferences.shows_battery(),
+            temperature: (preferences.enabled
+                && metric == MetricId::Disk
+                && (preferences.shows_disk_temperature()
+                    || (cfg!(any(target_os = "macos", windows))
+                        && panel_open
+                        && selected == MetricId::Disk)))
+                || (temperature_sampling && metric == MetricId::Cpu)
+                || (gpu_sampling
+                    && cfg!(any(target_os = "macos", windows))
+                    && metric == MetricId::Gpu),
+            active: (preferences.enabled && metric != MetricId::Gpu)
+                || (metric == MetricId::Cpu && temperature_sampling)
+                || (metric == MetricId::Gpu && gpu_sampling)
+                || (metric == MetricId::Network && catalogue & 1 != 0)
+                || (metric == MetricId::Disk && catalogue & 2 != 0)
+                || (metric == MetricId::Gpu && catalogue & 4 != 0),
+            detailed: preferences.enabled
+                && ((metric == MetricId::Memory
+                    && ((panel_open && selected == metric) || warm_icons))
+                    || (matches!(metric, MetricId::Cpu | MetricId::Gpu | MetricId::Disk)
+                        && panel_open
+                        && selected == metric)),
+            catalogue_only: metric == MetricId::Gpu && !gpu_sampling,
+            selection: match metric {
+                MetricId::Network => preferences.network_interface.clone(),
+                MetricId::Disk => preferences.disk_volume.clone(),
+                MetricId::Gpu => preferences.gpu_adapter.clone(),
+                _ => None,
+            },
+        })
+    }
+}
