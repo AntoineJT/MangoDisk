@@ -2,9 +2,7 @@ use crate::filesystem::ScanExclusionOptions;
 use std::time::Instant;
 
 use crate::{
-    filesystem::{
-        metadata::diagnostic_path, permanent_delete::delete_analysis_candidate_permanently,
-    },
+    filesystem::metadata::diagnostic_path,
     shared::{
         operation::{CoordinatedOperationKind, OperationGuard},
         CoreResult, TraversalProgress,
@@ -160,7 +158,7 @@ impl AnalysisService {
             scan_mode.as_str(),
             if is_directory { "directory" } else { "file" }
         );
-        let mut outcome = match delete_analysis_candidate_permanently(candidate) {
+        let mut outcome = match super::deletion::delete_candidate(candidate) {
             Ok(outcome) => outcome,
             Err(error) => {
                 if error.is_partial() {
