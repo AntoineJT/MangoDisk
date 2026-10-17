@@ -1,3 +1,4 @@
+pub(crate) mod atomic_replace;
 pub(crate) mod exclusion_paths;
 mod scan_exclusions;
 pub use scan_exclusions::ScanExclusionOptions;
