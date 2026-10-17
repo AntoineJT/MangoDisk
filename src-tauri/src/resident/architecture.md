@@ -21,7 +21,10 @@ application termination, or memory-reclamation algorithms.
 | `tray_display/display`, `format`, `temperature`, `power`, `fan` | Pure display assembly, numeric formatting and source-aware metric presentation |
 | `tray_display/color_state` | Pure, source-aware color hysteresis shared by native displays |
 | Other `tray_display` modules | Localization, native entries and Windows bitmap ownership |
-| `taskbar_display` | Windows native window, shell geometry, task-button space lease, painting and fallback |
+| `taskbar_display` | Windows shell geometry, task-button space lease, painting primitives and fallback |
+| `taskbar_display/native` | Native-thread window ownership, creation and shell restart lifecycle |
+| `taskbar_display/native/messages`, `interaction` | Reentrant Win32 dispatch, pointer hit testing and context menus |
+| `taskbar_display/native/update`, `rendering` | Live placement, lease coordination, visibility and native paint recovery |
 | `preference_schema` / `preference_schema/migrations` | Desktop preference models, normalization and backward-compatible pure decoding |
 | `preferences` | Revision conflicts, native application and persistence rollback |
 | `panel` / `main_window` | Independent presentation, source anchoring, focus and background-launch behavior |
