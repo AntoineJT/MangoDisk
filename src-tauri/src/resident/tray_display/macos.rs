@@ -1,6 +1,6 @@
 //! Retina-aware native image rendering. Keep AppKit work on Tauri's main thread.
 use super::{
-    format::DisplayEntry,
+    display_entry::DisplayEntry,
     macos_presentation::{self, Column},
 };
 use block2::RcBlock;
@@ -90,7 +90,7 @@ fn image(columns: Vec<Column>, icon: bool, dark: bool, compact: bool) -> Retaine
             x = 18.0 + macos_presentation::gap(compact) as f64;
         }
         for column in &columns {
-            if column.id == super::format::DisplayId::Upload {
+            if column.id == super::display_entry::DisplayId::Upload {
                 let rate = macos_presentation::rate_layout(compact);
                 // Direction remains explicit for users who cannot distinguish the colors.
                 text(
@@ -299,7 +299,7 @@ mod tests {
             power_state: None,
             fan_rows: None,
             color_value: None,
-            id: super::super::format::DisplayId::Cpu,
+            id: super::super::display_entry::DisplayId::Cpu,
             digits: "100".into(),
             marker: "C".into(),
             text: String::new(),
@@ -311,7 +311,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let width = macos_presentation::columns(
                 &[DisplayEntry {
-                    id: super::super::format::DisplayId::DiskTemperature,
+                    id: super::super::display_entry::DisplayId::DiskTemperature,
                     ..entry.clone()
                 }],
                 compact,
@@ -329,7 +329,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let column = macos_presentation::columns(
                 &[DisplayEntry {
-                    id: super::super::format::DisplayId::ChargingPower,
+                    id: super::super::display_entry::DisplayId::ChargingPower,
                     ..entry.clone()
                 }],
                 compact,
@@ -353,7 +353,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let column = macos_presentation::columns(
                 &[DisplayEntry {
-                    id: super::super::format::DisplayId::FanSpeed,
+                    id: super::super::display_entry::DisplayId::FanSpeed,
                     ..entry.clone()
                 }],
                 compact,
@@ -368,9 +368,9 @@ mod tests {
         for compact in [false, true] {
             let column = macos_presentation::columns(
                 &[DisplayEntry {
-                    id: super::super::format::DisplayId::FanSpeed,
+                    id: super::super::display_entry::DisplayId::FanSpeed,
                     fan_rows: Some(["F1 0", "F10 30000"].map(|text| {
-                        crate::resident::tray_display::format::FanRow {
+                        crate::resident::tray_display::display_entry::FanRow {
                             id: 0,
                             text: text.into(),
                             color_value: None,
@@ -391,7 +391,7 @@ mod tests {
             for heading in ["FMAX", "FAVG", "FAN 10"] {
                 let single = macos_presentation::columns(
                     &[DisplayEntry {
-                        id: super::super::format::DisplayId::FanSpeed,
+                        id: super::super::display_entry::DisplayId::FanSpeed,
                         ..entry.clone()
                     }],
                     compact,
@@ -405,7 +405,7 @@ mod tests {
             for digits in ["0", "<1", "999", "1000", "3000", "—"] {
                 let width = macos_presentation::columns(
                     &[DisplayEntry {
-                        id: super::super::format::DisplayId::SystemPower,
+                        id: super::super::display_entry::DisplayId::SystemPower,
                         digits: digits.into(),
                         ..entry.clone()
                     }],

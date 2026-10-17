@@ -1,5 +1,5 @@
 //! Compact menu-bar geometry for native rendering.
-use super::format::{DisplayEntry, DisplayId};
+use super::display_entry::{DisplayEntry, DisplayId};
 use serde::Serialize;
 
 #[cfg(any(target_os = "macos", test))]
@@ -236,15 +236,14 @@ mod tests {
                 ["F1 —", "F2 —"],
                 ["F9 30000", "F10 30000"],
             ] {
-                fan.fan_rows =
-                    Some(
-                        [0, 1].map(|index| crate::resident::tray_display::format::FanRow {
-                            id: index as u8,
-                            text: rows[index].into(),
-                            color_value: None,
-                            tone: Default::default(),
-                        }),
-                    );
+                fan.fan_rows = Some([0, 1].map(|index| {
+                    crate::resident::tray_display::display_entry::FanRow {
+                        id: index as u8,
+                        text: rows[index].into(),
+                        color_value: None,
+                        tone: Default::default(),
+                    }
+                }));
                 let pair = columns(&[fan.clone()], compact);
                 assert_eq!(pair.len(), 1);
                 assert_eq!(pair[0].fan_tones, Some([Default::default(); 2]));

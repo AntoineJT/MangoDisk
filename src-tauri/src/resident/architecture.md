@@ -14,7 +14,10 @@ application termination, or memory-reclamation algorithms.
 | `process_cpu_sampling` | Independent application CPU cadence and coalesced immediate refresh |
 | `runtime` | Cached snapshots, status transitions and sampling coordination |
 | `presentation` | Bounded, coalesced visible-window publication and native display updates |
-| `tray_display` | Shared formatting, localization, native entries and Windows bitmap ownership |
+| `tray_display/display_entry` | Native display models shared by the tray, menu bar, taskbar and panel |
+| `tray_display/display`, `format`, `temperature`, `power`, `fan` | Pure display assembly, numeric formatting and source-aware metric presentation |
+| `tray_display/color_state` | Pure, source-aware color hysteresis shared by native displays |
+| Other `tray_display` modules | Localization, native entries and Windows bitmap ownership |
 | `taskbar_display` | Windows native window, shell geometry, task-button space lease, painting and fallback |
 | `preference_schema` / `preference_schema/migrations` | Desktop preference models, normalization and backward-compatible pure decoding |
 | `preferences` | Revision conflicts, native application and persistence rollback |

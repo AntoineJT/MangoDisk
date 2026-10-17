@@ -252,7 +252,7 @@ fn tray_owns_focus(app: &tauri::AppHandle) -> bool {
     let Ok(cursor) = window.cursor_position() else {
         return false;
     };
-    let over_entry = super::tray_display::format::DisplayId::ALL
+    let over_entry = super::tray_display::display_entry::DisplayId::ALL
         .into_iter()
         .any(|id| {
             app.tray_by_id(id.tray_id())

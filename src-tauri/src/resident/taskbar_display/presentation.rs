@@ -1,5 +1,5 @@
 //! Shared taskbar text and stable column widths for native rendering.
-use crate::resident::tray_display::format::DisplayId;
+use crate::resident::tray_display::display_entry::DisplayId;
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct Column {
     pub id: DisplayId,
@@ -49,7 +49,7 @@ impl Rate {
 }
 
 pub fn columns(
-    entries: &[crate::resident::tray_display::format::DisplayEntry],
+    entries: &[crate::resident::tray_display::display_entry::DisplayEntry],
     dpi: u32,
     compact: bool,
 ) -> Vec<Column> {
@@ -152,7 +152,7 @@ pub fn columns(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resident::tray_display::format::DisplayEntry;
+    use crate::resident::tray_display::display_entry::DisplayEntry;
     #[test]
     fn full_width_rate_does_not_drop_the_number_attached_to_arrow() {
         for text in ["↑123.4 KB/s", "↓999.9 TB/s", "↑  0.0  B/s", "↓ —"] {

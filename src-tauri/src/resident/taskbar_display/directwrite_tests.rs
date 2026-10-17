@@ -2,7 +2,7 @@
 use super::*;
 use crate::resident::{
     taskbar_display::{alpha, draw, layout::Bounds, presentation, text_layout},
-    tray_display::format::{DisplayEntry, DisplayId},
+    tray_display::display_entry::{DisplayEntry, DisplayId},
 };
 use windows_sys::Win32::Graphics::Gdi::*;
 

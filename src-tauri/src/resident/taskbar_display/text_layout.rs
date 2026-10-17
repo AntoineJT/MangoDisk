@@ -183,7 +183,7 @@ pub fn runs<'a>(columns: &'a [Column], surface: &Surface, dpi: u32) -> Vec<Run<'
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::resident::tray_display::format::{DisplayEntry, DisplayId};
+    use crate::resident::tray_display::display_entry::{DisplayEntry, DisplayId};
 
     #[test]
     fn percentage_tone_colors_only_values_for_all_percentage_metrics() {

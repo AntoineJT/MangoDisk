@@ -1,6 +1,6 @@
 //! One set of cell rectangles drives painting, hover and panel anchors on every edge.
 use super::{layout::Bounds, presentation::Column};
-use crate::resident::tray_display::format::DisplayId;
+use crate::resident::tray_display::display_entry::DisplayId;
 
 #[derive(Default, PartialEq, Eq)]
 pub struct Surface {

@@ -178,7 +178,7 @@ mod tests {
     fn compact_text_fits_native_font_at_metric_and_rate_boundaries() {
         use crate::resident::{
             taskbar_display::{presentation, surface::Surface},
-            tray_display::format::{DisplayEntry, DisplayId},
+            tray_display::display_entry::{DisplayEntry, DisplayId},
         };
         unsafe {
             let dc = CreateCompatibleDC(std::ptr::null_mut());

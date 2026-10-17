@@ -1,0 +1,102 @@
+//! Native display models shared by menu-bar, tray, taskbar, and panel adapters.
+use mangodisk_core::system_resources::metrics::MetricId;
+use serde::Serialize;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DisplayId {
+    App,
+    Cpu,
+    CpuTemperature,
+    Gpu,
+    GpuTemperature,
+    Memory,
+    Upload,
+    Download,
+    Disk,
+    DiskTemperature,
+    BatteryTemperature,
+    ChargingPower,
+    BatteryPower,
+    SystemPower,
+    FanSpeed,
+}
+
+impl DisplayId {
+    pub const ALL: [Self; 15] = [
+        Self::App,
+        Self::Cpu,
+        Self::CpuTemperature,
+        Self::Gpu,
+        Self::GpuTemperature,
+        Self::Memory,
+        Self::Upload,
+        Self::Download,
+        Self::Disk,
+        Self::DiskTemperature,
+        Self::BatteryTemperature,
+        Self::ChargingPower,
+        Self::BatteryPower,
+        Self::SystemPower,
+        Self::FanSpeed,
+    ];
+    pub fn tray_id(self) -> &'static str {
+        match self {
+            Self::App => "resident",
+            Self::Cpu => "resident-cpu",
+            Self::CpuTemperature => "resident-cpu-temperature",
+            Self::Gpu => "resident-gpu",
+            Self::GpuTemperature => "resident-gpu-temperature",
+            Self::Memory => "resident-memory",
+            Self::Upload => "resident-upload",
+            Self::Download => "resident-download",
+            Self::Disk => "resident-disk",
+            Self::DiskTemperature => "resident-disk-temperature",
+            Self::BatteryTemperature => "resident-battery-temperature",
+            Self::ChargingPower => "resident-charging-power",
+            Self::BatteryPower => "resident-battery-power",
+            Self::SystemPower => "resident-system-power",
+            Self::FanSpeed => "resident-fan-speed",
+        }
+    }
+    pub fn metric(self) -> Option<MetricId> {
+        match self {
+            Self::App
+            | Self::BatteryTemperature
+            | Self::ChargingPower
+            | Self::BatteryPower
+            | Self::SystemPower
+            | Self::FanSpeed => None,
+            Self::Cpu | Self::CpuTemperature => Some(MetricId::Cpu),
+            Self::Gpu | Self::GpuTemperature => Some(MetricId::Gpu),
+            Self::Memory => Some(MetricId::Memory),
+            Self::Upload | Self::Download => Some(MetricId::Network),
+            Self::Disk | Self::DiskTemperature => Some(MetricId::Disk),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FanRow {
+    pub id: u8,
+    pub text: String,
+    pub color_value: Option<u16>,
+    pub tone: super::usage_color::UsageTone,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayEntry {
+    pub id: DisplayId,
+    pub tone: super::usage_color::UsageTone,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub power_state: Option<mangodisk_platform::system_resources::battery::BatteryPowerState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fan_rows: Option<[FanRow; 2]>,
+    pub color_value: Option<u16>,
+    pub marker: String,
+    pub digits: String,
+    pub text: String,
+    pub tooltip: String,
+}

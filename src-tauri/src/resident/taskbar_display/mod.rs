@@ -59,7 +59,7 @@ pub enum DisplayStatus {
 }
 
 #[cfg(windows)]
-use super::tray_display::format::DisplayEntry;
+use super::tray_display::display_entry::DisplayEntry;
 #[cfg(windows)]
 use std::sync::{
     atomic::{AtomicBool, AtomicUsize, Ordering},
@@ -83,7 +83,12 @@ struct Service {
     window: AtomicUsize,
     model: Mutex<Model>,
     geometry: Mutex<Option<geometry::Geometry>>,
-    bounds: Mutex<Vec<(super::tray_display::format::DisplayId, layout::Bounds)>>,
+    bounds: Mutex<
+        Vec<(
+            super::tray_display::display_entry::DisplayId,
+            layout::Bounds,
+        )>,
+    >,
     status: Mutex<DisplayStatus>,
 }
 

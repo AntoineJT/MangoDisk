@@ -1,6 +1,6 @@
 //! Fan summaries and paired rows share one fixed-width menu-bar column.
 use super::{
-    format::{DisplayEntry, DisplayId, FanRow},
+    display_entry::{DisplayEntry, DisplayId, FanRow},
     labels::Labels,
 };
 use crate::resident::preference_schema::{FanDisplayMode, ResidentPreferences};
