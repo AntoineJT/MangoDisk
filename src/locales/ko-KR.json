@@ -4227,6 +4227,7 @@
     "engineClock": "그래픽 클럭"
   },
   "cpuDetails": {
+    "coverage": "시간 가중 평균 · 최근 1분 추정 측정 범위 {seconds}초 · 누락 제외",
     "summary": "CPU 세부 정보",
     "minuteAverage": "1분 평균",
     "minutePeak": "1분 최고",

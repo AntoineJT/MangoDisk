@@ -4227,6 +4227,7 @@
     "engineClock": "Grafiktakt"
   },
   "cpuDetails": {
+    "coverage": "Zeitgewichteter Mittelwert; geschätzte Abdeckung: {seconds} s in der letzten Minute, ohne Lücken",
     "summary": "CPU-Details",
     "minuteAverage": "1 Minute Durchschnitt",
     "minutePeak": "1 Minute Spitze",

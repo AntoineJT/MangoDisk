@@ -4227,6 +4227,7 @@
     "engineClock": "Graphics clock"
   },
   "cpuDetails": {
+    "coverage": "Time-weighted average; estimated coverage: {seconds}s in the last minute; gaps excluded",
     "summary": "CPU details",
     "minuteAverage": "1 min average",
     "minutePeak": "1 min peak",

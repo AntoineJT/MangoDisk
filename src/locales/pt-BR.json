@@ -4227,6 +4227,7 @@
     "engineClock": "Clock gráfico"
   },
   "cpuDetails": {
+    "coverage": "Média ponderada por tempo; cobertura estimada: {seconds} s no último minuto, excluindo lacunas",
     "summary": "Detalhes da CPU",
     "minuteAverage": "Média de 1 min",
     "minutePeak": "Pico de 1 min",

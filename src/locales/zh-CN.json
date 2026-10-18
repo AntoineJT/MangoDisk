@@ -4227,6 +4227,7 @@
     "engineClock": "图形频率"
   },
   "cpuDetails": {
+    "coverage": "平均值按时长加权，近一分钟估算覆盖 {seconds} 秒，缺失区间不计入",
     "summary": "CPU 详情",
     "minuteAverage": "1 分钟平均",
     "minutePeak": "1 分钟峰值",

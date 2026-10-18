@@ -4227,6 +4227,7 @@
     "engineClock": "グラフィックスクロック"
   },
   "cpuDetails": {
+    "coverage": "時間加重平均・推定 {seconds}秒/分（欠測除外）",
     "summary": "CPU の詳細",
     "minuteAverage": "1分平均",
     "minutePeak": "1分ピーク",

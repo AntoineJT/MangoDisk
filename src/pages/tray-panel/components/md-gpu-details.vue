@@ -92,6 +92,11 @@ const facts = computed(() => {
     label: t(GPU_FACT_LABEL_KEYS[fact.key as keyof typeof GPU_FACT_LABEL_KEYS]),
     value: fact.value!.toFixed(0),
     unit: fact.unit,
+    liveHint: fact.key === 'average' || fact.key === 'peak',
+    hint:
+      (fact.key === 'average' || fact.key === 'peak') && historySummary.value
+        ? t('cpuDetails.coverage', { seconds: (historySummary.value.coveredMs / 1000).toFixed(1) })
+        : undefined,
   }));
 });
 function engineHistory(kind: GpuActivity['kind']) {

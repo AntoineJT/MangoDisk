@@ -4227,6 +4227,7 @@
     "engineClock": "Частота графического движка"
   },
   "cpuDetails": {
+    "coverage": "~{seconds}с/60с",
     "summary": "Данные CPU",
     "minuteAverage": "Среднее за 1 мин",
     "minutePeak": "Пик за 1 мин",

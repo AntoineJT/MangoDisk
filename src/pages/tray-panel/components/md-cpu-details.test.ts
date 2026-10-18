@@ -110,15 +110,17 @@ describe('CPU detail observations', () => {
     expect(line).toContain(' l0.001,0');
     wrapper.unmount();
   });
-  it('shows real recent load statistics alongside frequency without rated data or tooltips', async () => {
+  it('shows real recent load statistics alongside frequency with coverage hints and without rated data', async () => {
     const wrapper = render(windowsReading());
     const facts = wrapper.findAll('.resource-fact');
     expect(facts).toHaveLength(3);
     expect(facts[0].text()).toContain('4.86GHz');
-    expect(facts[1].text()).toContain('1 min average30%');
+    expect(facts[1].text()).toContain('1 min average45%');
     expect(facts[2].text()).toContain('1 min peak60%');
     expect(facts.map(fact => fact.text()).join(' ')).not.toContain('3.70');
-    expect(facts.every(fact => !fact.findComponent(MdTooltip).exists())).toBe(true);
+    expect(facts[0].findComponent(MdTooltip).exists()).toBe(false);
+    expect(facts[1].findComponent(MdTooltip).props('text')).toContain('estimated coverage: 4.0s');
+    expect(facts[2].findComponent(MdTooltip).props('text')).toContain('gaps excluded');
     await facts[0].trigger('mouseenter');
     expect(wrapper.find('[role="tooltip"]').exists()).toBe(false);
     wrapper.unmount();
@@ -139,6 +141,21 @@ describe('CPU detail observations', () => {
     });
     expect(wrapper.find('dl').exists()).toBe(false);
     wrapper.unmount();
+  });
+  it('identifies nominal coverage as an estimate when the first interval is unavailable', () => {
+    const reading = emptyReadings();
+    reading.observedAtMs = 70_000;
+    reading.cpu = { status: 'ready', sampledAtMs: 70_000, value: { usedPercent: 60 } };
+    // The transport carries no counter interval for this first successful reading.
+    reading.cpuHistory = [{ sampledAtMs: 70_000, primary: 60, secondary: null }];
+    const wrapper = render(reading);
+    try {
+      const hints = wrapper.findAllComponents(MdTooltip).filter(hint => hint.props('text')?.includes('2.0'));
+      expect(hints).toHaveLength(2);
+      for (const hint of hints) expect(hint.props('text')).toContain('estimated');
+    } finally {
+      wrapper.unmount();
+    }
   });
   it('does not manufacture missing frequency or historical zero readings', () => {
     const reading = emptyReadings();
@@ -162,7 +179,7 @@ describe('CPU detail observations', () => {
     const wrapper = render(reading);
     expect(wrapper.findAll('.resource-fact')).toHaveLength(3);
     expect(wrapper.text()).not.toContain('1 min peak');
-    expect(wrapper.findAll('.resource-fact')[2].text()).toContain('1 min average30%');
+    expect(wrapper.findAll('.resource-fact')[2].text()).toContain('1 min average45%');
     expect(wrapper.text()).toContain('Efficiency cores1.50GHz');
     expect(wrapper.text()).toContain('Performance cores4.00GHz');
     expect(wrapper.text()).not.toContain('Average frequency4.86');

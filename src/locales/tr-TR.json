@@ -4227,6 +4227,7 @@
     "engineClock": "Grafik frekansı"
   },
   "cpuDetails": {
+    "coverage": "Zaman ağırlıklı ortalama; son dakikada tahmini kapsam: {seconds} sn, eksik aralıklar hariç",
     "summary": "CPU ayrıntıları",
     "minuteAverage": "1 dk ortalama",
     "minutePeak": "1 dk en yüksek",

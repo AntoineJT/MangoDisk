@@ -58,6 +58,8 @@ const facts = computed(() => {
           value: Math.round(fact.value).toString(),
           unit: '%',
           cached: props.reading.cpu.status !== 'ready',
+          hint: t('cpuDetails.coverage', { seconds: (history.coveredMs / 1000).toFixed(1) }),
+          liveHint: true,
         }))
     : [];
   return [...selectedFrequencyFacts, ...usageFacts].map(fact => ({
