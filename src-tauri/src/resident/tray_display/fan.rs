@@ -255,5 +255,15 @@ mod tests {
         assert!(entry(&values, &labels, &preferences)
             .tooltip
             .contains(labels.text("noFans")));
+        for status in [
+            MetricStatus::Unsupported,
+            MetricStatus::Failed,
+            MetricStatus::Stale,
+        ] {
+            values.fan_speed.status = status;
+            let display = entry(&values, &labels, &preferences);
+            assert!(display.tooltip.contains(labels.status(status)));
+            assert!(!display.tooltip.contains(labels.text("noFans")));
+        }
     }
 }

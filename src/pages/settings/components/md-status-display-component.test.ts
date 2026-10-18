@@ -181,12 +181,21 @@ describe('status display interactions', () => {
     const row = wrapper.get('[data-metric="fanSpeed"]');
     expect(row.get('[role="status"]').text()).toBe('systemStatus.noFans');
     const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
-    accept({ ...reading, revision: 2, fanSpeed: { status: 'unsupported', sampledAtMs: null, value: null } });
+    let revision = 1;
+    for (const status of ['unsupported', 'failed', 'stale', 'disconnected', 'loading'] as const) {
+      accept({ ...reading, revision: ++revision, fanSpeed: { status, sampledAtMs: null, value: null } });
+      await flushPromises();
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
+      accept({ ...reading, revision: ++revision, fanSpeed: { status, sampledAtMs: 1, value: { fans: [] } } });
+      await flushPromises();
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
+    }
+    accept({ ...reading, revision: ++revision, fanSpeed: { status: 'ready', sampledAtMs: 1, value: null } });
     await flushPromises();
-    expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.failed');
     accept({
       ...reading,
-      revision: 3,
+      revision: revision + 1,
       fanSpeed: { status: 'ready', sampledAtMs: 3, value: { fans: [{ id: 0, rpm: 0 }] } },
     });
     await flushPromises();
@@ -225,6 +234,7 @@ describe('status display interactions', () => {
       fanAverage: string;
       fanSelected: string;
       fanNumber: string;
+      noFans: string;
     };
   }>('../../../locales/*.json', {
     eager: true,
@@ -274,6 +284,14 @@ describe('status display interactions', () => {
       fan.getComponent(Select).vm.$emit('update:modelValue', 'average');
       await flushPromises();
       expect(fan.get('.selection-toggle').text()).toBe(messages.systemStatus.fanAverage);
+      const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
+      accept({
+        ...readingFixture(),
+        revision: 100,
+        fanSpeed: { status: 'ready', sampledAtMs: 1, value: { fans: [] } },
+      });
+      await flushPromises();
+      expect(fan.get('[role="status"]').text()).toBe(messages.systemStatus.noFans);
     }
   );
   it.each([true, false])('offers disk temperature independently of disk usage on macOS=%s', async isMacOs => {

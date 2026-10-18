@@ -82,7 +82,12 @@ const batteryTemperatureStatus = ref<ResidentReading['batteryTemperature']['stat
 const chargingPowerStatus = ref<ResidentReading['chargingPower']['status']>('loading');
 const systemPowerStatus = ref<ResidentReading['systemPower']['status']>('loading');
 const fanReading = ref<ResidentReading['fanSpeed']>({ status: 'loading', sampledAtMs: null, value: null });
-const fans = computed(() => fanReading.value.value?.fans ?? []);
+const fanStatusKey = computed(() => {
+  const reading = fanReading.value;
+  if (reading.status !== 'ready') return METRIC_STATUS_KEYS[reading.status];
+  if (reading.value === null) return METRIC_STATUS_KEYS.failed;
+  return reading.value.fans.length === 0 ? 'systemStatus.noFans' : null;
+});
 const batteryPowerStatus = ref<ResidentReading['batteryPower']['status']>('loading');
 function batteryHint(id: ResidentDisplayMetricId) {
   const unavailable =
@@ -444,19 +449,11 @@ defineExpose({
                         </button>
                       </MdTooltip>
                       <span
-                        v-if="
-                          row.id === 'fanSpeed' && row.enabled && (fanReading.status !== 'ready' || fans.length === 0)
-                        "
+                        v-if="row.id === 'fanSpeed' && row.enabled && fanStatusKey"
                         role="status"
                         class="text-content-meta text-muted-foreground"
                       >
-                        {{
-                          t(
-                            fanReading.status === 'ready' && fans.length === 0
-                              ? 'systemStatus.noFans'
-                              : METRIC_STATUS_KEYS[fanReading.status]
-                          )
-                        }}
+                        {{ t(fanStatusKey) }}
                       </span>
                       <span
                         v-if="row.id === 'gpuTemperature' && !gpuTemperatureAvailable"

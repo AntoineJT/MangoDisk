@@ -1159,8 +1159,16 @@ identifies the fan count; F0Ac through F9Ac expose actual RPM. Integer counts,
 Intel unsigned fpe2 speeds, and Apple Silicon float speeds have explicit encoding
 and size checks. Counts are bounded to ten, RPM to 0–30000, and malformed or
 non-finite values fail closed. Zero RPM is valid. A successful zero count denotes
-fanless hardware; an unavailable count remains Unsupported. Missing individual
-tachometers retain their identity with no fabricated zero reading.
+fanless hardware. Exact hardware identifiers for confirmed M1–M5 MacBook Air
+models also produce a successful zero-fan sample without opening SMC. The model
+identifier is read once from `hw.model`; failed identification falls back to
+sensor probing. Unknown, Intel Air, Pro, desktop and future models are never
+classified as fanless from a missing FNum key: an unavailable count remains
+Unsupported, while native read failures remain Failed. Missing individual
+tachometers retain their identity with no fabricated zero reading. Settings and
+native tooltips localize only a successful empty sample as “This device has no
+fans”; missing, stale or failed observations retain their distinct status. Logs
+include the model and distinguish model-confirmed absence from an SMC zero count.
 
 Sampling runs on the existing two-second CPU worker only while resident display
 and fan speed are enabled. Disabling releases its independent SMC connection.

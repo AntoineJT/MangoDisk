@@ -2,6 +2,9 @@
 use crate::{PlatformError, PlatformErrorCode, PlatformResult};
 use serde::Serialize;
 
+#[cfg(any(target_os = "macos", test))]
+mod mac_model;
+
 pub const FAN_FRESHNESS_MS: u64 = 5_000;
 pub const MAX_FANS: u8 = 10;
 pub const MAX_FAN_RPM: f64 = 30_000.0;
@@ -50,10 +53,26 @@ impl FanReader {
             PlatformErrorCode::Unsupported,
             "fan tachometers unavailable on this platform",
         ));
+        #[cfg(target_os = "macos")]
+        let model = mac_model::current().unwrap_or("unknown");
+        #[cfg(not(target_os = "macos"))]
+        let model = "unknown";
         let outcome = match &result {
             Ok(sample) => format!(
-                "ready count={} unreadable_keys={}",
+                "ready count={} reason={} unreadable_keys={}",
                 sample.fans.len(),
+                if sample.fans.is_empty() {
+                    #[cfg(target_os = "macos")]
+                    if mac_model::is_known_fanless(model) {
+                        "confirmed_fanless_model"
+                    } else {
+                        "smc_fan_count_zero"
+                    }
+                    #[cfg(not(target_os = "macos"))]
+                    "fan_count_zero"
+                } else {
+                    "fan_sensors_present"
+                },
                 sample
                     .fans
                     .iter()
@@ -70,11 +89,20 @@ impl FanReader {
         };
         if self.last_outcome.as_ref() != Some(&outcome) {
             match &result {
-                Ok(_) => log::info!("resident_fan_observation outcome={outcome}"),
+                Ok(_) => log::info!(
+                    "resident_fan_observation model={} outcome={outcome}",
+                    crate::diagnostics::text(model)
+                ),
                 Err(error) if error.code() == PlatformErrorCode::Unsupported => {
-                    log::info!("resident_fan_observation outcome={outcome}")
+                    log::info!(
+                        "resident_fan_observation model={} outcome={outcome}",
+                        crate::diagnostics::text(model)
+                    )
                 }
-                Err(_) => log::warn!("resident_fan_observation outcome={outcome}"),
+                Err(_) => log::warn!(
+                    "resident_fan_observation model={} outcome={outcome}",
+                    crate::diagnostics::text(model)
+                ),
             }
         }
         self.last_outcome = Some(outcome);
@@ -83,11 +111,12 @@ impl FanReader {
 
     #[cfg(target_os = "macos")]
     fn read_macos(&mut self) -> PlatformResult<FanSample> {
-        if self.smc.is_none() {
-            self.smc = Some(super::macos_smc::ValueReader::new()?);
-        }
-        let result =
-            read_sensors(|key| self.smc.as_ref().expect("SMC reader initialized").read(key));
+        let result = mac_model::read_fans(mac_model::current(), || {
+            if self.smc.is_none() {
+                self.smc = Some(super::macos_smc::ValueReader::new()?);
+            }
+            read_sensors(|key| self.smc.as_ref().expect("SMC reader initialized").read(key))
+        });
         if result.is_err() {
             // Drop stale key metadata and reopen after wake or a native failure.
             self.smc = None;

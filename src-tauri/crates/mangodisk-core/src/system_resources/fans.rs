@@ -106,6 +106,35 @@ mod tests {
     }
 
     #[test]
+    fn confirmed_empty_samples_remain_distinct_from_unsupported_and_failed_readings() {
+        let mut cache = ResourceCache::default();
+        for (code, status) in [
+            (PlatformErrorCode::Unsupported, MetricStatus::Unsupported),
+            (PlatformErrorCode::OperationFailed, MetricStatus::Failed),
+        ] {
+            cache.fan_speed(Ok(FanSample { fans: vec![] }), 1000);
+            let snapshot = cache.snapshot(1000);
+            assert_eq!(snapshot.fan_speed.status, MetricStatus::Ready);
+            assert!(current_sample(&snapshot.fan_speed, 1000)
+                .unwrap()
+                .fans
+                .is_empty());
+            let wire = serde_json::to_value(&snapshot.fan_speed).unwrap();
+            assert_eq!(wire["status"], "ready");
+            assert_eq!(wire["value"]["fans"], serde_json::json!([]));
+            assert!(current_sample(&cache.snapshot(6001).fan_speed, 6001).is_none());
+            cache.fan_speed(
+                Err(PlatformError::new(code, "fan observation unavailable")),
+                7000,
+            );
+            let snapshot = cache.snapshot(7000);
+            assert_eq!(snapshot.fan_speed.status, status);
+            assert!(snapshot.fan_speed.value.is_none());
+            assert!(snapshot.fan_speed.sampled_at_ms.is_none());
+        }
+    }
+
+    #[test]
     fn failed_invalid_and_stale_samples_cannot_keep_a_previous_valid_rpm() {
         let mut cache = ResourceCache::default();
         cache.fan_speed(Ok(sample()), 1000);
