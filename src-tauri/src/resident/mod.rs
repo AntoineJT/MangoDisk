@@ -1,6 +1,7 @@
 mod application_icons;
 pub mod autostart;
 mod color_rules;
+mod cpu_auxiliary_sampling;
 mod diagnostics;
 mod disk_health_sampling;
 mod disk_temperature_sampling;

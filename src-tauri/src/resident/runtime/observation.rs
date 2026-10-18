@@ -16,6 +16,7 @@ pub(super) struct ObservationState {
     pub(super) warm_icons: bool,
     cpu_baseline: Option<CpuBaselineReason>,
     cpu_retries: u8,
+    frequency_retries: u8,
     gpu_retries: u8,
 }
 
@@ -47,14 +48,22 @@ impl ObservationState {
             previous_status,
         } = context;
         match completion.result {
-            Ok(Observation::Cpu {
-                sample,
-                details,
-                battery,
-                system_power,
-                battery_present,
-                fan_speed,
-            }) => {
+            Ok(Observation::CpuAuxiliary(observation)) => {
+                let super::super::cpu_auxiliary_sampling::Observation {
+                    details,
+                    battery,
+                    system_power,
+                    battery_present,
+                    fan_speed,
+                } = observation;
+                if matches!(&details.frequency, Some(Ok(None))) {
+                    if self.frequency_retries < 2 {
+                        self.frequency_retries += 1;
+                        slot.retry_after(now_ms(), 250);
+                    }
+                } else {
+                    self.frequency_retries = 0;
+                }
                 cache.battery_presence(battery_present, completion.timestamp_ms);
                 if let Some(sample) = fan_speed {
                     cache.fan_speed(sample, completion.timestamp_ms);
@@ -66,6 +75,8 @@ impl ObservationState {
                     cache.battery(sample, completion.timestamp_ms);
                 }
                 cache.cpu_details(details, completion.timestamp_ms);
+            }
+            Ok(Observation::Cpu { sample }) => {
                 if let Err(error) = &sample {
                     let status =
                         if error.code() == mangodisk_platform::PlatformErrorCode::Unsupported {

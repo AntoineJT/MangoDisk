@@ -6,7 +6,7 @@ use super::{
 use crate::resident::{
     disk_activity, network_traffic, presentation, process_cpu_sampling,
     sampling_diagnostics::{Query, SamplingDiagnostics},
-    sampling_schedule::SamplingSlot,
+    sampling_schedule::{Demand, SamplingSlot},
     sampling_workers::{self, SamplingEvent},
     tray_display,
 };
@@ -33,6 +33,9 @@ pub(super) fn run(
     let origin = Instant::now();
     let jobs = MetricId::ALL.map(|metric| sampling_workers::start(metric, origin, sender.clone()));
     let mut slots: [SamplingSlot; 5] = std::array::from_fn(|_| SamplingSlot::default());
+    let auxiliary = sampling_workers::start_cpu_auxiliary(origin, sender.clone());
+    let mut auxiliary_slot = SamplingSlot::default();
+    let mut auxiliary_expired = false;
     let mut cache = ResourceCache::default();
     if let Some(traffic) = network_traffic::install(&app, &worker) {
         cache.set_network_traffic(traffic);
@@ -71,7 +74,27 @@ pub(super) fn run(
             log::info!("resident_sampling_recovered");
         }
         loop_delayed = delayed;
-        let demands = worker.demands(observations.warm_icons);
+        let mut demands = worker.demands(observations.warm_icons);
+        let auxiliary_demand = demands[0].clone();
+        demands[0] = metric_demand(MetricId::Cpu, demands[0].clone());
+        if auxiliary_slot.update(auxiliary_demand.clone()) && !auxiliary_demand.active {
+            let _ = auxiliary.try_send(sampling_workers::Request::Release);
+        }
+        if let Some(generation) = auxiliary_slot.begin(
+            origin.elapsed().as_millis() as u64,
+            MetricId::Cpu.interval_ms(),
+        ) {
+            if auxiliary
+                .send(sampling_workers::Request::Sample {
+                    generation,
+                    baseline_generation: auxiliary_slot.baseline_generation(),
+                    demand: auxiliary_demand,
+                })
+                .is_err()
+            {
+                return;
+            }
+        }
         let mut changed = false;
         changed |= process_cpu.poll(
             active,
@@ -130,6 +153,7 @@ pub(super) fn run(
                     .map(|slot| slot.wait_ms(origin.elapsed().as_millis() as u64))
                     .min()
                     .unwrap_or(1000)
+                    .min(auxiliary_slot.wait_ms(origin.elapsed().as_millis() as u64))
                     .min(disk_slot.wait_ms(origin.elapsed().as_millis() as u64))
                     .min(process_cpu.wait_ms(origin.elapsed().as_millis() as u64))
                     .min(display_pending.map_or(1000, |deadline| {
@@ -155,6 +179,42 @@ pub(super) fn run(
             display_pending = None;
         }
         let event = match event {
+            Some(SamplingEvent::CpuAuxiliary(completion)) => {
+                auxiliary_slot.update(worker.demands(observations.warm_icons)[0].clone());
+                if !auxiliary_slot.demand.active {
+                    let _ = auxiliary.try_send(sampling_workers::Request::Release);
+                }
+                if auxiliary_slot.complete(completion.generation) {
+                    diagnostics.record(Query::CpuAuxiliary, completion.duration_ms);
+                    let expired = completion.duration_ms > MetricId::Cpu.freshness_ms();
+                    if expired != auxiliary_expired {
+                        log::info!(
+                            "resident_cpu_auxiliary_state expired={expired} query_ms={}",
+                            completion.duration_ms
+                        );
+                    }
+                    auxiliary_expired = expired;
+                    if expired {
+                        diagnostics.discard(Query::CpuAuxiliary);
+                    } else {
+                        changed = true;
+                        observations.apply(
+                            *completion,
+                            &mut cache,
+                            &mut auxiliary_slot,
+                            ObservationContext {
+                                catalogue: &worker.catalogue,
+                                now_ms: &|| origin.elapsed().as_millis() as u64,
+                                previous_status: previous_status[0],
+                            },
+                            |_| {},
+                        );
+                    }
+                } else {
+                    diagnostics.discard(Query::CpuAuxiliary);
+                }
+                None
+            }
             Some(SamplingEvent::ProcessCpu(completion)) => {
                 diagnostics.record(Query::CpuProcesses, completion.duration_ms);
                 changed |= process_cpu.poll(
@@ -215,7 +275,10 @@ pub(super) fn run(
                 .expect("known metric");
             // Reconcile demand before accepting a completion: disable/selection
             // commands may have raced the queued wake and this native result.
-            let demand = worker.demands(observations.warm_icons)[index].clone();
+            let demand = metric_demand(
+                completion.metric,
+                worker.demands(observations.warm_icons)[index].clone(),
+            );
             let selection_changed = slots[index].demand.selection != demand.selection;
             if slots[index].update(demand) {
                 if selection_changed {
@@ -352,5 +415,17 @@ pub(super) fn run(
             loop_max_ms = 0;
             summary_at = Instant::now();
         }
+    }
+}
+
+// Auxiliary controls must not invalidate a valid utilization interval.
+fn metric_demand(metric: MetricId, demand: Demand) -> Demand {
+    if metric == MetricId::Cpu {
+        Demand {
+            active: demand.active,
+            ..Default::default()
+        }
+    } else {
+        demand
     }
 }

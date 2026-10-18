@@ -40,15 +40,6 @@ fn baseline_retries_remain_bounded_and_return_to_the_regular_cadence() {
             let sample = match metric {
                 MetricId::Cpu => Observation::Cpu {
                     sample: Ok(CpuSample::Baseline),
-                    details: CpuDetails {
-                        identity: Default::default(),
-                        frequency: None,
-                        temperature: None,
-                    },
-                    battery: None,
-                    system_power: None,
-                    battery_present: None,
-                    fan_speed: None,
                 },
                 MetricId::Gpu => Observation::Gpu {
                     sample: Ok(GpuSample::Baseline),
@@ -171,4 +162,59 @@ fn failed_observations_clear_only_their_catalogue_request_and_preserve_other_dem
         };
         assert_eq!(status, MetricStatus::Failed);
     }
+}
+
+#[test]
+fn auxiliary_failures_preserve_fresh_utilization_and_history() {
+    use mangodisk_platform::{PlatformError, PlatformErrorCode};
+    let mut state = ObservationState::new(false);
+    let mut cache = ResourceCache::default();
+    cache.cpu(
+        CpuSample::Percent {
+            used: 42.0,
+            interval_ms: 2000,
+        },
+        1000,
+        1000,
+    );
+    let mut slot = SamplingSlot::default();
+    let catalogue = AtomicU8::new(0);
+    state.apply(
+        completion(
+            MetricId::Cpu,
+            Ok(Observation::CpuAuxiliary(
+                crate::resident::cpu_auxiliary_sampling::Observation {
+                    details: CpuDetails {
+                        identity: Default::default(),
+                        frequency: Some(Err(PlatformError::new(
+                            PlatformErrorCode::Unsupported,
+                            "frequency unavailable",
+                        ))),
+                        temperature: Some(Err(PlatformError::new(
+                            PlatformErrorCode::AccessDenied,
+                            "temperature denied",
+                        ))),
+                    },
+                    battery: None,
+                    system_power: None,
+                    battery_present: None,
+                    fan_speed: None,
+                },
+            )),
+        ),
+        &mut cache,
+        &mut slot,
+        ObservationContext {
+            catalogue: &catalogue,
+            now_ms: &|| 1000,
+            previous_status: MetricStatus::Ready,
+        },
+        |_| panic!("auxiliary observations cannot enumerate applications"),
+    );
+    let reading = cache.snapshot(1000);
+    assert_eq!(reading.cpu.status, MetricStatus::Ready);
+    assert_eq!(reading.cpu.value.unwrap().used_percent, 42.0);
+    assert_eq!(reading.cpu_history.len(), 1);
+    assert_eq!(reading.cpu_frequency.status, MetricStatus::Unsupported);
+    assert_eq!(reading.cpu_temperature.status, MetricStatus::Failed);
 }
