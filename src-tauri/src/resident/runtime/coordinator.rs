@@ -364,6 +364,25 @@ pub(super) fn run(
                     .reading
                     .lock()
                     .unwrap_or_else(|error| error.into_inner());
+                if let Some(gpu) = resources
+                    .gpu
+                    .value
+                    .as_ref()
+                    .filter(|_| resources.gpu.status == MetricStatus::Ready)
+                {
+                    let previous = reading.resources.gpu.value.as_ref();
+                    if previous.is_none_or(|previous| previous.adapter_id != gpu.adapter_id) {
+                        log::info!(
+                            "resident_gpu_selected previous={} adapter={} name={} automatic={} usage_history_points={} temperature_history_points={}",
+                            mangodisk_platform::diagnostics::text(previous.map_or("none", |value| value.adapter_id.as_str())),
+                            mangodisk_platform::diagnostics::text(&gpu.adapter_id),
+                            mangodisk_platform::diagnostics::text(&gpu.adapter_name),
+                            slots[1].demand.selection.is_none(),
+                            resources.gpu_detail_history.len(),
+                            resources.gpu_temperature_history.len()
+                        );
+                    }
+                }
                 if resources.network.status == MetricStatus::Ready {
                     if let Some(network) = &resources.network.value {
                         if reading

@@ -50,6 +50,17 @@ const value = computed(() => {
     ? sample.value
     : null;
 });
+const deviceIdentity = computed(() => JSON.stringify([value.value?.adapterId, value.value?.adapterName]));
+const temperatureIdentity = computed(() => {
+  const temperature = props.reading.gpuTemperature.value;
+  return JSON.stringify([
+    temperature?.adapterId,
+    temperature?.adapterName,
+    temperature?.source,
+    temperature?.kind,
+    temperature?.sensorCount,
+  ]);
+});
 const details = computed(() => {
   const sample = props.reading.gpuDetails;
   return value.value &&
@@ -161,7 +172,7 @@ onMounted(() => {
           <strong>{{ value ? value.usedPercent.toFixed(0) : '—' }}<small v-if="value">%</small></strong>
         </header>
         <MdResourceTrend
-          :key="value?.adapterId ?? 'unavailable'"
+          :key="deviceIdentity"
           metric="gpu"
           :history="history"
           :observed-at-ms="reading.observedAtMs"
@@ -192,7 +203,7 @@ onMounted(() => {
       :active="active"
       :label="t('gpuTemperature.trend')"
       :aria-label="t('gpuTemperature.label')"
-      :identity="`${reading.gpuTemperature.value?.adapterId}:${reading.gpuTemperature.value?.source}:${reading.gpuTemperature.value?.kind}:${reading.gpuTemperature.value?.sensorCount}`"
+      :identity="temperatureIdentity"
     >
       <MdResourceTemperature metric="gpu" :reading="reading.gpuTemperature" :observed-at-ms="reading.observedAtMs" />
     </MdTemperatureDetails>
@@ -263,7 +274,7 @@ onMounted(() => {
             </div>
             <MdGpuEngineHistory
               v-if="engineHistory(activity.kind).length"
-              :key="`${value?.adapterId}:${activity.kind}`"
+              :key="`${deviceIdentity}:${activity.kind}`"
               :history="engineHistory(activity.kind)"
               :observed-at-ms="reading.observedAtMs"
               :active="active"

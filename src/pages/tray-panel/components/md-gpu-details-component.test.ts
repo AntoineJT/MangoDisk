@@ -405,6 +405,40 @@ describe('GPU detail capabilities and selection', () => {
     await wrapper.setProps({ reading: { ...value } });
     expect(wrapper.findComponent({ name: 'MdGpuEngineHistory' }).exists()).toBe(false);
   });
+  it('recreates GPU charts when a native replacement reuses the same adapter id', async () => {
+    const value = reading();
+    value.gpuDetails.value!.details!.activities = [
+      { id: 'renderer', kind: 'renderer', name: null, usedPercent: 12, includedInSummary: false },
+    ];
+    value.gpuRendererHistory = [{ sampledAtMs: 2000, primary: 12, secondary: null }];
+    value.gpuTemperature = {
+      status: 'ready',
+      sampledAtMs: 2000,
+      value: { adapterId: 'a', adapterName: 'RTX 4090', celsius: 55, source: 'driver', kind: 'device', sensorCount: 1 },
+    };
+    value.gpuTemperatureHistory = [{ sampledAtMs: 2000, primary: 55, secondary: null }];
+    const { wrapper } = render(value);
+    await flushPromises();
+    const previous = wrapper.findAllComponents({ name: 'MdResourceTrend' }).map(chart => chart.vm);
+    expect(previous).toHaveLength(3);
+    const next: ResourceReadings = {
+      ...value,
+      observedAtMs: 4000,
+      gpuDetails: { ...value.gpuDetails, value: { ...value.gpuDetails.value!, adapterName: 'Replacement GPU' } },
+      gpuDetailHistory: [{ sampledAtMs: 4000, primary: 3, secondary: null }],
+      gpuRendererHistory: [{ sampledAtMs: 4000, primary: 12, secondary: null }],
+      gpuTemperature: {
+        ...value.gpuTemperature,
+        sampledAtMs: 4000,
+        value: { ...value.gpuTemperature.value!, adapterName: 'Replacement GPU' },
+      },
+      gpuTemperatureHistory: [{ sampledAtMs: 4000, primary: 60, secondary: null }],
+    };
+    await wrapper.setProps({ reading: next });
+    const current = wrapper.findAllComponents({ name: 'MdResourceTrend' });
+    expect(current).toHaveLength(3);
+    expect(current.map((chart, index) => chart.vm !== previous[index])).toEqual([true, true, true]);
+  });
   it('uses the fixed device label once in its tooltip', async () => {
     const preferences = preferencesFixture();
     preferences.gpuAdapter = 'a';

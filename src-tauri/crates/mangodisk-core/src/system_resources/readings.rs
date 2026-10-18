@@ -13,7 +13,7 @@ use mangodisk_platform::system_resources::{
     network::{InterfaceSample, NetworkInterface},
 };
 use serde::Serialize;
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 
 use super::{
     cpu::{CpuBaselineReason, CpuDelta},
@@ -123,10 +123,8 @@ pub struct ResourceCache {
     cpu_temperature_history: Trend,
     gpu_temperature: super::gpu_temperature::GpuTemperatureCache,
     gpu_history: Trend,
-    gpu_detail_history: Trend,
+    gpu_device_histories: BTreeMap<String, super::gpu_history::GpuDeviceHistory>,
     gpu_detail_device: Option<String>,
-    gpu_renderer_history: Trend,
-    gpu_tiler_history: Trend,
     network_history: Trend,
     memory_history: Trend,
     disk_io_history: Trend,
@@ -449,43 +447,31 @@ impl ResourceCache {
                     .expire(timestamp_ms, MetricId::Gpu.freshness_ms());
             }
             mangodisk_platform::system_resources::gpu::GpuSample::Usage(adapters) => {
+                for adapter in &adapters {
+                    if adapter.used_percent.is_finite()
+                        && (0.0..=100.0).contains(&adapter.used_percent)
+                    {
+                        let replaced = self
+                            .gpu_device_histories
+                            .entry(adapter.id.clone())
+                            .or_default()
+                            .observe(adapter, timestamp_ms);
+                        if replaced {
+                            self.gpu_temperature
+                                .invalidate_replaced_device(&adapter.id, &adapter.name);
+                            if self.gpu_detail_device.as_deref() == Some(&adapter.id) {
+                                self.readings.gpu_details = MetricReading::default();
+                            }
+                        }
+                    }
+                }
                 if let Some(mut value) = gpu::select(adapters, selected) {
                     if self.gpu_detail_device.as_deref() != Some(&value.adapter_id) {
-                        self.gpu_detail_history.clear();
-                        self.gpu_renderer_history.clear();
-                        self.gpu_tiler_history.clear();
                         self.readings.gpu_details = MetricReading::default();
                         self.gpu_detail_device = Some(value.adapter_id.clone());
                     }
                     self.gpu_temperature.select(Some(&value.adapter_id));
-                    // The panel summary uses every real sample for this device,
-                    // including lightweight background observations while details pause.
-                    self.gpu_detail_history.push(TrendPoint {
-                        sampled_at_ms: timestamp_ms,
-                        primary: value.used_percent,
-                        secondary: None,
-                    });
-                    if let Some(details) = &value.details {
-                        use mangodisk_platform::system_resources::gpu::details::GpuActivityKind;
-                        for (kind, history) in [
-                            (GpuActivityKind::Renderer, &mut self.gpu_renderer_history),
-                            (GpuActivityKind::Tiler, &mut self.gpu_tiler_history),
-                        ] {
-                            let maximum = details
-                                .activities
-                                .iter()
-                                .filter(|activity| activity.kind == kind)
-                                .map(|activity| activity.used_percent)
-                                .filter(|value| value.is_finite() && (0.0..=100.0).contains(value))
-                                .max_by(f64::total_cmp);
-                            if let Some(primary) = maximum {
-                                history.push(TrendPoint {
-                                    sampled_at_ms: timestamp_ms,
-                                    primary,
-                                    secondary: None,
-                                });
-                            }
-                        }
+                    if value.details.is_some() {
                         self.readings.gpu_details =
                             MetricReading::ready(value.clone(), timestamp_ms);
                     }
@@ -521,6 +507,11 @@ impl ResourceCache {
         &mut self,
         adapters: Vec<mangodisk_platform::system_resources::gpu::GpuAdapter>,
     ) {
+        // Catalogue captions include display ordinals, which can change when another
+        // GPU disappears. Native sample names detect replacements independently.
+        let present = |id: &str| adapters.iter().any(|adapter| adapter.id == id);
+        self.gpu_device_histories.retain(|id, _| present(id));
+        self.gpu_temperature.retain(present);
         self.readings.gpu_adapters = adapters;
     }
 
@@ -784,11 +775,8 @@ impl ResourceCache {
                 self.readings.network = MetricReading::default();
             }
             MetricId::Gpu => {
-                self.gpu_temperature.clear();
+                self.gpu_temperature.clear_selection();
                 self.gpu_history.clear();
-                self.gpu_detail_history.clear();
-                self.gpu_renderer_history.clear();
-                self.gpu_tiler_history.clear();
                 self.gpu_detail_device = None;
                 self.readings.gpu_details = MetricReading::default();
                 self.readings.gpu = MetricReading::default();
@@ -898,12 +886,22 @@ impl ResourceCache {
         self.readings.cpu_history = self.cpu_history.snapshot(now_ms);
         self.readings.cpu_temperature_history = self.cpu_temperature_history.snapshot(now_ms);
         self.readings.gpu_history = self.gpu_history.snapshot(now_ms);
-        self.readings.gpu_detail_history = self.gpu_detail_history.snapshot(now_ms);
         self.readings
             .gpu_detail_adapter_id
             .clone_from(&self.gpu_detail_device);
-        self.readings.gpu_renderer_history = self.gpu_renderer_history.snapshot(now_ms);
-        self.readings.gpu_tiler_history = self.gpu_tiler_history.snapshot(now_ms);
+        if let Some(history) = self
+            .gpu_detail_device
+            .as_ref()
+            .and_then(|id| self.gpu_device_histories.get_mut(id))
+        {
+            self.readings.gpu_detail_history = history.usage.snapshot(now_ms);
+            self.readings.gpu_renderer_history = history.renderer.snapshot(now_ms);
+            self.readings.gpu_tiler_history = history.tiler.snapshot(now_ms);
+        } else {
+            self.readings.gpu_detail_history = Default::default();
+            self.readings.gpu_renderer_history = Default::default();
+            self.readings.gpu_tiler_history = Default::default();
+        }
         self.readings.network_history = self.network_history.snapshot(now_ms);
         if let Some(network) = self.readings.network.value.as_mut() {
             network.cumulative = self.network_delta.cumulative(&network.interface.id);
@@ -1359,6 +1357,263 @@ mod tests {
     }
 
     #[test]
+    fn automatic_gpu_switches_restore_each_devices_observed_history() {
+        use mangodisk_platform::system_resources::gpu::{
+            temperature::{
+                GpuTemperature, GpuTemperatureKind, GpuTemperatureSample, GpuTemperatureSource,
+            },
+            GpuAdapterUsage, GpuSample,
+        };
+        let mut cache = ResourceCache::default();
+        let usage = |amd, intel| {
+            GpuSample::Usage(
+                [("amd", amd), ("intel", intel)]
+                    .into_iter()
+                    .map(|(id, used_percent)| GpuAdapterUsage {
+                        id: id.into(),
+                        name: id.into(),
+                        used_percent,
+                        details: None,
+                    })
+                    .collect(),
+            )
+        };
+        let temperatures = |celsius| {
+            Ok(vec![
+                GpuTemperatureSample {
+                    adapter_id: "amd".into(),
+                    reading: Ok(GpuTemperature {
+                        adapter_id: "amd".into(),
+                        adapter_name: "AMD".into(),
+                        celsius,
+                        kind: GpuTemperatureKind::Device,
+                        source: GpuTemperatureSource::Driver,
+                        sensor_count: 1,
+                    }),
+                },
+                GpuTemperatureSample {
+                    adapter_id: "intel".into(),
+                    reading: Err(mangodisk_platform::PlatformError::new(
+                        mangodisk_platform::PlatformErrorCode::Unsupported,
+                        "temperature unavailable",
+                    )),
+                },
+            ])
+        };
+        cache.gpu(usage(30.0, 5.0), None, 1000);
+        cache.gpu_temperatures(temperatures(53.0), None, 1000);
+        cache.gpu(usage(5.0, 40.0), None, 3000);
+        assert_eq!(cache.snapshot(3000).gpu.value.unwrap().adapter_id, "intel");
+        cache.gpu(usage(6.0, 50.0), None, 5000);
+        cache.gpu_temperatures(temperatures(54.0), None, 5000);
+        cache.gpu(usage(35.0, 4.0), None, 7000);
+        let restored = cache.snapshot(7000);
+        assert_eq!(restored.gpu.value.unwrap().adapter_id, "amd");
+        assert_eq!(
+            restored
+                .gpu_detail_history
+                .iter()
+                .map(|p| p.primary)
+                .collect::<Vec<_>>(),
+            vec![30.0, 5.0, 6.0, 35.0]
+        );
+        assert_eq!(
+            restored
+                .gpu_temperature_history
+                .iter()
+                .map(|p| p.sampled_at_ms)
+                .collect::<Vec<_>>(),
+            vec![1000, 5000]
+        );
+        assert_eq!(restored.gpu_temperature.sampled_at_ms, Some(5000));
+        assert_eq!(restored.gpu_temperature.value.unwrap().celsius, 54.0);
+    }
+
+    #[test]
+    fn gpu_selection_resets_restore_only_the_selected_devices_history_until_removal() {
+        use mangodisk_platform::system_resources::gpu::{GpuAdapter, GpuAdapterUsage, GpuSample};
+        let mut cache = ResourceCache::default();
+        let catalogue = || {
+            vec![
+                GpuAdapter {
+                    id: "a".into(),
+                    name: "A".into(),
+                },
+                GpuAdapter {
+                    id: "b".into(),
+                    name: "B".into(),
+                },
+            ]
+        };
+        let sample = || {
+            GpuSample::Usage(vec![
+                GpuAdapterUsage {
+                    id: "a".into(),
+                    name: "A".into(),
+                    used_percent: 10.0,
+                    details: None,
+                },
+                GpuAdapterUsage {
+                    id: "b".into(),
+                    name: "B".into(),
+                    used_percent: 80.0,
+                    details: None,
+                },
+            ])
+        };
+        cache.gpu_adapters(catalogue());
+        cache.gpu(sample(), Some("a"), 1000);
+        cache.reset(MetricId::Gpu);
+        assert!(cache.snapshot(2000).gpu_detail_history.is_empty());
+        cache.gpu(sample(), Some("b"), 3000);
+        let b = cache.snapshot(3000);
+        assert_eq!(b.gpu_detail_history.len(), 2);
+        assert!(b
+            .gpu_detail_history
+            .iter()
+            .all(|point| point.primary == 80.0));
+        cache.reset(MetricId::Gpu);
+        cache.gpu(sample(), Some("a"), 19000);
+        let a = cache.snapshot(19000);
+        assert_eq!(
+            a.gpu_detail_history
+                .iter()
+                .map(|point| point.sampled_at_ms)
+                .collect::<Vec<_>>(),
+            vec![1000, 3000, 19000]
+        );
+        assert!(a
+            .gpu_detail_history
+            .iter()
+            .all(|point| point.primary == 10.0));
+        cache.gpu_adapters(vec![GpuAdapter {
+            id: "b".into(),
+            name: "B".into(),
+        }]);
+        assert_eq!(cache.gpu_device_histories.len(), 1);
+        assert!(cache.snapshot(19000).gpu_detail_history.is_empty());
+        cache.gpu_adapters(catalogue());
+        cache.gpu(sample(), Some("a"), 21000);
+        assert_eq!(cache.snapshot(21000).gpu_detail_history.len(), 1);
+        cache.gpu_adapters(vec![GpuAdapter {
+            id: "a".into(),
+            name: "Replacement".into(),
+        }]);
+        cache.gpu(
+            GpuSample::Usage(vec![GpuAdapterUsage {
+                id: "a".into(),
+                name: "Replacement".into(),
+                used_percent: 20.0,
+                details: None,
+            }]),
+            Some("a"),
+            23000,
+        );
+        let replaced = cache.snapshot(23000);
+        assert_eq!(replaced.gpu_detail_history.len(), 1);
+        assert_eq!(replaced.gpu_detail_history[0].primary, 20.0);
+    }
+
+    #[test]
+    fn gpu_catalogue_renumbering_preserves_the_surviving_devices_histories() {
+        use mangodisk_platform::system_resources::gpu::{
+            temperature::{
+                GpuTemperature, GpuTemperatureKind, GpuTemperatureSample, GpuTemperatureSource,
+            },
+            GpuAdapter, GpuAdapterUsage, GpuSample,
+        };
+        let mut cache = ResourceCache::default();
+        cache.gpu_adapters(vec![
+            GpuAdapter {
+                id: "a".into(),
+                name: "GPU 0 · A".into(),
+            },
+            GpuAdapter {
+                id: "b".into(),
+                name: "GPU 1 · B".into(),
+            },
+        ]);
+        for timestamp in [1000, 5000] {
+            cache.gpu(
+                GpuSample::Usage(vec![GpuAdapterUsage {
+                    id: "b".into(),
+                    name: "B".into(),
+                    used_percent: 80.0,
+                    details: None,
+                }]),
+                Some("b"),
+                timestamp,
+            );
+            cache.gpu_temperatures(
+                Ok(vec![GpuTemperatureSample {
+                    adapter_id: "b".into(),
+                    reading: Ok(GpuTemperature {
+                        adapter_id: "b".into(),
+                        adapter_name: "B".into(),
+                        celsius: 70.0,
+                        kind: GpuTemperatureKind::Device,
+                        source: GpuTemperatureSource::Driver,
+                        sensor_count: 1,
+                    }),
+                }]),
+                Some("b"),
+                timestamp,
+            );
+        }
+        cache.gpu_adapters(vec![GpuAdapter {
+            id: "b".into(),
+            name: "GPU 0 · B".into(),
+        }]);
+        let reading = cache.snapshot(6000);
+        assert_eq!(reading.gpu_detail_history.len(), 2);
+        assert_eq!(reading.gpu_temperature_history.len(), 2);
+        assert_eq!(reading.gpu_temperature.sampled_at_ms, Some(5000));
+        assert_eq!(reading.gpu_temperature.status, MetricStatus::Ready);
+    }
+
+    #[test]
+    fn replacement_temperature_observed_before_utilization_recovery_stays_available() {
+        use mangodisk_platform::system_resources::gpu::{
+            temperature::{
+                GpuTemperature, GpuTemperatureKind, GpuTemperatureSample, GpuTemperatureSource,
+            },
+            GpuAdapterUsage, GpuSample,
+        };
+        let mut cache = ResourceCache::default();
+        let usage = |name: &str| {
+            GpuSample::Usage(vec![GpuAdapterUsage {
+                id: "a".into(),
+                name: name.into(),
+                used_percent: 10.0,
+                details: None,
+            }])
+        };
+        let temperature = |name: &str| {
+            Ok(vec![GpuTemperatureSample {
+                adapter_id: "a".into(),
+                reading: Ok(GpuTemperature {
+                    adapter_id: "a".into(),
+                    adapter_name: name.into(),
+                    celsius: 51.0,
+                    kind: GpuTemperatureKind::Device,
+                    source: GpuTemperatureSource::Driver,
+                    sensor_count: 1,
+                }),
+            }])
+        };
+        cache.gpu(usage("Original"), Some("a"), 1000);
+        cache.gpu_temperatures(temperature("Original"), Some("a"), 1000);
+        cache.gpu(GpuSample::Baseline, Some("a"), 5000);
+        cache.gpu_temperatures(temperature("Replacement"), Some("a"), 5000);
+        cache.gpu(usage("Replacement"), Some("a"), 7000);
+        let recovered = cache.snapshot(7000);
+        assert_eq!(recovered.gpu_temperature.status, MetricStatus::Ready);
+        assert_eq!(recovered.gpu_temperature.sampled_at_ms, Some(5000));
+        assert_eq!(recovered.gpu_temperature_history.len(), 1);
+        assert_eq!(recovered.gpu_detail_history.len(), 1);
+    }
+
+    #[test]
     fn detail_history_isolated_when_automatic_selection_changes_devices() {
         use mangodisk_platform::system_resources::gpu::{details::*, GpuAdapterUsage, GpuSample};
         let sample = |a: f64, b: f64, detailed: bool| {
@@ -1387,7 +1642,7 @@ mod tests {
         cache.gpu(sample(3.0, 56.0, true), None, 5000);
         let switched = cache.snapshot(5000);
         assert_eq!(switched.gpu_history.len(), 3);
-        assert_eq!(switched.gpu_detail_history.len(), 1);
+        assert_eq!(switched.gpu_detail_history.len(), 3);
         assert_eq!(switched.gpu_details.value.as_ref().unwrap().adapter_id, "b");
         assert!(switched.gpu.value.as_ref().unwrap().details.is_none());
         cache.gpu(sample(5.0, 60.0, false), None, 7000);

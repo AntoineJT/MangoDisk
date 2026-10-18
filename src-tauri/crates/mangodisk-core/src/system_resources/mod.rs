@@ -17,6 +17,7 @@ pub mod release;
 pub mod release_policy;
 pub mod service;
 
+mod gpu_history;
 mod gpu_temperature;
 
 #[cfg(test)]
