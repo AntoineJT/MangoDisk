@@ -140,9 +140,10 @@ impl Adapter {
                 }
                 Err(error) if error.code() == crate::PlatformErrorCode::Unsupported => {
                     log::info!(
-                        "gpu_temperature_unsupported adapter={} name={} reason={}",
+                        "gpu_temperature_unsupported adapter={} name={} code={:?} reason={} retry_after_ms=30000",
                         text(&self.id),
                         text(&self.name),
+                        error.code(),
                         text(error)
                     );
                 }

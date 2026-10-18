@@ -88,10 +88,12 @@ impl CpuDetailsReader {
         if self.temperature_due.is_some_and(|due| now < due) {
             return None;
         }
+        let mut stage = "initialize";
         let result = (|| {
             if self.temperature.is_none() {
                 self.temperature = Some(CpuTemperatureReader::new(model)?);
             }
+            stage = "read";
             self.temperature
                 .as_mut()
                 .expect("temperature reader initialized")
@@ -103,13 +105,8 @@ impl CpuDetailsReader {
         self.temperature_due = temperature_deadline(now, result.is_ok());
         if let Err(error) = &result {
             self.temperature = None;
-            if error.code() != PlatformErrorCode::Unsupported {
-                log::warn!(
-                    "cpu_temperature_read_failed code={:?} error={}",
-                    error.code(),
-                    crate::diagnostics::text(error)
-                );
-            }
+            self.temperature_diagnostics
+                .observe_error(model, stage, error);
         }
         Some(result)
     }
