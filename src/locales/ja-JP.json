@@ -4234,6 +4234,7 @@
     "average": "平均周波数",
     "efficiency": "高効率コア",
     "performance": "高性能コア",
+    "super": "スーパーコア",
     "cached": "キャッシュ"
   },
   "gpuTemperature": {

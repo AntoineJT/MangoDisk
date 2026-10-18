@@ -32,6 +32,7 @@ const facts = computed(() => {
     { label: 'cpuDetails.average', mhz: frequency?.averageMhz },
     { label: 'cpuDetails.efficiency', mhz: frequency?.efficiencyMhz },
     { label: 'cpuDetails.performance', mhz: frequency?.performanceMhz },
+    { label: 'cpuDetails.super', mhz: frequency?.superMhz },
   ]
     .filter(fact => fact.mhz != null && Number.isFinite(fact.mhz) && fact.mhz >= 1 && fact.mhz <= 20_000)
     .map(fact => ({
@@ -40,9 +41,7 @@ const facts = computed(() => {
       unit: 'GHz',
       cached: frequencyReading.status !== 'ready',
     }));
-  const hasFrequencyClasses =
-    frequencyFacts.some(fact => fact.label === 'cpuDetails.efficiency') &&
-    frequencyFacts.some(fact => fact.label === 'cpuDetails.performance');
+  const hasFrequencyClasses = frequencyFacts.filter(fact => fact.label !== 'cpuDetails.average').length >= 2;
   const selectedFrequencyFacts = hasFrequencyClasses
     ? frequencyFacts.filter(fact => fact.label !== 'cpuDetails.average')
     : frequencyFacts;
@@ -62,7 +61,7 @@ const facts = computed(() => {
           liveHint: true,
         }))
     : [];
-  return [...selectedFrequencyFacts, ...usageFacts].map(fact => ({
+  return [...selectedFrequencyFacts, ...usageFacts].slice(0, 3).map(fact => ({
     ...fact,
     key: fact.label,
     label: t(fact.label),
@@ -155,5 +154,10 @@ const facts = computed(() => {
 }
 .cpu-summary :deep(.resource-trend.cpu) {
   height: 28px;
+}
+.cpu-details {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
 }
 </style>

@@ -4234,6 +4234,7 @@
     "average": "Frecuencia media",
     "efficiency": "Núcleos de eficiencia",
     "performance": "Núcleos de rendimiento",
+    "super": "Núcleos super",
     "cached": "En caché"
   },
   "gpuTemperature": {

@@ -4234,6 +4234,7 @@
     "average": "Fréquence moyenne",
     "efficiency": "Noyaux d'efficacité",
     "performance": "Noyaux de performances",
+    "super": "Cœurs super",
     "cached": "En cache"
   },
   "gpuTemperature": {

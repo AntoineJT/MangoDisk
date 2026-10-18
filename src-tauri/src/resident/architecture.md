@@ -63,7 +63,7 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 25; resource readings use version 28.
+Resident preferences use schema version 25; resource readings use version 29.
 Versions 1–8 preferences preserve every saved selection and order, appending GPU
 display disabled. New installations also leave GPU display unselected. Resource
 version 9 adds the GPU catalogue. Version 9 preferences migrate GPU selection to automatic; version 10 persists fixed selection. Frontends reject mismatched envelopes.
@@ -495,7 +495,7 @@ shared tray text and tooltips keep their existing precision.
 
 ### Overview history and disk activity
 
-Resource readings use schema version 28 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
+Resource readings use schema version 29 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
 
 Memory pressure is independent of occupancy. macOS reads `kern.memorystatus_vm_pressure_level` in the existing three-second memory sample and decodes dispatch flags 1/2/4 as normal/warning/critical. Unknown flags, unexpected lengths and read errors publish unavailable; Windows and Linux publish unsupported. The panel hides unsupported pressure and marks non-ready samples as not updated. Diagnostics record the first observation, transitions, failures and recovery rather than every sample.
 
@@ -875,6 +875,20 @@ on stderr without mixing them into its JSON observation protocol. Combining
 `--lifecycle --details --diagnostics` also exercises detail demand transitions
 before a reader release, without injecting hardware failures.
 
+### CPU frequency observations
+
+M1–M6 use validated Apple performance-state tables: M1–M3 store Hz, and M4–M6
+store kHz. Known table identities take precedence over metadata fallbacks; M5
+performance-core metadata identifies its separate renamed slot. Base M5 ECPU
+metadata can point at an absent table, so it must not replace the known live table.
+Firmware state order is preserved even when boost frequencies dip between adjacent
+ordinals; IOReport ordinal and state-count validation still applies. M6 also
+searches `pmgr-child` and uses the identified shared PACC table when needed. M5/M6
+core channels keep efficiency, performance and super-core observations separate.
+Unknown or inconsistent tables/states fail closed with model, stage, table and
+channel diagnostics. Idle cores do not become fabricated minimum frequencies.
+The existing two-second detail demand and 30-second failure backoff are unchanged.
+
 ### CPU temperature observations
 
 CPU temperature is independent of utilization and frequency. The existing CPU
@@ -890,7 +904,7 @@ sets clear temperature history.
 
 macOS reads only mapped CPU SMC keys, caches their metadata, and requires all
 selected sensors to be valid before publishing a reading. Apple Silicon
-M1–M5 mappings distinguish CPU keys from GPU, PMU, battery and proximity sensors;
+M1–M6 mappings distinguish CPU keys from GPU, PMU, battery and proximity sensors;
 unknown chips are unsupported. Apple Silicon publishes the selected cores' average.
 Intel prefers the CPU package key TCAD. When absent, machines with one to eight
 physical cores can use the highest TC1C–TC8C core temperature, bounded by
@@ -1133,7 +1147,7 @@ a recovered main window. Follow Microsoft's [process-related event guidance](htt
 
 ## macOS fan speed
 
-Preference envelopes use version 25; current readings use version 28. Previous preferences retain all
+Preference envelopes use version 25; current readings use version 29. Previous preferences retain all
 saved display choices, relative order, colors, and device selections. Migration
 adds fan speed disabled before a trailing network item, with automatic fan
 selection. Version-23 automatic and fixed choices migrate to highest and selected

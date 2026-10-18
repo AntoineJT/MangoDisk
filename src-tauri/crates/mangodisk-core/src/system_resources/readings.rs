@@ -72,7 +72,7 @@ pub struct ResourceReadings {
 impl Default for ResourceReadings {
     fn default() -> Self {
         Self {
-            schema_version: 28,
+            schema_version: 29,
             observed_at_ms: 0,
             cpu: MetricReading::default(),
             cpu_identity: None,
@@ -1263,6 +1263,7 @@ mod tests {
                 average_mhz: Some(4773.0),
                 efficiency_mhz: None,
                 performance_mhz: None,
+                super_mhz: None,
                 source: CpuFrequencySource::WindowsPerformance,
             })))),
             1000,
@@ -1735,7 +1736,7 @@ mod tests {
             second.cpu_processes.value.as_ref().unwrap()
         ));
         let wire = serde_json::to_value(&second).unwrap();
-        assert_eq!(wire["schemaVersion"], 28);
+        assert_eq!(wire["schemaVersion"], 29);
         assert_eq!(wire["cpuProcesses"]["value"]["readableProcessCount"], 12);
         assert!(!cache.expire(2000));
         assert!(cache.expire(6001));
@@ -1857,7 +1858,7 @@ mod tests {
             },
             1000,
         ));
-        assert_eq!(cache.snapshot(1000).schema_version, 28);
+        assert_eq!(cache.snapshot(1000).schema_version, 29);
         assert_eq!(
             cache.snapshot(6001).cpu_processes.status,
             MetricStatus::Stale

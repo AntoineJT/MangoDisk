@@ -141,6 +141,7 @@ impl Query {
             average_mhz: Some(average_mhz),
             efficiency_mhz: None,
             performance_mhz: None,
+            super_mhz: None,
             source: CpuFrequencySource::WindowsPerformance,
         }))
     }

@@ -4234,6 +4234,7 @@
     "average": "平均频率",
     "efficiency": "能效核心",
     "performance": "性能核心",
+    "super": "超级核心",
     "cached": "缓存"
   },
   "gpuTemperature": {

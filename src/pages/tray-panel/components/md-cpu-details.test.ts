@@ -25,7 +25,13 @@ const windowsReading = () => {
   reading.cpuFrequency = {
     status: 'ready',
     sampledAtMs: 70_000,
-    value: { averageMhz: 4860, efficiencyMhz: null, performanceMhz: null, source: 'windowsPerformance' },
+    value: {
+      averageMhz: 4860,
+      efficiencyMhz: null,
+      performanceMhz: null,
+      superMhz: null,
+      source: 'windowsPerformance',
+    },
   };
   reading.cpuHistory = [
     [9999, 100],
@@ -162,7 +168,7 @@ describe('CPU detail observations', () => {
     reading.cpuFrequency = {
       status: 'ready',
       sampledAtMs: 1,
-      value: { averageMhz: NaN, efficiencyMhz: 0, performanceMhz: null, source: 'windowsPerformance' },
+      value: { averageMhz: NaN, efficiencyMhz: 0, performanceMhz: null, superMhz: null, source: 'windowsPerformance' },
     };
     const wrapper = render(reading);
     expect(wrapper.find('dl').exists()).toBe(false);
@@ -174,6 +180,7 @@ describe('CPU detail observations', () => {
       averageMhz: null,
       efficiencyMhz: 1500,
       performanceMhz: 4000,
+      superMhz: null,
       source: 'applePerformanceStates',
     };
     const wrapper = render(reading);
@@ -183,6 +190,65 @@ describe('CPU detail observations', () => {
     expect(wrapper.text()).toContain('Efficiency cores1.50GHz');
     expect(wrapper.text()).toContain('Performance cores4.00GHz');
     expect(wrapper.text()).not.toContain('Average frequency4.86');
+    wrapper.unmount();
+  });
+  it('keeps M5 and M6 super-core frequencies distinct from other core classes', () => {
+    for (const efficiencyMhz of [null, 1800]) {
+      const reading = windowsReading();
+      reading.cpuFrequency.value = {
+        averageMhz: null,
+        efficiencyMhz,
+        performanceMhz: 3200,
+        superMhz: 4700,
+        source: 'applePerformanceStates',
+      };
+      const wrapper = render(reading);
+      expect(wrapper.text()).toContain('Performance cores3.20GHz');
+      expect(wrapper.text()).toContain('Super cores4.70GHz');
+      if (efficiencyMhz !== null) expect(wrapper.text()).toContain('Efficiency cores1.80GHz');
+      else expect(wrapper.text()).not.toContain('Efficiency cores');
+      expect(wrapper.findAll('.resource-fact')).toHaveLength(3);
+      expect(wrapper.text().includes('1 min average')).toBe(efficiencyMhz === null);
+      expect(wrapper.text()).not.toContain('1 min peak');
+      wrapper.unmount();
+    }
+  });
+  it('keeps three core frequencies in one row and restores load statistics when a core is idle', async () => {
+    const reading = windowsReading();
+    const frequency = {
+      averageMhz: 3000,
+      efficiencyMhz: 1800,
+      performanceMhz: 3200,
+      superMhz: 4700,
+      source: 'applePerformanceStates' as const,
+    };
+    reading.cpuFrequency.value = frequency;
+    const wrapper = render(reading);
+    expect(wrapper.findAll('.resource-fact').map(fact => fact.text())).toEqual([
+      'Efficiency cores1.80GHz',
+      'Performance cores3.20GHz',
+      'Super cores4.70GHz',
+    ]);
+    await wrapper.setProps({
+      reading: { ...reading, cpuFrequency: { ...reading.cpuFrequency, value: { ...frequency, performanceMhz: null } } },
+    });
+    expect(wrapper.findAll('.resource-fact')).toHaveLength(3);
+    expect(wrapper.text()).toContain('1 min average45%');
+    expect(wrapper.text()).not.toContain('Performance cores');
+    await wrapper.setProps({ reading });
+    expect(wrapper.findAll('.resource-fact')).toHaveLength(3);
+    expect(wrapper.text()).not.toContain('1 min average');
+    wrapper.unmount();
+  });
+  it('limits mixed overall and single-class frequency observations to three facts', () => {
+    const reading = windowsReading();
+    reading.cpuFrequency.value!.efficiencyMhz = 1500;
+    const wrapper = render(reading);
+    expect(wrapper.findAll('.resource-fact')).toHaveLength(3);
+    expect(wrapper.text()).toContain('Average frequency4.86GHz');
+    expect(wrapper.text()).toContain('Efficiency cores1.50GHz');
+    expect(wrapper.text()).toContain('1 min average45%');
+    expect(wrapper.text()).not.toContain('1 min peak');
     wrapper.unmount();
   });
 });

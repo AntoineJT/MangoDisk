@@ -4234,6 +4234,7 @@
     "average": "Ortalama frekans",
     "efficiency": "Verimlilik çekirdekleri",
     "performance": "Performans çekirdekleri",
+    "super": "Süper çekirdekler",
     "cached": "Önbellek"
   },
   "gpuTemperature": {

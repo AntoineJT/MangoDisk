@@ -4234,6 +4234,7 @@
     "average": "Durchschnittliche Häufigkeit",
     "efficiency": "Effizienzkerne",
     "performance": "Leistungskerne",
+    "super": "Super-Kerne",
     "cached": "Zwischengespeichert"
   },
   "gpuTemperature": {

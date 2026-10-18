@@ -4234,6 +4234,7 @@
     "average": "평균 주파수",
     "efficiency": "효율 코어",
     "performance": "성능 코어",
+    "super": "슈퍼 코어",
     "cached": "캐시"
   },
   "gpuTemperature": {

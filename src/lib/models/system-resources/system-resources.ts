@@ -79,6 +79,7 @@ export interface CpuFrequency {
   averageMhz: number | null;
   efficiencyMhz: number | null;
   performanceMhz: number | null;
+  superMhz: number | null;
   source: 'windowsPerformance' | 'applePerformanceStates';
 }
 export const CPU_TEMPERATURE_FRESHNESS_MS = 10_000;
@@ -278,7 +279,7 @@ export interface DiskHealth {
 }
 
 export interface ResourceReadings {
-  schemaVersion: 28;
+  schemaVersion: 29;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;

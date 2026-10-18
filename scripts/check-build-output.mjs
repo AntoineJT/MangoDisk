@@ -48,12 +48,14 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // French, German and Spanish assets measure approximately 318 / 308 / 310 kB
 // raw and 63.2 / 63.8 / 61.7 kB gzip. Keep their measured allowances local;
 // application and existing locale budgets stay fixed.
+// Super-core frequency adds one label per locale: Japanese measures 62,734 gzip bytes;
+// Russian measures 399,926 raw bytes. Add only 64 gzip / 128 raw bytes locally.
 const localeChunkLimitOverrides = new Map([
   ['fr-fr', { bytes: 311 * 1024, gzipBytes: 62 * 1024 }],
   ['de-de', { bytes: maximumLocaleChunkBytes, gzipBytes: 63 * 1024 }],
   ['es-es', { bytes: maximumLocaleChunkBytes, gzipBytes: 61 * 1024 }],
-  ['ja-jp', { bytes: 323 * 1024 + 512, gzipBytes: 61 * 1024 + 256 }],
-  ['ru-ru', { bytes: 390 * 1024 + 512, gzipBytes: 69 * 1024 + 128 }],
+  ['ja-jp', { bytes: 323 * 1024 + 512, gzipBytes: 61 * 1024 + 320 }],
+  ['ru-ru', { bytes: 390 * 1024 + 640, gzipBytes: 69 * 1024 + 128 }],
 ]);
 
 function fail(message) {

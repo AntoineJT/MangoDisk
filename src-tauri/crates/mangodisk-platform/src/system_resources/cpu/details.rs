@@ -1,6 +1,8 @@
 //! Optional CPU identity and frequency observations, independent of utilization.
 use super::temperature::{CpuTemperature, CpuTemperatureReader, TEMPERATURE_INTERVAL_MS};
-use crate::{PlatformError, PlatformErrorCode, PlatformResult};
+use crate::PlatformResult;
+#[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
+use crate::{PlatformError, PlatformErrorCode};
 use serde::Serialize;
 use std::time::{Duration, Instant};
 
@@ -30,6 +32,7 @@ pub struct CpuFrequency {
     pub average_mhz: Option<f64>,
     pub efficiency_mhz: Option<f64>,
     pub performance_mhz: Option<f64>,
+    pub super_mhz: Option<f64>,
     pub source: CpuFrequencySource,
 }
 
@@ -133,6 +136,7 @@ fn temperature_deadline(now: Instant, successful: bool) -> Option<Instant> {
         Some(now + Duration::from_millis(TEMPERATURE_INTERVAL_MS))
     }
 }
+#[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
 fn unsupported() -> PlatformError {
     PlatformError::new(
         PlatformErrorCode::Unsupported,
@@ -249,6 +253,8 @@ mod tests {
 #[cfg(test)]
 mod temperature_tests {
     use super::*;
+    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+    use crate::PlatformErrorCode;
     #[test]
     fn hidden_panels_release_temperature_resources_and_unsupported_probes_back_off() {
         let mut reader = CpuDetailsReader::default();
