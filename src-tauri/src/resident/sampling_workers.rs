@@ -78,7 +78,11 @@ pub enum Observation {
 }
 
 pub enum Request {
-    Sample { generation: u64, demand: Demand },
+    Sample {
+        generation: u64,
+        baseline_generation: u64,
+        demand: Demand,
+    },
     Release,
 }
 pub struct Completion {
@@ -127,6 +131,7 @@ fn run_worker(
     while let Ok(request) = requests.recv() {
         let Request::Sample {
             generation: requested_generation,
+            baseline_generation,
             demand,
         } = request
         else {
@@ -142,7 +147,7 @@ fn run_worker(
             log::info!("resident_sampling_resources_acquired metric={metric:?}");
             create()
         });
-        if generation.replace(requested_generation) != Some(requested_generation) {
+        if generation.replace(baseline_generation) != Some(baseline_generation) {
             sensor.reset_baselines();
         }
         let started = Instant::now();
@@ -231,6 +236,12 @@ impl Sensor {
         }
         if let Self::Gpu(reader) = self {
             reader.reset();
+        }
+        #[cfg(test)]
+        if let Self::Probe(probe) = self {
+            probe
+                .resets
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         }
     }
     fn sample(&mut self, demand: &Demand, timestamp_ms: u64) -> CoreResult<Observation> {
@@ -394,12 +405,58 @@ mod tests {
         pub(super) started: mpsc::Sender<()>,
         pub(super) proceed: mpsc::Receiver<()>,
         retired: mpsc::Sender<()>,
+        pub(super) resets: Arc<std::sync::atomic::AtomicUsize>,
     }
     impl Drop for Probe {
         fn drop(&mut self) {
             self.owner.take();
             let _ = self.retired.send(());
         }
+    }
+
+    #[test]
+    fn detail_changes_preserve_the_owned_native_counter_baseline() {
+        let (requests, jobs) = mpsc::sync_channel(1);
+        let (events, completed) = mpsc::sync_channel(1);
+        let (started, starts) = mpsc::channel();
+        let (proceed, wait) = mpsc::channel();
+        let (retired, _) = mpsc::channel();
+        let resets = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let observed = resets.clone();
+        let worker = std::thread::spawn(move || {
+            let mut probe = Some(Probe {
+                owner: None,
+                started,
+                proceed: wait,
+                retired,
+                resets,
+            });
+            run_worker(MetricId::Gpu, Instant::now(), events, jobs, || {
+                Sensor::Probe(probe.take().unwrap())
+            });
+        });
+        for (generation, baseline_generation, expected) in [(1, 1, 1), (2, 1, 1), (3, 2, 2)] {
+            requests
+                .send(Request::Sample {
+                    generation,
+                    baseline_generation,
+                    demand: Demand {
+                        active: true,
+                        detailed: generation > 1,
+                        ..Default::default()
+                    },
+                })
+                .unwrap();
+            starts.recv_timeout(Duration::from_secs(3)).unwrap();
+            assert_eq!(
+                observed.load(std::sync::atomic::Ordering::Relaxed),
+                expected
+            );
+            proceed.send(()).unwrap();
+            completed.recv_timeout(Duration::from_secs(3)).unwrap();
+        }
+        drop(requests);
+        worker.join().unwrap();
     }
 
     #[test]
@@ -415,6 +472,7 @@ mod tests {
                 started,
                 proceed: wait,
                 retired,
+                resets: Default::default(),
             });
             run_worker(MetricId::Cpu, Instant::now(), events, jobs, || {
                 Sensor::Probe(probe.take().unwrap())
@@ -423,6 +481,7 @@ mod tests {
         requests
             .send(Request::Sample {
                 generation: 1,
+                baseline_generation: 1,
                 demand: Demand {
                     active: true,
                     temperature: true,
@@ -469,12 +528,14 @@ mod tests {
                     started: started.clone(),
                     proceed: wait,
                     retired: retired.clone(),
+                    resets: Default::default(),
                 })
             });
         });
         let timeout = Duration::from_secs(3);
         let request = |generation, detailed| Request::Sample {
             generation,
+            baseline_generation: generation,
             demand: Demand {
                 active: true,
                 detailed,
@@ -534,6 +595,7 @@ mod tests {
                 requests
                     .send(Request::Sample {
                         generation,
+                        baseline_generation: generation,
                         demand: Demand {
                             active: true,
                             detailed: metric == MetricId::Memory,

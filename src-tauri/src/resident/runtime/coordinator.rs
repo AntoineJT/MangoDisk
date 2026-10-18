@@ -110,6 +110,7 @@ pub(super) fn run(
                 if jobs[index]
                     .send(sampling_workers::Request::Sample {
                         generation,
+                        baseline_generation: slots[index].baseline_generation(),
                         demand: demands[index].clone(),
                     })
                     .is_err()
