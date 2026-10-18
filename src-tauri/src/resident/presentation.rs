@@ -58,7 +58,7 @@ impl Presentation {
                             // full process identities into a second WebView on every tick.
                             let mut overview = reading.clone();
                             overview.resources.gpu_details = Default::default();
-                            overview.resources.gpu_detail_history.clear();
+                            overview.resources.gpu_detail_history = Default::default();
                             overview.resources.cpu_processes = Default::default();
                             overview.resources.memory_processes = Default::default();
                             let _ = app.emit_to(crate::MAIN_WINDOW_LABEL, READING_EVENT, &overview);

@@ -1,5 +1,5 @@
 //! Per-device temperature history remains independent of utilization failures.
-use super::metrics::{MetricReading, MetricStatus, Trend, TrendPoint};
+use super::metrics::{MetricReading, MetricStatus, Trend, TrendHistory, TrendPoint};
 use mangodisk_platform::{
     system_resources::gpu::temperature::{
         GpuTemperature, GpuTemperatureSample, GPU_TEMPERATURE_FRESHNESS_MS,
@@ -107,7 +107,7 @@ impl GpuTemperatureCache {
     pub fn expire(&mut self, now: u64) {
         self.reading.expire(now, GPU_TEMPERATURE_FRESHNESS_MS);
     }
-    pub fn history(&self, now: u64) -> Vec<TrendPoint> {
+    pub fn history(&mut self, now: u64) -> TrendHistory {
         self.history.snapshot(now)
     }
 }
