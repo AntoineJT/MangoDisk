@@ -49,6 +49,7 @@ pub(super) fn run(
     let mut summary_at = Instant::now();
     let mut process_cpu = process_cpu_sampling::ProcessCpuSampling::start(origin, sender.clone());
     let mut loop_at = Instant::now();
+    let mut loop_wall_at = sampling_workers::timestamp_ms();
     let mut was_active = worker.enabled();
     let mut loop_max_ms = 0u128;
     let mut loop_delayed = false;
@@ -62,17 +63,27 @@ pub(super) fn run(
     loop {
         let loop_ms = loop_at.elapsed().as_millis();
         loop_at = Instant::now();
+        let wall_now = sampling_workers::timestamp_ms();
+        let wall_loop_ms = wall_now.saturating_sub(loop_wall_at);
+        let wall_clock_reversed = wall_now < loop_wall_at;
+        loop_wall_at = wall_now;
         loop_max_ms = loop_max_ms.max(loop_ms);
         // An idle disabled service can sleep indefinitely; that is intentional.
         // While active, the coordinator should wake at least once per second.
         let active = worker.enabled();
         let delayed = was_active && active && loop_ms > 2000;
-        was_active = active;
+        if was_active
+            && active
+            && (wall_clock_reversed || u128::from(wall_loop_ms).abs_diff(loop_ms) > 2000)
+        {
+            log::info!("resident_clock_gap monotonic_gap_ms={loop_ms} wall_gap_ms={wall_loop_ms} wall_clock_reversed={wall_clock_reversed} outcome=revalidate_freshness");
+        }
         if delayed && !loop_delayed {
-            log::warn!("resident_sampling_delayed loop_ms={loop_ms}");
+            log::warn!("resident_sampling_delayed loop_ms={loop_ms} wall_gap_ms={wall_loop_ms} wall_clock_reversed={wall_clock_reversed}");
         } else if loop_delayed && !delayed {
             log::info!("resident_sampling_recovered");
         }
+        was_active = active;
         loop_delayed = delayed;
         let mut demands = worker.demands(observations.warm_icons);
         let auxiliary_demand = demands[0].clone();
@@ -341,6 +352,13 @@ pub(super) fn run(
                 );
                 disk_status = resources.disk_io.status;
             }
+            let sample_times = [
+                resources.cpu.sampled_at_ms,
+                resources.gpu.sampled_at_ms,
+                resources.memory.sampled_at_ms,
+                resources.network.sampled_at_ms,
+                resources.disk.sampled_at_ms,
+            ];
             let statuses = [
                 resources.cpu.status,
                 resources.gpu.status,
@@ -351,10 +369,10 @@ pub(super) fn run(
             for index in 0..MetricId::ALL.len() {
                 if statuses[index] != previous_status[index] {
                     log::info!(
-                        "resident_metric_state metric={:?} from={:?} to={:?}",
-                        MetricId::ALL[index],
-                        previous_status[index],
-                        statuses[index]
+                        "resident_metric_state metric={:?} from={:?} to={:?} now_ms={} sampled_at_ms={:?} sample_age_ms={:?} sample_in_future={} freshness_ms={} interval_ms={} coordinator_loop_ms={} wall_loop_ms={} wall_clock_reversed={}",
+                        MetricId::ALL[index], previous_status[index], statuses[index], now_ms, sample_times[index],
+                        sample_times[index].map(|at| now_ms.saturating_sub(at)), sample_times[index].is_some_and(|at| at > now_ms),
+                        MetricId::ALL[index].freshness_ms(), MetricId::ALL[index].interval_ms(), loop_ms, wall_loop_ms, wall_clock_reversed
                     );
                 }
             }
