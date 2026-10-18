@@ -14,6 +14,7 @@ withDefaults(
       cached?: boolean;
       copy?: boolean;
       hint?: string;
+      liveHint?: boolean;
     }[];
   }>(),
   { active: true, layout: 'tiles' }
@@ -24,7 +25,7 @@ const { t } = useI18n({ useScope: 'global' });
   <dl v-if="facts.length" class="resource-facts" :class="{ compact: facts.length === 1, rows: layout === 'rows' }">
     <div v-for="fact in facts" :key="fact.key" class="resource-fact">
       <dt>
-        <MdTooltip v-if="fact.hint" :active="active" :text="fact.hint" multiline
+        <MdTooltip v-if="fact.hint" :active="active" :text="fact.hint" :close-on-text-change="!fact.liveHint" multiline
           ><span tabindex="0">{{ fact.label }}</span></MdTooltip
         >
         <span v-else>{{ fact.label }}</span>

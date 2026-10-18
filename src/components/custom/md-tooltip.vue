@@ -5,13 +5,26 @@ import { TOOLTIP_OPEN_DELAY_MS } from '@/lib/models/presentation/ui';
 
 defineOptions({ inheritAttrs: false });
 const props = withDefaults(
-  defineProps<{ text?: string | null; delayDuration?: number; multiline?: boolean; active?: boolean }>(),
-  { active: true, text: undefined, delayDuration: undefined }
+  defineProps<{
+    text?: string | null;
+    delayDuration?: number;
+    multiline?: boolean;
+    active?: boolean;
+    closeOnTextChange?: boolean;
+  }>(),
+  { active: true, closeOnTextChange: true, text: undefined, delayDuration: undefined }
 );
 const open = ref(false);
 // Recycled rows must close a tooltip before it starts describing another file.
 watch(
-  () => [props.text, props.active],
+  () => props.text,
+  text => {
+    if (!text || props.closeOnTextChange) open.value = false;
+  },
+  { flush: 'sync' }
+);
+watch(
+  () => props.active,
   () => {
     open.value = false;
   },
@@ -37,6 +50,7 @@ onDeactivated(() => {
       <!-- Natural wrapping avoids balanced lines leaving unused space in descriptions and file paths. -->
       <TooltipContent
         v-if="open"
+        :aria-label="closeOnTextChange ? undefined : text || undefined"
         class="max-w-[min(24rem,calc(100vw-24px))] text-left text-wrap [overflow-wrap:anywhere]"
         :class="multiline ? 'whitespace-pre-line' : 'whitespace-normal'"
       >

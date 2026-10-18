@@ -50,3 +50,45 @@ it('closes hints and resets pointer state when the resident panel becomes inacti
     wrapper.unmount();
   }
 });
+
+it('closes recycled hints when their text changes by default', async () => {
+  const wrapper = mount(MdTooltip, {
+    attachTo: document.body,
+    props: { text: 'First file', delayDuration: 0 },
+    slots: { default: () => h('button', 'File') },
+  });
+  try {
+    await wrapper.get('button').trigger('pointermove', { pointerType: 'mouse' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('First file'));
+    await wrapper.setProps({ text: 'Another file' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+  } finally {
+    wrapper.unmount();
+  }
+});
+
+it('keeps live hints readable across updates while honoring deactivation and empty text', async () => {
+  const wrapper = mount(MdTooltip, {
+    attachTo: document.body,
+    props: { text: 'Sampled 2 seconds', closeOnTextChange: false, delayDuration: 0 },
+    slots: { default: () => h('button', 'Coverage') },
+  });
+  try {
+    await wrapper.get('button').trigger('pointermove', { pointerType: 'mouse' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+    await wrapper.setProps({ text: 'Sampled 4 seconds' });
+    await vi.waitFor(() =>
+      expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('Sampled 4 seconds')
+    );
+    await wrapper.setProps({ active: false });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+    await wrapper.setProps({ active: true });
+    expect(document.querySelector('[role="tooltip"]')).toBeNull();
+    await wrapper.get('button').trigger('pointermove', { pointerType: 'mouse' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).not.toBeNull());
+    await wrapper.setProps({ text: '' });
+    await vi.waitFor(() => expect(document.querySelector('[role="tooltip"]')).toBeNull());
+  } finally {
+    wrapper.unmount();
+  }
+});
