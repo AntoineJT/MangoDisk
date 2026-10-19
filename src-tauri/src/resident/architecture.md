@@ -25,7 +25,7 @@ application termination, or memory-reclamation algorithms.
 | `taskbar_display/native` | Native-thread window ownership, creation and shell restart lifecycle |
 | `taskbar_display/native/messages`, `interaction` | Reentrant Win32 dispatch, pointer hit testing and context menus |
 | `taskbar_display/native/update`, `rendering` | Live placement, lease coordination, visibility and native paint recovery |
-| `preference_schema` / `preference_schema/migrations` | Desktop preference models, normalization and backward-compatible pure decoding |
+| `preference_schema` | Current preference models, validation and pure release upgrades |
 | `preferences` | Revision conflicts, native application and persistence rollback |
 | `panel` / `main_window` | Independent presentation, source anchoring, focus and background-launch behavior |
 | Vue resident settings store | Serialized optimistic edits and rollback to committed preferences |
@@ -38,7 +38,7 @@ application termination, or memory-reclamation algorithms.
 ## Validation
 
 `pnpm rust:test:desktop` builds the required desktop helper and runs the desktop
-host's library tests, including resident preference migrations, native display
+host's library tests, including resident preference validation, native display
 calculations, sampling demand and publication ordering. `pnpm rust:test` includes
 this entry point, so `pnpm check` and `pnpm build` also execute the host tests.
 Core tests remain responsible for resource calculations and memory use cases.
@@ -63,22 +63,29 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 25; resource readings use version 29.
-Versions 1–8 preferences preserve every saved selection and order, appending GPU
-display disabled. New installations also leave GPU display unselected. Resource
-version 9 adds the GPU catalogue. Version 9 preferences migrate GPU selection to automatic; version 10 persists fixed selection. Frontends reject mismatched envelopes.
-Version 1 preferences retain background and memory-display choices. Version 2
-preferences retain all selections and migrate to taskbar presentation.
-Version 3 retains that mode and defaults the new position preference to right.
-Version 4 retains all choices and enables the new taskbar background option.
-Version 5 retains its saved left/right preference; only new installations default
-to automatic placement. Version 6 retains automatic/manual choices and defaults
-the new compact mode to off. Compact mode reduces horizontal cells from 38/81
+Resident preferences use schema version 28; resource readings use version 29.
+The runtime and IPC accept only the current structure. Persisted configurations from
+release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) upgrade directly to schema 28;
+development-only schemas, including 26 and 27, have no migration contract. Each
+supported release has a frozen fixture beside the pure decoder. Upgrades retain
+saved order, visibility, colors, source choices and consent; newly introduced
+metrics start disabled. Loading performs no writes. The next explicit settings
+save persists only the current structure, without passing through intermediate
+schemas. Unknown versions or malformed data use runtime defaults with diagnostics,
+and cannot be overwritten by an ordinary settings save. `resident.json` is owned
+by the desktop configuration adapter, outside plugin store exit callbacks. Explicit
+saves reread and validate the persisted version, write and sync a temporary file
+in the same directory, then atomically replace the target. Failed writes preserve
+the previous record and do not publish new runtime preferences.
+Only shipped structures become migration sources. While a target is still in
+development, update its direct converters rather than accumulating intermediate
+version steps.
+Display metrics must contain each current metric exactly once; custom order is retained.
+GPU display is disabled by default. Compact mode reduces horizontal cells from 38/81
 to 34/55 DIP (percentage/network), with abbreviated network units
 (B/K/M/G/T) and unchanged numeric precision. Taskbar labels and values use 13 DIP Segoe UI. The shared size converts to physical pixels with nearest-pixel
 rounding at the monitor DPI; paint and hit testing share those bounds.
-Unknown persisted
-versions are rejected for writes. Memory snapshots use version 4; release results retain their separate version 1 contract.
+Writes accept only the current validated structure. Memory snapshots use version 4; release results retain their separate version 1 contract.
 
 CPU overview samples every 2 seconds on both platforms, whether visible or hidden. Memory samples every
 3 seconds, network every 1 and disk every 30.
@@ -546,16 +553,10 @@ all metric rules. Each display item opens a fixed-height editing dialog with a
 local draft, Number Field controls, explicit save/cancel, and deletion of every
 rule. Closing without saving leaves persisted preferences unchanged.
 
-Version 15 continuous bands migrate to equivalent conditions without changing
-colors, thresholds, enable flags, or selections. Older preferences retain their
-warning/critical thresholds as default/orange/red rules; temperature coloring
-remains disabled during that migration. New installations use green/orange/red
-defaults. Only adjacent descending boundaries have three-percentage-point or
-two-degree hysteresis; gaps immediately return to the system foreground.
-
-Version 8 adds these color preferences and an independent macOS compact setting.
-Legacy selections and custom order are retained. The former default sequence
-and new installations use CPU, memory, disk, then network. macOS compact mode preserves labels, percentages and direction
+New installations use green/orange/red defaults. Only adjacent descending
+boundaries have three-percentage-point or two-degree hysteresis; gaps immediately
+return to the system foreground. The macOS compact setting is independent.
+macOS compact mode preserves labels, percentages and direction
 arrows, shortens network units, and reduces fixed field widths and spacing. Both
 densities reserve enough width for their largest numeric values at the native font.
 
@@ -686,7 +687,7 @@ instantaneous values.
 CPU and memory share icon identity, disclosure, and file-manager navigation. CPU is
 view-only: normal app-wide quit and memory exclusions remain in the memory list.
 Resource version 9 replaces the ephemeral IPC protocol; readers reject other
-versions. Resident preferences migrate independently to version 11.
+versions. Resident preferences have an independent schema with explicit release upgrades.
 
 Linux process rows request path-specific icons rather than sharing an extensionless
 file-type icon. The GUI enables the platform's `linux-desktop-icons` feature;
@@ -929,14 +930,8 @@ an em dash rather than a cached number.
 
 ## CPU temperature display
 
-Preference schema 21 keeps network last in the default display order, after
-battery and whole-system power items. Loading an older complete default order
-moves only network to the end; custom saved order, selections and color rules
-remain intact. Missing display items are inserted before a trailing network item.
-
-Preference schema 11 adds `cpuTemperature` to the ordered `metrics` display
-items. It is disabled by default and appended to migrated preferences without
-changing existing selections or relative order. macOS exposes the same checkbox
+The default display order keeps network last, after battery and whole-system power
+items. CPU temperature is disabled by default. macOS exposes the same checkbox
 and drag/keyboard reordering as other items, independently of CPU utilization.
 Display item IDs are separate from the five resource worker IDs. Detail hints
 identify the sensor aggregation and count; native hover text shows the current
@@ -980,9 +975,7 @@ accelerators; AMD GPUs retain identified driver temperature support. Reads use
 ordinary process permissions and the shared read-only SMC transport; no fan
 control, helper, service or driver installation is involved.
 
-Preference schema 14 removes the Windows display destination field. Versions 1–13
-preserve metric selections, layout, and enabled state; legacy tray selections
-migrate to taskbar display. A plain tray icon remains the recovery entry when
+Windows uses taskbar display. A plain tray icon remains the recovery entry when
 Explorer is unavailable or the taskbar has insufficient space.
 
 Windows uses the same identified temperature contract, cache, display column and
@@ -1004,8 +997,7 @@ remain outside the scrolling memory and engine detail sections, matching CPU fac
 
 ### macOS battery display
 
-Preference version 20 keeps battery temperature, charging power, and battery power
-display disabled by default, preserving saved selections, order, and color rules.
+Battery temperature, charging power, and battery power display are disabled by default.
 Battery-temperature rules use the defaults described below; power rules start
 disabled and empty. Limits are 100°C and 300 W. Menu-bar power uses rounded integer watts in both modes; nonzero
 readings below 1 W display as <1W and use zero as their integer color-rule value.
@@ -1037,8 +1029,7 @@ periodic numeric observation, without battery identity or raw registry contents.
 Native battery power headings use BAT with a separate red ↑ for discharging,
 blue ↓ for charging, and IDLE for zero current without charging. Arrow colors
 indicate direction independently of the value's color rules. Tooltips localize the state; stale readings
-clear the state along with the value. Version 17 selections and colors migrate
-without changing them, appending battery power disabled.
+clear the state along with the value.
 
 
 ### macOS whole-system power display
@@ -1070,9 +1061,8 @@ and native columns while preserving saved selections and color rules. If no
 visible metric remains, the native brand icon preserves access to settings.
 
 
-Preference version 20 adds enabled battery-temperature color defaults: below
-40°C green, 40–45°C orange, and at least 45°C red. Migration upgrades only the
-old inactive, empty battery-temperature default; custom rules remain intact.
+Battery-temperature color defaults are green below 40°C, orange from 40°C to below
+45°C, and red at 45°C or above.
 Current-version users can still disable or remove every rule. Charging, battery
 and whole-system power defaults remain disabled and empty. Battery help actions
 sit immediately after their labels, separate from color controls.
@@ -1080,9 +1070,8 @@ sit immediately after their labels, separate from color controls.
 
 ### Disk temperature and network selection
 
-Preference and resource version 22 add `diskTemperature` without temperature
-history. Migration inserts this default-off item immediately after disk usage,
-preserving existing relative order, enabled flags, device selections and colors.
+`diskTemperature` has no temperature history and is disabled by default, immediately
+after disk usage.
 Disk temperature colors default to green below 50°C, orange from 50°C to below
 60°C, and red at 60°C or above. These editable display presets do not represent
 universal drive health limits. Saved color rules, including disabled or empty
@@ -1147,12 +1136,8 @@ a recovered main window. Follow Microsoft's [process-related event guidance](htt
 
 ## macOS fan speed
 
-Preference envelopes use version 25; current readings use version 29. Previous preferences retain all
-saved display choices, relative order, colors, and device selections. Migration
-adds fan speed disabled before a trailing network item, with automatic fan
-selection. Version-23 automatic and fixed choices migrate to highest and selected
-modes. Selected IDs contain one or two unique, bounded IDs sorted numerically;
-missing tachometers never change the saved selection.
+Fan display defaults to highest speed. Selected IDs contain one or two unique,
+bounded IDs sorted numerically; missing tachometers never change the saved selection.
 
 The platform fan reader uses the existing read-only Apple SMC connection. FNum
 identifies the fan count; F0Ac through F9Ac expose actual RPM. Integer counts,
@@ -1187,8 +1172,7 @@ item. Fan speed has no trend or control interface.
 Fan color conditions use RPM with configurable thresholds bounded to 30000.
 The default bands are green below 2000, orange from 2000 to below 4000, and
 red from 4000 upward. These are speed bands, not hardware health limits.
-Version-24 and older preferences acquire only the missing default fan rule;
-existing color choices are preserved. Highest and average modes color their
+Highest and average modes color their
 aggregate value; paired rows classify independently by fan ID. Missing or stale
 values use the system foreground. Descending boundaries hold for 100 RPM to
 avoid flicker and reset when the mode, selected fans, or rules change.

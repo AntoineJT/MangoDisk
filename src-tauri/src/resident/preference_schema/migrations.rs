@@ -1,427 +1,273 @@
-//! Backward-compatible preference decoding with no persistence or native UI effects.
-use super::{DisplayMetricId, ResidentPreferences, TaskbarPosition, PREFERENCE_SCHEMA_VERSION};
-use crate::resident::color_rules;
-use serde::Deserialize;
+//! Direct upgrades from shipped preference structures; development schemas are not contracts.
+use super::{
+    DisplayMetric, DisplayMetricId, GpuDisplaySelection, ResidentPreferences, DISPLAY_ORDER,
+    PREFERENCE_SCHEMA_VERSION,
+};
+use crate::resident::color_rules::{self, ColorRule, DisplayColor, MetricColorRule};
+use serde_json::{Map, Value};
 
-pub(super) const PREVIOUS_DEFAULT_ORDER: [DisplayMetricId; 11] = [
-    DisplayMetricId::Cpu,
-    DisplayMetricId::CpuTemperature,
-    DisplayMetricId::Gpu,
-    DisplayMetricId::GpuTemperature,
-    DisplayMetricId::Memory,
-    DisplayMetricId::Disk,
-    DisplayMetricId::Network,
-    DisplayMetricId::BatteryTemperature,
-    DisplayMetricId::ChargingPower,
-    DisplayMetricId::BatteryPower,
-    DisplayMetricId::SystemPower,
-];
+// Release tags v1.1.1–v1.1.9 persisted only these five structures.
+const RELEASED_VERSIONS: [u64; 5] = [7, 8, 10, 21, 25];
 
-pub fn decode(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
-    let version = value.get("schemaVersion").and_then(|v| v.as_u64());
-    if version.is_some_and(|version| version < 23)
-        && (value.get("fanId").is_some_and(|value| !value.is_null())
-            || value
-                .get("metrics")
-                .and_then(|value| value.as_array())
-                .is_some_and(|metrics| metrics.iter().any(|metric| metric["id"] == "fanSpeed")))
-    {
-        return Err("preferences_invalid");
+pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
+    let version = value
+        .get("schemaVersion")
+        .and_then(Value::as_u64)
+        .ok_or("preferences_version")?;
+    if version == u64::from(PREFERENCE_SCHEMA_VERSION) {
+        return serde_json::from_value::<ResidentPreferences>(value)
+            .map_err(|_| "preferences_invalid")?
+            .normalize();
     }
-    if matches!(version, Some(2..=24)) {
-        if let Some(rules) = value
-            .get_mut("colorRules")
-            .and_then(|value| value.as_array_mut())
-        {
-            if rules.iter().any(|rule| rule["id"] == "fanSpeed") {
+    if !RELEASED_VERSIONS.contains(&version) {
+        return Err("preferences_version");
+    }
+    let object = value.as_object_mut().ok_or("preferences_invalid")?;
+    // Reject fields absent from the declared release before adding current defaults.
+    for field in [
+        "gpuDisplay",
+        "gpuTemperatureDisplay",
+        "diskTemperatureDevice",
+    ] {
+        if object.contains_key(field) {
+            return Err("preferences_invalid");
+        }
+    }
+    if version < 25 {
+        for field in ["fanDisplay", "fanIds"] {
+            if object.contains_key(field) {
                 return Err("preferences_invalid");
             }
-            if version.is_some_and(|version| version >= 16) {
-                rules.push(
-                    serde_json::to_value(color_rules::MetricColorRule::defaults(
-                        DisplayMetricId::FanSpeed,
-                    ))
-                    .map_err(|_| "preferences_invalid")?,
-                );
-            }
         }
+        object.insert("fanDisplay".into(), "highest".into());
+        object.insert("fanIds".into(), serde_json::json!([0]));
     }
-    if matches!(version, Some(2..=23)) {
-        if value.get("fanDisplay").is_some() || value.get("fanIds").is_some() {
-            return Err("preferences_invalid");
-        }
-        let old_id = value
-            .as_object_mut()
-            .ok_or("preferences_invalid")?
-            .remove("fanId");
-        let selected = match old_id {
-            None | Some(serde_json::Value::Null) => None,
-            Some(id) => Some(
-                id.as_u64()
-                    .filter(|id| *id < 10)
-                    .ok_or("preferences_invalid")?,
-            ),
-        };
-        value["fanDisplay"] = if selected.is_some() {
-            "selected"
-        } else {
-            "highest"
-        }
-        .into();
-        value["fanIds"] = serde_json::json!([selected.unwrap_or(0)]);
+    if version <= 10 {
+        upgrade_percentage_display(object, version)?;
     }
-    if matches!(version, Some(2..=21)) {
-        if value
-            .get("metrics")
-            .and_then(|value| value.as_array())
-            .is_some_and(|metrics| {
-                metrics.iter().any(|metric| {
-                    metric.get("id").and_then(|id| id.as_str()) == Some("diskTemperature")
-                })
-            })
-        {
-            return Err("preferences_invalid");
-        }
-        if let Some(rules) = value
-            .get_mut("colorRules")
-            .and_then(|value| value.as_array_mut())
-        {
-            if rules
-                .iter()
-                .any(|rule| rule.get("id").and_then(|id| id.as_str()) == Some("diskTemperature"))
-            {
-                return Err("preferences_invalid");
-            }
-            if version.is_some_and(|version| version >= 16) {
-                rules.push(
-                    serde_json::to_value(color_rules::MetricColorRule::defaults(
-                        DisplayMetricId::DiskTemperature,
-                    ))
-                    .map_err(|_| "preferences_invalid")?,
-                );
-            }
-        }
+    upgrade_metrics(object, version)?;
+    if version == 21 {
+        upgrade_color_rules(object, version)?;
     }
-    if matches!(version, Some(2..=12))
-        && value
-            .get("metrics")
-            .and_then(|v| v.as_array())
-            .is_some_and(|metrics| {
-                metrics.iter().any(|metric| {
-                    metric.get("id").and_then(|id| id.as_str()) == Some("gpuTemperature")
-                })
-            })
-    {
+    let selection = match object.get("gpuAdapter").and_then(Value::as_str) {
+        Some(id) => GpuDisplaySelection::Selected {
+            adapter_ids: vec![id.into()],
+        },
+        None => GpuDisplaySelection::Automatic,
+    };
+    object.insert(
+        "gpuDisplay".into(),
+        serde_json::to_value(selection).map_err(|_| "preferences_invalid")?,
+    );
+    // The former single GPU choice also controlled temperature; automatic temperature
+    // now follows the same menu-bar selection without coupling it to detail navigation.
+    object.insert(
+        "gpuTemperatureDisplay".into(),
+        serde_json::to_value(GpuDisplaySelection::Automatic).map_err(|_| "preferences_invalid")?,
+    );
+    object.insert("diskTemperatureDevice".into(), Value::Null);
+    object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
+    serde_json::from_value::<ResidentPreferences>(value)
+        .map_err(|_| "preferences_invalid")?
+        .normalize()
+}
+
+fn upgrade_percentage_display(
+    object: &mut Map<String, Value>,
+    version: u64,
+) -> Result<(), &'static str> {
+    if object.contains_key("windowsCpuTemperatureEnabled") || object.contains_key("colorRules") {
         return Err("preferences_invalid");
     }
-    if matches!(version, Some(2..=11)) {
-        if value.get("windowsCpuTemperatureEnabled").is_some() {
-            return Err("preferences_invalid");
-        }
-        value["windowsCpuTemperatureEnabled"] = false.into();
-    }
-    if matches!(version, Some(2..=10))
-        && value
-            .get("metrics")
-            .and_then(|v| v.as_array())
-            .is_some_and(|metrics| {
-                metrics.iter().any(|metric| {
-                    metric.get("id").and_then(|id| id.as_str()) == Some("cpuTemperature")
-                })
-            })
+    match object
+        .remove("windowsDisplayMode")
+        .as_ref()
+        .and_then(Value::as_str)
     {
-        return Err("preferences_invalid");
+        Some("tray" | "taskbar") => {}
+        _ => return Err("preferences_invalid"),
     }
-    if matches!(version, Some(2..=9)) {
-        if value.get("gpuAdapter").is_some() {
+    object.insert("windowsCpuTemperatureEnabled".into(), false.into());
+    if version < 10 {
+        if object.contains_key("gpuAdapter") {
             return Err("preferences_invalid");
         }
-        value["gpuAdapter"] = serde_json::Value::Null;
+        object.insert("gpuAdapter".into(), Value::Null);
     }
-    if matches!(version, Some(2..=7)) {
+    if version == 7 {
         for field in [
             "menuBarCompact",
             "usageColors",
             "usageWarningPercent",
             "usageCriticalPercent",
         ] {
-            if value.get(field).is_some() {
+            if object.contains_key(field) {
                 return Err("preferences_invalid");
             }
         }
-        // Upgrade only the former default sequence; keep deliberate custom order.
-        if let Some(metrics) = value.get_mut("metrics").and_then(|v| v.as_array_mut()) {
-            let ids: Vec<_> = metrics
-                .iter()
-                .filter_map(|m| m.get("id").and_then(|id| id.as_str()))
-                .collect();
-            if ids == ["cpu", "memory", "network", "disk"] {
-                metrics.swap(2, 3);
-            }
-        }
-        value["menuBarCompact"] = false.into();
-        value["usageColors"] = true.into();
-        value["usageWarningPercent"] = 70.into();
-        value["usageCriticalPercent"] = 90.into();
+        object.insert("menuBarCompact".into(), false.into());
+        object.insert("usageColors".into(), true.into());
     }
-    // Versions 2–6 had no density preference. Preserve their appearance and
-    // reject fields that did not belong to the declared legacy protocol.
-    if matches!(
-        value.get("schemaVersion").and_then(|v| v.as_u64()),
-        Some(2..=6)
-    ) {
-        if value.get("taskbarCompact").is_some() {
+    let (warning, critical) = if version == 7 {
+        (70, 90)
+    } else {
+        let warning = object
+            .remove("usageWarningPercent")
+            .and_then(|v| v.as_u64())
+            .ok_or("preferences_invalid")?;
+        let critical = object
+            .remove("usageCriticalPercent")
+            .and_then(|v| v.as_u64())
+            .ok_or("preferences_invalid")?;
+        if warning < 1 || warning >= critical || critical > 100 {
             return Err("preferences_invalid");
         }
-        value["taskbarCompact"] = false.into();
-    }
-    let mut preferences = match value
-        .get("schemaVersion")
-        .and_then(serde_json::Value::as_u64)
+        (warning as u16, critical as u16)
+    };
+    object.insert(
+        "colorRules".into(),
+        serde_json::to_value(percentage_colors(warning, critical))
+            .map_err(|_| "preferences_invalid")?,
+    );
+    Ok(())
+}
+
+fn upgrade_metrics(object: &mut Map<String, Value>, version: u64) -> Result<(), &'static str> {
+    let mut metrics: Vec<DisplayMetric> = serde_json::from_value(
+        object
+            .get("metrics")
+            .cloned()
+            .ok_or("preferences_invalid")?,
+    )
+    .map_err(|_| "preferences_invalid")?;
+    let expected: Vec<_> = DISPLAY_ORDER
+        .into_iter()
+        .filter(|id| released_metric(version, *id))
+        .collect();
+    if metrics.len() != expected.len()
+        || expected
+            .iter()
+            .any(|id| metrics.iter().filter(|m| m.id == *id).count() != 1)
     {
-        Some(1) => {
-            #[derive(Deserialize)]
-            #[serde(rename_all = "camelCase", deny_unknown_fields)]
-            struct Previous {
-                schema_version: u32,
-                enabled: bool,
-                show_memory: bool,
-            }
-            let previous: Previous =
-                serde_json::from_value(value).map_err(|_| "preferences_invalid")?;
-            if previous.schema_version != 1 {
-                return Err("preferences_version");
-            }
-            let mut migrated = ResidentPreferences {
-                enabled: previous.enabled,
-                color_rules: color_rules::legacy(70, 90),
-                // Preserve legacy metric and position choices. Windows now uses
-                // taskbar presentation for every supported preference version.
-                taskbar_position: TaskbarPosition::Right,
-                ..Default::default()
-            };
-            for metric in &mut migrated.metrics {
-                metric.enabled = metric.id == DisplayMetricId::Memory && previous.show_memory;
-            }
-            Ok(migrated)
-        }
-        Some(2) => {
-            // Version 2 predates taskbar settings. Retain metric choices and
-            // migrate the display destination to the sole supported taskbar mode.
-            if value.get("windowsDisplayMode").is_some()
-                || value.get("taskbarPosition").is_some()
-                || value.get("taskbarBackground").is_some()
+        return Err("preferences_invalid");
+    }
+    // Keep every saved metric's relative position and enabled state. Newly introduced
+    // metrics stay off and sit before a trailing network column where possible.
+    for id in DISPLAY_ORDER {
+        if !expected.contains(&id) {
+            let index = if id == DisplayMetricId::DiskTemperature {
+                metrics
+                    .iter()
+                    .position(|m| m.id == DisplayMetricId::Disk)
+                    .map_or(metrics.len(), |i| i + 1)
+            } else if metrics
+                .last()
+                .is_some_and(|m| m.id == DisplayMetricId::Network)
             {
-                return Err("preferences_invalid");
-            }
-            value["schemaVersion"] = 14.into();
-            value["taskbarBackground"] = true.into();
-            value["windowsDisplayMode"] = "tray".into();
-            value["taskbarPosition"] = "right".into();
-            migrate_display_destination(value)
+                metrics.len() - 1
+            } else {
+                metrics.len()
+            };
+            metrics.insert(index, DisplayMetric { id, enabled: false });
         }
-        Some(3) => {
-            if value.get("taskbarPosition").is_some() || value.get("taskbarBackground").is_some() {
-                return Err("preferences_invalid");
-            }
-            value["schemaVersion"] = 14.into();
-            value["taskbarBackground"] = true.into();
-            value["taskbarPosition"] = "right".into();
-            migrate_display_destination(value)
-        }
-        Some(4) => {
-            if !matches!(
-                value.get("taskbarPosition").and_then(|v| v.as_str()),
-                Some("left" | "right")
-            ) {
-                return Err("preferences_invalid");
-            }
-            if value.get("taskbarBackground").is_some() {
-                return Err("preferences_invalid");
-            }
-            // Existing installations keep the opaque presentation until the
-            // user explicitly selects transparency.
-            value["schemaVersion"] = 14.into();
-            value["taskbarBackground"] = true.into();
-            migrate_display_destination(value)
-        }
-        Some(5) => {
-            // Version 5 predates automatic placement. Do not infer whether a saved
-            // left/right value was a default or an explicit user decision.
-            if !matches!(
-                value.get("taskbarPosition").and_then(|v| v.as_str()),
-                Some("left" | "right")
-            ) {
-                return Err("preferences_invalid");
-            }
-            value["schemaVersion"] = 14.into();
-            migrate_display_destination(value)
-        }
-        Some(6) => {
-            value["schemaVersion"] = 14.into();
-            migrate_display_destination(value)
-        }
-        Some(7..=13) => {
-            value["schemaVersion"] = 14.into();
-            migrate_display_destination(value)
-        }
-        Some(14) => {
-            if value.get("windowsDisplayMode").is_some() {
-                return Err("preferences_invalid");
-            }
-            migrate_display_destination(value)
-        }
-        Some(15) => {
-            let rules = color_rules::migrate_bands(
-                value
-                    .get("colorRules")
-                    .cloned()
-                    .ok_or("preferences_invalid")?,
-            )?;
-            value["colorRules"] = serde_json::to_value(rules).map_err(|_| "preferences_invalid")?;
-            value["schemaVersion"] = 16.into();
-            migrate_battery(value)
-        }
-        Some(16 | 17) => migrate_battery(value),
-        Some(18) => migrate_system_power(value),
-        Some(19) => {
-            let mut preferences = serde_json::from_value::<ResidentPreferences>(value)
-                .map_err(|_| "preferences_invalid")?;
-            upgrade_battery_temperature_default(&mut preferences);
-            preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
-            preferences.normalize()
-        }
-        Some(20..=24) => {
-            let mut preferences = serde_json::from_value::<ResidentPreferences>(value)
-                .map_err(|_| "preferences_invalid")?;
-            preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
-            preferences.normalize()
-        }
-        Some(25) => serde_json::from_value::<ResidentPreferences>(value)
-            .map_err(|_| "preferences_invalid")?
-            .normalize(),
-        _ => Err("preferences_version"),
-    }?;
-    // Upgrade the exact former default once. Version-21 custom orders, including
-    // ones that resemble the old default, must remain stable across reloads.
-    if version.is_some_and(|version| version < 21)
-        && preferences
-            .metrics
+    }
+    object.insert(
+        "metrics".into(),
+        serde_json::to_value(metrics).map_err(|_| "preferences_invalid")?,
+    );
+    Ok(())
+}
+
+fn upgrade_color_rules(object: &mut Map<String, Value>, version: u64) -> Result<(), &'static str> {
+    let mut rules: Vec<MetricColorRule> = serde_json::from_value(
+        object
+            .get("colorRules")
+            .cloned()
+            .ok_or("preferences_invalid")?,
+    )
+    .map_err(|_| "preferences_invalid")?;
+    let expected: Vec<_> = color_rules::COLOR_METRICS
+        .into_iter()
+        .filter(|id| released_metric(version, *id))
+        .collect();
+    if rules.len() != expected.len()
+        || expected
             .iter()
-            .map(|metric| metric.id)
-            .filter(|id| {
-                !matches!(
-                    id,
-                    DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
-                )
-            })
-            .eq(PREVIOUS_DEFAULT_ORDER)
-    {
-        let index = preferences
-            .metrics
-            .iter()
-            .position(|metric| metric.id == DisplayMetricId::Network)
-            .unwrap();
-        let network = preferences.metrics.remove(index);
-        preferences.metrics.push(network);
-    }
-    Ok(preferences)
-}
-
-fn upgrade_battery_temperature_default(preferences: &mut ResidentPreferences) {
-    if let Some(rule) = preferences.color_rules.iter_mut().find(|rule| {
-        rule.id == DisplayMetricId::BatteryTemperature && !rule.enabled && rule.rules.is_empty()
-    }) {
-        // Match only the old inactive, empty default. Saved custom rules and
-        // version-20 users who deliberately clear rules must remain unchanged.
-        *rule = color_rules::MetricColorRule::defaults(DisplayMetricId::BatteryTemperature);
-    }
-}
-
-fn migrate_system_power(value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
-    let mut preferences =
-        serde_json::from_value::<ResidentPreferences>(value).map_err(|_| "preferences_invalid")?;
-    if preferences
-        .metrics
-        .iter()
-        .any(|metric| metric.id == DisplayMetricId::SystemPower)
+            .any(|id| rules.iter().filter(|r| r.id == *id).count() != 1)
+        || rules.iter().any(|rule| !rule.valid())
     {
         return Err("preferences_invalid");
     }
-    // Only append the new rule. Existing malformed version-18 rules must still
-    // fail validation instead of being silently repaired and persisted.
-    preferences
-        .color_rules
-        .push(color_rules::MetricColorRule::defaults(
-            DisplayMetricId::SystemPower,
-        ));
-    preferences.schema_version = PREFERENCE_SCHEMA_VERSION;
-    upgrade_battery_temperature_default(&mut preferences);
-    preferences.normalize()
+    rules.extend(
+        [DisplayMetricId::DiskTemperature, DisplayMetricId::FanSpeed]
+            .map(MetricColorRule::defaults),
+    );
+    object.insert(
+        "colorRules".into(),
+        serde_json::to_value(rules).map_err(|_| "preferences_invalid")?,
+    );
+    Ok(())
 }
 
-fn migrate_battery(mut value: serde_json::Value) -> Result<ResidentPreferences, &'static str> {
-    let rules = value
-        .get_mut("colorRules")
-        .and_then(|value| value.as_array_mut())
-        .ok_or("preferences_invalid")?;
-    for id in [
-        DisplayMetricId::BatteryTemperature,
-        DisplayMetricId::ChargingPower,
-        DisplayMetricId::BatteryPower,
-        DisplayMetricId::SystemPower,
-    ] {
-        let name = serde_json::to_value(id).map_err(|_| "preferences_invalid")?;
-        if !rules.iter().any(|rule| rule.get("id") == Some(&name)) {
-            rules.push(
-                serde_json::to_value(color_rules::MetricColorRule::defaults(id))
-                    .map_err(|_| "preferences_invalid")?,
-            );
-        }
+fn released_metric(version: u64, id: DisplayMetricId) -> bool {
+    match version {
+        7 | 8 => matches!(
+            id,
+            DisplayMetricId::Cpu
+                | DisplayMetricId::Memory
+                | DisplayMetricId::Disk
+                | DisplayMetricId::Network
+        ),
+        10 => matches!(
+            id,
+            DisplayMetricId::Cpu
+                | DisplayMetricId::Gpu
+                | DisplayMetricId::Memory
+                | DisplayMetricId::Disk
+                | DisplayMetricId::Network
+        ),
+        21 => !matches!(
+            id,
+            DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
+        ),
+        25 => true,
+        _ => false,
     }
-    value["schemaVersion"] = PREFERENCE_SCHEMA_VERSION.into();
-    let mut preferences =
-        serde_json::from_value::<ResidentPreferences>(value).map_err(|_| "preferences_invalid")?;
-    upgrade_battery_temperature_default(&mut preferences);
-    preferences.normalize()
 }
 
-fn migrate_display_destination(
-    mut value: serde_json::Value,
-) -> Result<ResidentPreferences, &'static str> {
-    if let Some(mode) = value
-        .as_object_mut()
-        .and_then(|object| object.remove("windowsDisplayMode"))
-    {
-        if !matches!(mode.as_str(), Some("taskbar" | "tray")) {
-            return Err("preferences_invalid");
-        }
-    }
-    if value.get("colorRules").is_some() {
-        return Err("preferences_invalid");
-    }
-    let warning = value
-        .get("usageWarningPercent")
-        .and_then(|v| v.as_u64())
-        .ok_or("preferences_invalid")?;
-    let critical = value
-        .get("usageCriticalPercent")
-        .and_then(|v| v.as_u64())
-        .ok_or("preferences_invalid")?;
-    if warning < 1 || warning >= critical || critical > 100 {
-        return Err("preferences_invalid");
-    }
-    value
-        .as_object_mut()
-        .ok_or("preferences_invalid")?
-        .remove("usageWarningPercent");
-    value
-        .as_object_mut()
-        .ok_or("preferences_invalid")?
-        .remove("usageCriticalPercent");
-    value["colorRules"] =
-        serde_json::to_value(color_rules::legacy(warning as u16, critical as u16))
-            .map_err(|_| "preferences_invalid")?;
-    value["schemaVersion"] = 16.into();
-    migrate_battery(value)
+fn percentage_colors(warning: u16, critical: u16) -> Vec<MetricColorRule> {
+    color_rules::defaults()
+        .into_iter()
+        .map(|mut rule| {
+            if matches!(
+                rule.id,
+                DisplayMetricId::CpuTemperature | DisplayMetricId::GpuTemperature
+            ) {
+                rule.enabled = false;
+            } else if matches!(
+                rule.id,
+                DisplayMetricId::Cpu
+                    | DisplayMetricId::Gpu
+                    | DisplayMetricId::Memory
+                    | DisplayMetricId::Disk
+            ) {
+                rule.rules = vec![
+                    ColorRule::Below {
+                        value: warning,
+                        color: DisplayColor::Default,
+                    },
+                    ColorRule::Range {
+                        from: warning,
+                        to: critical,
+                        color: DisplayColor::Orange,
+                    },
+                    ColorRule::AtLeast {
+                        value: critical,
+                        color: DisplayColor::Red,
+                    },
+                ];
+            }
+            rule
+        })
+        .collect()
 }

@@ -1,15 +1,18 @@
 use super::{diagnostics::Failure, runtime::ResidentState};
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 use tauri::Manager;
-use tauri_plugin_store::StoreExt;
 
 pub use super::preference_schema::ResidentPreferences;
 use super::preference_schema::{decode, PREFERENCE_SCHEMA_VERSION};
 const FILE: &str = "resident.json";
 
 pub fn load(app: &tauri::AppHandle) -> ResidentPreferences {
-    let value = match app.store_builder(FILE).disable_auto_save().build() {
-        Ok(store) => store.get("preferences"),
+    let path = match path(app) {
+        Ok(path) => path,
+        Err(_) => return ResidentPreferences::default(),
+    };
+    let value = match super::preference_file::read(&path) {
+        Ok(mut document) => document.remove("preferences"),
         Err(error) => {
             Failure::record("preferences_load", &error);
             return ResidentPreferences::default();
@@ -21,14 +24,14 @@ pub fn load(app: &tauri::AppHandle) -> ResidentPreferences {
             let previous_version = value.get("schemaVersion").and_then(|v| v.as_u64());
             match decode(value) {
                 Ok(preferences) => {
-                    if previous_version != Some(u64::from(preferences.schema_version)) {
-                        log::info!("resident_preferences_migrated from_schema={previous_version:?} to_schema={} display_destination=platform_default metric_count={} enabled={}",
-                            preferences.schema_version, preferences.metrics.len(), preferences.enabled);
+                    if previous_version != Some(u64::from(PREFERENCE_SCHEMA_VERSION)) {
+                        log::info!("resident_preferences_migrated from_schema={previous_version:?} to_schema={} persisted=false outcome=loaded_current save_policy=next_explicit_save",
+                            preferences.schema_version);
                     }
                     preferences
                 }
                 Err(reason) => {
-                    log::warn!("resident_preferences_invalid schema={previous_version:?} reason={reason} outcome=use_defaults");
+                    log::warn!("resident_preferences_invalid schema={previous_version:?} reason={reason} outcome=runtime_defaults_original_preserved");
                     ResidentPreferences::default()
                 }
             }
@@ -40,31 +43,33 @@ fn save(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> Result<(),
     if preferences.schema_version != PREFERENCE_SCHEMA_VERSION {
         return Err(Failure::state("preferences_version"));
     }
-    let store = app
-        .store_builder(FILE)
-        .disable_auto_save()
-        .build()
+    let path = path(app)?;
+    let mut document = super::preference_file::read(&path)
         .map_err(|error| Failure::record("preferences_open", &error))?;
-    let previous = store.get("preferences");
-    if let Some(value) = &previous {
-        decode(value.clone()).map_err(Failure::state)?;
+    let previous = document.get("preferences");
+    if let Some(value) = previous {
+        if let Err(reason) = decode(value.clone()) {
+            let stored_version = value.get("schemaVersion").and_then(|value| value.as_u64());
+            log::warn!("resident_preferences_save_rejected stored_schema={stored_version:?} requested_schema={} reason={reason} outcome=original_preserved", preferences.schema_version);
+            return Err(Failure::state(reason));
+        }
     }
-    store.set(
-        "preferences",
+    document.insert(
+        "preferences".into(),
         serde_json::to_value(preferences)
             .map_err(|error| Failure::record("preferences_encode", &error))?,
     );
-    if let Err(error) = store.save() {
-        // Restore the plugin cache too: otherwise a later save could persist a
-        // preference that the UI correctly reported as rejected.
-        if let Some(previous) = previous {
-            store.set("preferences", previous);
-        } else {
-            store.delete("preferences");
-        }
-        return Err(Failure::record("preferences_save", &error));
-    }
-    Ok(())
+    let content = serde_json::to_vec_pretty(&document)
+        .map_err(|error| Failure::record("preferences_encode", &error))?;
+    super::preference_file::write(&path, &content)
+        .map_err(|error| Failure::record("preferences_save", &error))
+}
+
+fn path(app: &tauri::AppHandle) -> Result<PathBuf, Failure> {
+    app.path()
+        .app_data_dir()
+        .map(|directory| directory.join(FILE))
+        .map_err(|error| Failure::record("preferences_path", &error))
 }
 
 /// Desktop policy stays here; IPC only transports the requested preference value.

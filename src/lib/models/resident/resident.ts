@@ -15,8 +15,10 @@ export type ResidentDisplayMetricId =
   | 'systemPower'
   | 'fanSpeed';
 
+export type GpuDisplaySelection = { mode: 'automatic' } | { mode: 'selected'; adapterIds: string[] };
+
 export interface ResidentPreferences {
-  schemaVersion: 25;
+  schemaVersion: 28;
   windowsCpuTemperatureEnabled: boolean;
   revision: number;
   enabled: boolean;
@@ -30,7 +32,10 @@ export interface ResidentPreferences {
   metrics: { id: ResidentDisplayMetricId; enabled: boolean }[];
   networkInterface: string | null;
   diskVolume: string | null;
+  diskTemperatureDevice: string | null;
   gpuAdapter: string | null;
+  gpuDisplay: GpuDisplaySelection;
+  gpuTemperatureDisplay: GpuDisplaySelection;
   fanDisplay: 'highest' | 'average' | 'selected';
   fanIds: number[];
 }

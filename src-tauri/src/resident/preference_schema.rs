@@ -1,13 +1,11 @@
-//! Versioned user preferences. Unknown or malformed persisted data is never overwritten.
+//! Current preference models with strict validation and explicit release upgrades.
 use mangodisk_core::system_resources::metrics::MetricId;
 use serde::{Deserialize, Serialize};
 
 mod migrations;
 pub use migrations::decode;
-#[cfg(test)]
-use migrations::PREVIOUS_DEFAULT_ORDER;
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 25;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 28;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -25,6 +23,37 @@ pub enum FanDisplayMode {
     Highest,
     Average,
     Selected,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "mode", rename_all = "camelCase", deny_unknown_fields)]
+pub enum GpuDisplaySelection {
+    #[default]
+    Automatic,
+    Selected {
+        #[serde(rename = "adapterIds")]
+        adapter_ids: Vec<String>,
+    },
+}
+
+impl GpuDisplaySelection {
+    fn valid(&self) -> bool {
+        match self {
+            Self::Selected { adapter_ids } => {
+                !adapter_ids.is_empty()
+                    && adapter_ids.len() <= 32
+                    && adapter_ids
+                        .iter()
+                        .all(|id| !id.is_empty() && id.len() <= 1024 && !id.contains('\0'))
+                    && adapter_ids
+                        .iter()
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .len()
+                        == adapter_ids.len()
+            }
+            _ => true,
+        }
+    }
 }
 
 /// Display selection is independent of the five resource sampling workers.
@@ -90,7 +119,10 @@ pub struct ResidentPreferences {
     pub metrics: Vec<DisplayMetric>,
     pub network_interface: Option<String>,
     pub disk_volume: Option<String>,
+    pub disk_temperature_device: Option<String>,
     pub gpu_adapter: Option<String>,
+    pub gpu_display: GpuDisplaySelection,
+    pub gpu_temperature_display: GpuDisplaySelection,
     pub fan_display: FanDisplayMode,
     pub fan_ids: Vec<u8>,
 }
@@ -136,7 +168,10 @@ impl Default for ResidentPreferences {
                 .collect(),
             network_interface: None,
             disk_volume: None,
+            disk_temperature_device: None,
             gpu_adapter: None,
+            gpu_display: GpuDisplaySelection::default(),
+            gpu_temperature_display: GpuDisplaySelection::default(),
         }
     }
 }
@@ -230,7 +265,7 @@ impl ResidentPreferences {
             return Err("preferences_version");
         }
         if !super::color_rules::valid(&self.color_rules)
-            || self.metrics.len() > 64
+            || self.metrics.len() != DISPLAY_ORDER.len()
             || self.fan_ids.is_empty()
             || self.fan_ids.len() > 2
             || self
@@ -241,6 +276,7 @@ impl ResidentPreferences {
             || [
                 &self.network_interface,
                 &self.disk_volume,
+                &self.disk_temperature_device,
                 &self.gpu_adapter,
             ]
             .iter()
@@ -251,69 +287,14 @@ impl ResidentPreferences {
         {
             return Err("preferences_invalid");
         }
-        self.fan_ids.sort_unstable();
-        let mut seen = Vec::new();
-        self.metrics.retain(|metric| {
-            if seen.contains(&metric.id) {
-                return false;
-            }
-            seen.push(metric.id);
-            true
-        });
-        // Preserve saved relative order. New items precede a trailing network
-        // column so it remains last, including when older preferences migrate.
-        for id in DISPLAY_ORDER
-            .into_iter()
-            .filter(|id| {
-                !matches!(
-                    id,
-                    DisplayMetricId::DiskTemperature
-                        | DisplayMetricId::CpuTemperature
-                        | DisplayMetricId::GpuTemperature
-                        | DisplayMetricId::BatteryTemperature
-                        | DisplayMetricId::ChargingPower
-                        | DisplayMetricId::BatteryPower
-                        | DisplayMetricId::SystemPower
-                        | DisplayMetricId::FanSpeed
-                )
-            })
-            .chain([
-                DisplayMetricId::CpuTemperature,
-                DisplayMetricId::GpuTemperature,
-                DisplayMetricId::BatteryTemperature,
-                DisplayMetricId::ChargingPower,
-                DisplayMetricId::BatteryPower,
-                DisplayMetricId::SystemPower,
-                DisplayMetricId::FanSpeed,
-            ])
-        {
-            if !seen.contains(&id) {
-                let index = if self
-                    .metrics
-                    .last()
-                    .is_some_and(|metric| metric.id == DisplayMetricId::Network)
-                {
-                    self.metrics.len() - 1
-                } else {
-                    self.metrics.len()
-                };
-                self.metrics
-                    .insert(index, DisplayMetric { id, enabled: false });
-            }
+        if !self.gpu_display.valid() || !self.gpu_temperature_display.valid() {
+            return Err("preferences_invalid");
         }
-        if !seen.contains(&DisplayMetricId::DiskTemperature) {
-            let index = self
-                .metrics
-                .iter()
-                .position(|metric| metric.id == DisplayMetricId::Disk)
-                .map_or(self.metrics.len(), |index| index + 1);
-            self.metrics.insert(
-                index,
-                DisplayMetric {
-                    id: DisplayMetricId::DiskTemperature,
-                    enabled: false,
-                },
-            );
+        self.fan_ids.sort_unstable();
+        for id in DISPLAY_ORDER {
+            if self.metrics.iter().filter(|metric| metric.id == id).count() != 1 {
+                return Err("preferences_invalid");
+            }
         }
         Ok(self)
     }

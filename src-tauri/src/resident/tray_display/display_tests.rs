@@ -668,11 +668,21 @@ fn displayed_percentages_and_color_thresholds_use_the_same_rounding() {
         let mut rule = crate::resident::color_rules::MetricColorRule::defaults(
             crate::resident::preference_schema::DisplayMetricId::Cpu,
         );
-        rule.rules = crate::resident::color_rules::legacy(75, 85)
-            .into_iter()
-            .find(|updated| updated.id == rule.id)
-            .unwrap()
-            .rules;
+        rule.rules = vec![
+            crate::resident::color_rules::ColorRule::Below {
+                value: 75,
+                color: crate::resident::color_rules::DisplayColor::Default,
+            },
+            crate::resident::color_rules::ColorRule::Range {
+                from: 75,
+                to: 85,
+                color: crate::resident::color_rules::DisplayColor::Orange,
+            },
+            crate::resident::color_rules::ColorRule::AtLeast {
+                value: 85,
+                color: crate::resident::color_rules::DisplayColor::Red,
+            },
+        ];
         let matched = super::super::usage_color::next_rule(None, cpu.color_value, &rule).unwrap();
         assert_eq!(UsageTone::from(rule.rules[matched].color()), tone);
     }

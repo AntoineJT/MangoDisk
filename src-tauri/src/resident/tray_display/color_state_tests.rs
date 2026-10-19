@@ -276,11 +276,21 @@ fn switching_disks_resets_hysteresis_without_resetting_cpu() {
     assert_eq!(entries[1].tone, UsageTone::Warning);
     let mut higher_threshold = preferences;
     for rule in &mut higher_threshold.color_rules {
-        rule.rules = super::super::color_rules::legacy(70, 91)
-            .into_iter()
-            .find(|updated| updated.id == rule.id)
-            .unwrap()
-            .rules;
+        rule.rules = vec![
+            super::super::color_rules::ColorRule::Below {
+                value: 70,
+                color: super::super::color_rules::DisplayColor::Default,
+            },
+            super::super::color_rules::ColorRule::Range {
+                from: 70,
+                to: 91,
+                color: super::super::color_rules::DisplayColor::Orange,
+            },
+            super::super::color_rules::ColorRule::AtLeast {
+                value: 91,
+                color: super::super::color_rules::DisplayColor::Red,
+            },
+        ];
     }
     state.colors.apply(
         &mut entries,
