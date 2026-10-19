@@ -174,11 +174,15 @@ impl GpuTemperatureCache {
         self.devices.retain(|id, _| present(id));
         self.refresh_reading();
     }
-    pub fn expire(&mut self, now: u64) {
+    pub fn expire(&mut self, now: u64) -> bool {
+        let mut changed = false;
         for device in self.devices.values_mut() {
+            let previous = device.reading.status;
             device.reading.expire(now, GPU_TEMPERATURE_FRESHNESS_MS);
+            changed |= previous != device.reading.status;
         }
         self.refresh_reading();
+        changed
     }
     pub fn history(&mut self, now: u64) -> TrendHistory {
         self.adapter_id
@@ -186,6 +190,33 @@ impl GpuTemperatureCache {
             .and_then(|id| self.devices.get_mut(id))
             .map(|device| device.history.snapshot(now))
             .unwrap_or_default()
+    }
+
+    pub fn device_snapshot(
+        &mut self,
+        id: &str,
+        now: u64,
+    ) -> (MetricReading<GpuTemperature>, TrendHistory) {
+        self.devices
+            .get_mut(id)
+            .map(|device| (device.reading.clone(), device.history.snapshot(now)))
+            .unwrap_or_else(|| {
+                (
+                    MetricReading {
+                        status: if matches!(
+                            self.reading.status,
+                            MetricStatus::Unsupported | MetricStatus::Failed
+                        ) {
+                            self.reading.status
+                        } else {
+                            MetricStatus::Loading
+                        },
+                        sampled_at_ms: None,
+                        value: None,
+                    },
+                    Default::default(),
+                )
+            })
     }
 }
 #[cfg(test)]

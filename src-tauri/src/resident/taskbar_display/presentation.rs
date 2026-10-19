@@ -58,11 +58,18 @@ pub fn columns(
         .filter(|e| e.id != DisplayId::Download)
         .map(|entry| {
             let network = entry.id == DisplayId::Upload;
+            let gpu_label_width = entry.gpu_device.as_ref().map_or(0, |device| {
+                // Multi-digit catalogue positions, such as GPU31, need extra label space.
+                let padding = if compact { 2 } else { 6 };
+                ((device.label.chars().count() as u32 * 8 + padding) * dpi / 96) as i32
+            });
             Column {
                 id: entry.id,
                 compact,
                 tone: entry.tone,
-                first: if network {
+                first: if let Some(device) = &entry.gpu_device {
+                    device.label.clone()
+                } else if network {
                     entry.text.split_whitespace().collect::<Vec<_>>().join(" ")
                 } else {
                     match entry.id {
@@ -100,7 +107,7 @@ pub fn columns(
                 },
                 // Compact units save width without discarding numeric precision.
                 // Four numeric characters cover 99.9 and a rounded 1000.
-                width: ((if matches!(
+                width: (((if matches!(
                     entry.id,
                     DisplayId::CpuTemperature
                         | DisplayId::GpuTemperature
@@ -120,7 +127,8 @@ pub fn columns(
                         (false, false) => 38,
                     }
                 }) * dpi
-                    / 96) as i32,
+                    / 96) as i32)
+                    .max(gpu_label_width),
                 network: network.then(|| {
                     let mut rates = [
                         Rate::from_title(&entry.text),
@@ -196,6 +204,7 @@ mod tests {
     }
     fn entry(id: DisplayId, text: &str, digits: &str) -> DisplayEntry {
         DisplayEntry {
+            gpu_device: None,
             tone: Default::default(),
             power_state: None,
             fan_rows: None,

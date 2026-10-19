@@ -176,11 +176,7 @@ impl ObservationState {
                     }
                 }
                 if let Some(temperature) = temperature {
-                    cache.gpu_temperatures(
-                        temperature,
-                        slot.demand.selection.as_deref(),
-                        completion.timestamp_ms,
-                    );
+                    cache.gpu_temperatures(temperature, completion.timestamp_ms);
                 }
             }
             Ok(Observation::Memory(snapshot)) => {

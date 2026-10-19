@@ -3,6 +3,7 @@ import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia } from 'pinia';
 import { createI18n } from 'vue-i18n';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
+import { Select } from '@/components/ui/select';
 import MdGpuDetails from './md-gpu-details.vue';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
@@ -96,6 +97,42 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 describe('GPU detail capabilities and selection', () => {
+  it('does not reopen a removed device menu when the GPU catalogue expands again', async () => {
+    const { wrapper } = render();
+    await flushPromises();
+    wrapper.getComponent(Select).vm.$emit('update:open', true);
+    await flushPromises();
+    const single = reading();
+    single.gpuAdapters = single.gpuAdapters.slice(0, 1);
+    await wrapper.setProps({ reading: single });
+    await wrapper.setProps({ reading: reading() });
+    expect(wrapper.getComponent(Select).props('open')).toBe(false);
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+  });
+  it('shows a static heading for a single GPU through missing samples without rewriting selections', async () => {
+    const value = reading();
+    value.gpuAdapters = value.gpuAdapters.slice(0, 1);
+    const { wrapper } = render(value);
+    await flushPromises();
+    expect(wrapper.find('.device-trigger').exists()).toBe(false);
+    expect(wrapper.get('.device-label').text()).toBe(enUS.systemStatus.gpuUsage);
+    expect(wrapper.get('.device-name').text()).toBe('RTX 4090');
+    await wrapper.setProps({ reading: { ...value, gpuDetails: { ...value.gpuDetails, status: 'failed' } } });
+    expect(wrapper.find('.device-trigger').exists()).toBe(false);
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+    await wrapper.setProps({ reading: reading() });
+    expect(wrapper.find('.device-trigger').exists()).toBe(true);
+  });
+  it('retains the selector for a disconnected fixed GPU when one other device remains', async () => {
+    vi.mocked(ResidentService.preferences).mockResolvedValue({ ...preferencesFixture(), gpuAdapter: 'b' });
+    const value = reading();
+    value.gpuAdapters = value.gpuAdapters.slice(0, 1);
+    const { wrapper } = render(value);
+    await flushPromises();
+    expect(wrapper.get('.device-trigger').attributes('aria-label')).toContain(enUS.systemStatus.savedDisconnected);
+    expect(wrapper.get('header strong').text()).toBe('—');
+    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+  });
   it.each(Object.keys(messages))('explains allocatable capacity only on hover in %s', async locale => {
     const value = reading();
     value.gpuDetails.value!.details!.memory!.dedicatedTotalSource = 'allocatable';
@@ -487,6 +524,60 @@ describe('GPU detail capabilities and selection', () => {
 });
 
 describe('shared GPU temperature history', () => {
+  it('keeps details on one GPU while menu-bar selections remain independent', async () => {
+    vi.mocked(ResidentService.savePreferences).mockImplementation(async preferences => ({
+      ...preferences,
+      revision: preferences.revision + 1,
+    }));
+    const value = reading();
+    value.gpuDevices = ['a', 'b'].map((id, index) => ({
+      adapterId: id,
+      adapterName: id,
+      usage: {
+        status: 'ready',
+        sampledAtMs: 2000,
+        value: { adapterId: id, adapterName: id, usedPercent: index ? 72 : 3, details: null },
+      },
+      usageHistory: [],
+      temperature: {
+        status: 'ready',
+        sampledAtMs: 2000,
+        value: {
+          adapterId: id,
+          adapterName: id,
+          celsius: index ? 62 : 41,
+          kind: 'device',
+          source: 'driver',
+          sensorCount: 1,
+        },
+      },
+      temperatureHistory: [{ sampledAtMs: 2000, primary: index ? 62 : 41, secondary: null }],
+    }));
+    const { wrapper, settings } = render(value);
+    await flushPromises();
+    await settings.change({
+      gpuAdapter: 'a',
+      gpuTemperatureDisplay: { mode: 'selected', adapterIds: ['b'] },
+      gpuDisplay: { mode: 'selected', adapterIds: ['a', 'b'] },
+    });
+    expect(wrapper.get('.temperature-details strong').text()).toBe('41°C');
+    expect(wrapper.find('.gpu-view-switch').exists()).toBe(false);
+    expect(wrapper.find('.temperature-details [role="combobox"]').exists()).toBe(false);
+    wrapper.get('.gpu-summary').getComponent(Select).vm.$emit('update:modelValue', 'b');
+    await flushPromises();
+    expect(settings.draft).toMatchObject({ gpuAdapter: 'b', gpuDisplay: { mode: 'selected', adapterIds: ['a', 'b'] } });
+    await wrapper.setProps({
+      reading: {
+        ...value,
+        gpu: { ...value.gpuDevices[1]!.usage },
+        gpuDetailAdapterId: 'b',
+        gpuDetailHistory: value.gpuDevices[1]!.usageHistory,
+      },
+    });
+    expect(wrapper.get('.gpu-summary strong').text()).toBe('72%');
+    expect(wrapper.get('.temperature-details strong').text()).toBe('62°C');
+  });
+
   it.each(Object.keys(messages))('uses the CPU temperature layout and localized sensor hint in %s', async locale => {
     const value = reading();
     value.gpuTemperature = {
@@ -515,12 +606,12 @@ describe('shared GPU temperature history', () => {
     );
     expect(wrapper.findAll('.gpu-facts .resource-fact').some(fact => fact.text().includes('°C'))).toBe(false);
   });
-  it('hides unsupported temperature cards and old-device curves, but preserves transient history', async () => {
+  it('keeps unsupported selection available and hides old-device curves while retaining failures', async () => {
     const value = reading();
     value.gpuTemperature = { status: 'unsupported', sampledAtMs: null, value: null };
     const { wrapper, settings } = render(value);
     await flushPromises();
-    expect(wrapper.find('.temperature-details').exists()).toBe(false);
+    expect(wrapper.find('.temperature-details').exists()).toBe(true);
     value.gpuTemperature = {
       status: 'failed',
       sampledAtMs: 2000,
@@ -539,6 +630,7 @@ describe('shared GPU temperature history', () => {
     expect(wrapper.find('.temperature-chart').exists()).toBe(true);
     settings.draft!.gpuAdapter = 'b';
     await flushPromises();
-    expect(wrapper.find('.temperature-details').exists()).toBe(false);
+    expect(wrapper.get('.temperature-details strong').text()).toBe('—');
+    expect(wrapper.get('.temperature-chart').findComponent({ name: 'MdResourceTrend' }).exists()).toBe(false);
   });
 });

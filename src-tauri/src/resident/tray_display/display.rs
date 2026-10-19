@@ -107,6 +107,34 @@ pub fn entries(
         if !metric.enabled {
             continue;
         }
+        if matches!(
+            metric.id,
+            DisplayMetricId::Gpu | DisplayMetricId::GpuTemperature
+        ) {
+            let temperature = metric.id == DisplayMetricId::GpuTemperature;
+            let selection = if temperature
+                && matches!(
+                    preferences.gpu_temperature_display,
+                    crate::resident::preference_schema::GpuDisplaySelection::Automatic
+                ) {
+                &preferences.gpu_display
+            } else if temperature {
+                &preferences.gpu_temperature_display
+            } else {
+                &preferences.gpu_display
+            };
+            if (!values.gpu_devices.is_empty()
+                || matches!(
+                    selection,
+                    crate::resident::preference_schema::GpuDisplaySelection::Selected { .. }
+                ))
+                && (!temperature || preferences.shows_gpu_temperature())
+            {
+                entries.extend(super::gpu::entries(values, labels, temperature, selection));
+                continue;
+            }
+        }
+
         if metric.id == DisplayMetricId::CpuTemperature {
             if preferences.shows_cpu_temperature() {
                 entries.push(temperature_entry(values, labels));
@@ -125,7 +153,16 @@ pub fn entries(
         }
         if metric.id == DisplayMetricId::GpuTemperature {
             if preferences.shows_gpu_temperature() {
-                entries.push(gpu_temperature_entry(values, labels));
+                entries.push(gpu_temperature_entry(
+                    values,
+                    labels,
+                    values
+                        .gpu
+                        .value
+                        .as_ref()
+                        .filter(|_| values.gpu.status == MetricStatus::Ready)
+                        .map(|gpu| gpu.adapter_id.as_str()),
+                ));
             }
             continue;
         }
@@ -228,6 +265,7 @@ pub fn entries(
             let name = labels.metric(metric_id);
             if status != MetricStatus::Ready || value.is_none() {
                 entries.push(DisplayEntry {
+                    gpu_device: None,
                     tone: Default::default(),
                     power_state: None,
                     fan_rows: None,
@@ -260,6 +298,7 @@ pub fn entries(
                     .map(|value| value.interface.name.as_str())
                     .unwrap_or("");
                 DisplayEntry {
+                    gpu_device: None,
                     tone: Default::default(),
                     power_state: None,
                     fan_rows: None,
@@ -324,6 +363,7 @@ pub fn entries(
                     _ => "DISK",
                 };
                 DisplayEntry {
+                    gpu_device: None,
                     tone: Default::default(),
                     power_state: None,
                     fan_rows: None,
@@ -344,3 +384,17 @@ pub fn entries(
 #[cfg(test)]
 #[path = "display_tests.rs"]
 mod tests;
+
+#[cfg(any(windows, test))]
+pub fn notification_entries(entries: &[DisplayEntry]) -> Vec<DisplayEntry> {
+    let mut result: Vec<DisplayEntry> = Vec::new();
+    for entry in entries {
+        if let Some(previous) = result.iter_mut().find(|previous| previous.id == entry.id) {
+            previous.tooltip.push('\n');
+            previous.tooltip.push_str(&entry.tooltip);
+        } else {
+            result.push(entry.clone());
+        }
+    }
+    result
+}

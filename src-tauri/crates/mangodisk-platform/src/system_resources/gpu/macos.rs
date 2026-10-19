@@ -445,7 +445,7 @@ impl GpuReader {
             .enumerate()
             .map(|(index, adapter)| GpuAdapter {
                 id: adapter.id.clone(),
-                name: format!("GPU {index} · {}", adapter.name),
+                name: format!("GPU{index} · {}", adapter.name),
             })
             .collect()
     }

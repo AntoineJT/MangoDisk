@@ -4199,6 +4199,7 @@
     "quitAction": "Beenden"
   },
   "gpuDetails": {
+    "selectedAdapters": "Ausgewählte GPUs",
     "allocatableMemoryHint": "Die dedizierte Kapazität ist vom System zuweisbar und kann Hardwarereservierungen ausschließen\nDies wirkt sich auch auf die gesamte GPU-Kapazität aus",
     "cachedLabel": "Zwischengespeichert",
     "cached": "Zeigt die letzten verfügbaren Daten an; warte auf ein Update",
@@ -4238,6 +4239,7 @@
     "cached": "Zwischengespeichert"
   },
   "gpuTemperature": {
+    "followUsage": "GPU-Auslastung folgen",
     "label": "GPU-Temperatur",
     "sensorAverageHint": "Durchschnittliche GPU-Temperatur · Sensoren: {count}",
     "deviceHint": "Vom Gerät gemeldete GPU-Temperatur",

@@ -4199,6 +4199,7 @@
     "quitAction": "Salir"
   },
   "gpuDetails": {
+    "selectedAdapters": "GPU seleccionadas",
     "allocatableMemoryHint": "La capacidad dedicada es asignable por el sistema y puede excluir reservas de hardware\nEsto también afecta la capacidad total de la GPU",
     "cachedLabel": "En caché",
     "cached": "Mostrando los últimos datos disponibles; esperando una actualización",
@@ -4238,6 +4239,7 @@
     "cached": "En caché"
   },
   "gpuTemperature": {
+    "followUsage": "Seguir el uso de GPU",
     "label": "Temperatura de la GPU",
     "sensorAverageHint": "Temperatura media de la GPU · Sensores: {count}",
     "deviceHint": "Temperatura de GPU reportada por el dispositivo",

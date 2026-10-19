@@ -50,12 +50,14 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // application and existing locale budgets stay fixed.
 // Super-core frequency adds one label per locale: Japanese measures 62,734 gzip bytes;
 // Russian measures 399,926 raw bytes. Add only 64 gzip / 128 raw bytes locally.
+// GPU display selection labels measure 400,087 Russian raw / 70,819 gzip bytes.
+// Extend only that locale by 128 raw / 64 gzip bytes.
 const localeChunkLimitOverrides = new Map([
   ['fr-fr', { bytes: 311 * 1024, gzipBytes: 62 * 1024 }],
   ['de-de', { bytes: maximumLocaleChunkBytes, gzipBytes: 63 * 1024 }],
   ['es-es', { bytes: maximumLocaleChunkBytes, gzipBytes: 61 * 1024 }],
   ['ja-jp', { bytes: 323 * 1024 + 512, gzipBytes: 61 * 1024 + 320 }],
-  ['ru-ru', { bytes: 390 * 1024 + 640, gzipBytes: 69 * 1024 + 128 }],
+  ['ru-ru', { bytes: 390 * 1024 + 768, gzipBytes: 69 * 1024 + 192 }],
 ]);
 
 function fail(message) {

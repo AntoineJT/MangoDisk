@@ -3,6 +3,7 @@ pub mod display;
 pub mod display_entry;
 mod fan;
 mod format;
+mod gpu;
 pub mod labels;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -455,6 +456,10 @@ fn render(
     #[cfg(windows)]
     {
         let appearance = windows_bitmap::appearance();
+        // Notification icons have one retained handle per metric. The taskbar
+        // renders every device; its fallback retains the first device and lists
+        // all devices in the tooltip without repeatedly overwriting one handle.
+        entries = display::notification_entries(&entries);
         for entry in &entries {
             if !state.visible.contains(&entry.id) {
                 continue;

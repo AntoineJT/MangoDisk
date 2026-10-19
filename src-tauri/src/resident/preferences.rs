@@ -158,7 +158,7 @@ pub fn apply(
     }
     state.wake();
     log::info!(
-        "resident_preferences_saved enabled={} revision={} show_icon={} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} elapsed_ms={}",
+        "resident_preferences_saved enabled={} revision={} show_icon={} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",
         preferences.enabled,
         preferences.revision,
         preferences.effective_icon(),
@@ -176,6 +176,9 @@ pub fn apply(
         preferences.color_rules,
         preferences.network_interface.is_some(),
         preferences.disk_volume.is_some(),
+        mangodisk_platform::diagnostics::text(preferences.gpu_adapter.as_deref().unwrap_or("automatic")),
+        preferences.gpu_display,
+        preferences.gpu_temperature_display,
         started.elapsed().as_millis()
     );
     Ok(preferences)

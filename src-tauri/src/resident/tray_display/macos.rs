@@ -295,6 +295,7 @@ mod tests {
             }
         }
         let entry = DisplayEntry {
+            gpu_device: None,
             tone: Default::default(),
             power_state: None,
             fan_rows: None,
@@ -311,6 +312,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let width = macos_presentation::columns(
                 &[DisplayEntry {
+                    gpu_device: None,
                     id: super::super::display_entry::DisplayId::DiskTemperature,
                     ..entry.clone()
                 }],
@@ -329,6 +331,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let column = macos_presentation::columns(
                 &[DisplayEntry {
+                    gpu_device: None,
                     id: super::super::display_entry::DisplayId::ChargingPower,
                     ..entry.clone()
                 }],
@@ -353,6 +356,7 @@ mod tests {
             let size = if compact { 11.0 } else { 12.0 };
             let column = macos_presentation::columns(
                 &[DisplayEntry {
+                    gpu_device: None,
                     id: super::super::display_entry::DisplayId::FanSpeed,
                     ..entry.clone()
                 }],
@@ -368,6 +372,7 @@ mod tests {
         for compact in [false, true] {
             let column = macos_presentation::columns(
                 &[DisplayEntry {
+                    gpu_device: None,
                     id: super::super::display_entry::DisplayId::FanSpeed,
                     fan_rows: Some(["F1 0", "F10 30000"].map(|text| {
                         crate::resident::tray_display::display_entry::FanRow {
@@ -391,6 +396,7 @@ mod tests {
             for heading in ["FMAX", "FAVG", "FAN 10"] {
                 let single = macos_presentation::columns(
                     &[DisplayEntry {
+                        gpu_device: None,
                         id: super::super::display_entry::DisplayId::FanSpeed,
                         ..entry.clone()
                     }],
@@ -405,6 +411,7 @@ mod tests {
             for digits in ["0", "<1", "999", "1000", "3000", "—"] {
                 let width = macos_presentation::columns(
                     &[DisplayEntry {
+                        gpu_device: None,
                         id: super::super::display_entry::DisplayId::SystemPower,
                         digits: digits.into(),
                         ..entry.clone()

@@ -1,10 +1,14 @@
 //! Retain only observations belonging to one physical GPU.
-use super::metrics::{Trend, TrendPoint};
+use super::{
+    gpu::GpuUsage,
+    metrics::{MetricReading, MetricStatus, Trend, TrendPoint},
+};
 use mangodisk_platform::system_resources::gpu::{details::GpuActivityKind, GpuAdapterUsage};
 
 #[derive(Default)]
 pub(super) struct GpuDeviceHistory {
     adapter_name: Option<String>,
+    pub reading: MetricReading<GpuUsage>,
     pub usage: Trend,
     pub renderer: Trend,
     pub tiler: Trend,
@@ -28,6 +32,15 @@ impl GpuDeviceHistory {
             primary: adapter.used_percent,
             secondary: None,
         });
+        self.reading = MetricReading::ready(
+            GpuUsage {
+                adapter_id: adapter.id.clone(),
+                adapter_name: adapter.name.clone(),
+                used_percent: adapter.used_percent,
+                details: None,
+            },
+            timestamp_ms,
+        );
         if let Some(details) = &adapter.details {
             for (kind, history) in [
                 (GpuActivityKind::Renderer, &mut self.renderer),
@@ -50,6 +63,17 @@ impl GpuDeviceHistory {
             }
         }
         replaced
+    }
+
+    pub fn fail(&mut self, status: MetricStatus) {
+        self.reading.status = status;
+        if matches!(
+            status,
+            MetricStatus::Unsupported | MetricStatus::Disconnected
+        ) {
+            self.reading.value = None;
+            self.reading.sampled_at_ms = None;
+        }
     }
 }
 

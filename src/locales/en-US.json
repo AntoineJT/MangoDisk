@@ -4199,6 +4199,7 @@
     "quitAction": "Quit"
   },
   "gpuDetails": {
+    "selectedAdapters": "Selected GPUs",
     "allocatableMemoryHint": "Dedicated capacity is system-allocatable and may exclude hardware reservations\nThis also affects total GPU capacity",
     "cachedLabel": "Cached",
     "cached": "Showing the last available data; waiting for an update",
@@ -4238,6 +4239,7 @@
     "cached": "Cached"
   },
   "gpuTemperature": {
+    "followUsage": "Follow GPU utilization",
     "label": "GPU temperature",
     "sensorAverageHint": "Average of {count} GPU temperature sensors",
     "deviceHint": "GPU temperature reported by the device",

@@ -208,6 +208,7 @@ mod tests {
                 ] {
                     let columns = presentation::columns(
                         &[DisplayEntry {
+                            gpu_device: None,
                             tone: Default::default(),
                             power_state: None,
                             fan_rows: None,

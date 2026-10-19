@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdCheckbox from '@/components/custom/md-checkbox.vue';
 import MdIcon from '@/components/icons/md-icon.vue';
@@ -27,9 +27,31 @@ const modeKeys = {
   average: 'systemStatus.fanAverage',
   selected: 'systemStatus.fanSelected',
 } as const;
+const knownFanIds = ref<number[] | null>(null);
+watch(
+  () => props.reading,
+  reading => {
+    // A failed sample is not evidence that a physical fan disappeared.
+    if (reading.status === 'ready' && reading.value) {
+      knownFanIds.value = reading.value.fans.map(fan => fan.id);
+    }
+  },
+  { immediate: true }
+);
+const canSelect = computed(() => {
+  const known = knownFanIds.value;
+  return known === null || known.length > 1 || (props.mode === 'selected' && props.ids.some(id => !known.includes(id)));
+});
+watch(
+  canSelect,
+  visible => {
+    if (!visible && props.open) emit('update:open', false);
+  },
+  { immediate: true }
+);
 const choices = computed(() => {
   const fans = props.reading.status === 'ready' ? (props.reading.value?.fans ?? []) : [];
-  return [...new Set([...fans.map(fan => fan.id), ...props.ids])]
+  return [...new Set([...(knownFanIds.value ?? []), ...props.ids])]
     .sort((a, b) => a - b)
     .map(id => {
       const fan = fans.find(fan => fan.id === id);
@@ -37,7 +59,7 @@ const choices = computed(() => {
         id,
         label: t('systemStatus.fanNumber', { number: id + 1 }),
         value: fan?.rpm == null ? '—' : Math.round(fan.rpm).toString(),
-        missing: props.reading.status === 'ready' && !fan,
+        missing: props.reading.status === 'ready' && props.reading.value !== null && !fan,
       };
     });
 });
@@ -60,6 +82,7 @@ function toggle(id: number, checked: boolean) {
   <!-- The parent metric heading owns the shared header grid. -->
   <div class="contents" data-fan-settings>
     <Select
+      v-if="canSelect"
       :open="open"
       :disabled="disabled"
       :model-value="mode"
@@ -80,7 +103,7 @@ function toggle(id: number, checked: boolean) {
         <SelectItem v-for="(key, value) in modeKeys" :key="value" :value="value">{{ t(key) }}</SelectItem>
       </SelectContent>
     </Select>
-    <div v-if="mode === 'selected'" class="fan-options">
+    <div v-if="canSelect && mode === 'selected'" class="fan-options">
       <div
         class="fan-options-list"
         :class="{ 'fan-options-paired': choices.length > 1 }"

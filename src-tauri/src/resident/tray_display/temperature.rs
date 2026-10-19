@@ -42,6 +42,7 @@ pub(super) fn temperature_entry(
         )
     };
     DisplayEntry {
+        gpu_device: None,
         id: DisplayId::CpuTemperature,
         tone: Default::default(),
         power_state: None,
@@ -62,11 +63,17 @@ pub(super) fn temperature_entry(
 pub(super) fn gpu_temperature_entry(
     values: &ResourceReadings,
     labels: &labels::Labels,
+    selected: Option<&str>,
 ) -> DisplayEntry {
     use mangodisk_platform::system_resources::gpu::temperature::GPU_TEMPERATURE_FRESHNESS_MS;
     let reading = &values.gpu_temperature;
+    let mismatched = reading
+        .value
+        .as_ref()
+        .is_some_and(|value| selected.is_some_and(|id| id != value.adapter_id));
     let value = reading.value.as_ref().filter(|value| {
-        reading.status == MetricStatus::Ready
+        !mismatched
+            && reading.status == MetricStatus::Ready
             && reading.sampled_at_ms.is_some_and(|sampled| {
                 sampled <= values.observed_at_ms
                     && values.observed_at_ms - sampled <= GPU_TEMPERATURE_FRESHNESS_MS
@@ -86,7 +93,9 @@ pub(super) fn gpu_temperature_entry(
         format!(
             "{} · {}",
             labels.gpu_temperature("label"),
-            labels.status(if reading.status == MetricStatus::Ready {
+            labels.status(if mismatched {
+                MetricStatus::Loading
+            } else if reading.status == MetricStatus::Ready {
                 MetricStatus::Stale
             } else {
                 reading.status
@@ -94,6 +103,7 @@ pub(super) fn gpu_temperature_entry(
         )
     };
     DisplayEntry {
+        gpu_device: None,
         id: DisplayId::GpuTemperature,
         tone: Default::default(),
         power_state: None,
@@ -163,6 +173,7 @@ pub(super) fn disk_temperature_entry(
         )
     };
     DisplayEntry {
+        gpu_device: None,
         id: DisplayId::DiskTemperature,
         tone: Default::default(),
         power_state: None,

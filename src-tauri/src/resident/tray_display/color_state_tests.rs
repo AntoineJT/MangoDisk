@@ -161,6 +161,7 @@ fn battery_power_color_rules_apply_to_their_own_slot() {
         color: DisplayColor::Blue,
     }];
     let mut entries = vec![DisplayEntry {
+        gpu_device: None,
         id: DisplayId::BatteryPower,
         tone: Default::default(),
         power_state: None,
@@ -188,6 +189,7 @@ fn temperature_and_percentage_rules_are_independent_and_unavailable_is_neutral()
     ]
     .into_iter()
     .map(|id| DisplayEntry {
+        gpu_device: None,
         id,
         tone: Default::default(),
         power_state: None,
@@ -233,6 +235,7 @@ fn switching_disks_resets_hysteresis_without_resetting_cpu() {
     let mut entries: Vec<_> = [DisplayId::Cpu, DisplayId::Disk]
         .into_iter()
         .map(|id| DisplayEntry {
+            gpu_device: None,
             id,
             tone: UsageTone::Normal,
             power_state: None,
@@ -309,4 +312,38 @@ fn switching_disks_resets_hysteresis_without_resetting_cpu() {
         None,
     );
     assert!(entries.iter().all(|entry| entry.tone == UsageTone::Warning));
+}
+
+#[test]
+fn multiple_gpu_colors_follow_device_identity_across_reordering_and_removal() {
+    use display_entry::GpuDisplayDevice;
+    let preferences = ResidentPreferences::default();
+    let mut state = color_state::ColorState::default();
+    let entry = |id: &str, value: u16| DisplayEntry {
+        gpu_device: Some(GpuDisplayDevice {
+            id: id.into(),
+            name: id.into(),
+            label: "GPU0".into(),
+        }),
+        id: DisplayId::Gpu,
+        tone: Default::default(),
+        power_state: None,
+        fan_rows: None,
+        color_value: Some(value),
+        marker: "G".into(),
+        digits: value.to_string(),
+        text: String::new(),
+        tooltip: String::new(),
+    };
+    let mut first = vec![entry("a", 90), entry("b", 10)];
+    state.apply(&mut first, &preferences, None, None, None, None);
+    assert_eq!(first[0].tone, UsageTone::Critical);
+    let mut reordered = vec![entry("b", 10), entry("a", 89)];
+    state.apply(&mut reordered, &preferences, None, None, None, None);
+    assert_eq!(reordered[1].tone, UsageTone::Critical);
+    let mut removed = vec![entry("b", 10)];
+    state.apply(&mut removed, &preferences, None, None, None, None);
+    let mut returned = vec![entry("a", 89), entry("b", 10)];
+    state.apply(&mut returned, &preferences, None, None, None, None);
+    assert_eq!(returned[0].tone, UsageTone::Warning);
 }

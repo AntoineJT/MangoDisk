@@ -192,6 +192,7 @@ mod tests {
             for tone in [UsageTone::Normal, UsageTone::Warning, UsageTone::Critical] {
                 let columns = super::super::presentation::columns(
                     &[DisplayEntry {
+                        gpu_device: None,
                         power_state: None,
                         fan_rows: None,
                         id,
@@ -250,6 +251,7 @@ mod tests {
                 ] {
                     let columns = super::super::presentation::columns(
                         &[DisplayEntry {
+                            gpu_device: None,
                             tone: Default::default(),
                             power_state: None,
                             fan_rows: None,

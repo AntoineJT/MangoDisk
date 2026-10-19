@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { automaticGpuDevice, gpuDeviceMetrics } from '@/lib/utils/system-resources/gpu-device-metrics';
 import MdResidentMetricOrder from './md-resident-metric-order.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
 import { METRIC_LABEL_KEYS, METRIC_STATUS_KEYS } from '@/lib/models/system-resources/system-resources';
@@ -18,6 +19,7 @@ import { SelectTrigger } from 'reka-ui';
 import MdTaskbarPosition from './md-taskbar-position.vue';
 import MdStatusAppearance from './md-status-appearance.vue';
 import MdFanDisplaySettings from './md-fan-display-settings.vue';
+import MdGpuDisplaySettings from './md-gpu-display-settings.vue';
 import MdStatusColorRuleEditor from './md-status-color-rule-editor.vue';
 import type { ColorMetricId, MetricColorRule } from '@/lib/models/resident/resident-color-rules';
 import { ICON_NAMES } from '@/lib/models/presentation/ui';
@@ -42,6 +44,7 @@ const temperatureSelectionPending = ref(false);
 const interfaces = ref<NetworkInterface[]>([]);
 const volumes = ref<ResourceVolume[]>([]);
 const gpuAdapters = ref<{ id: string; name: string }[]>([]);
+const gpuDevices = ref<ResidentReading['gpuDevices']>([]);
 const catalogueError = ref(false);
 const gpuTemperatureReading = ref<ResidentReading['gpuTemperature']>({
   status: 'loading',
@@ -49,33 +52,30 @@ const gpuTemperatureReading = ref<ResidentReading['gpuTemperature']>({
   value: null,
 });
 const gpuTemperatureObservedAtMs = ref(0);
-const gpuSelectionObservedAtMs = ref<number | null>(null);
-watch(
-  () => [settings.draft?.gpuAdapter, settings.preferences?.gpuAdapter] as const,
-  (selection, previous) => {
-    if (selection.some((adapter, index) => previous[index] !== undefined && adapter !== previous[index])) {
-      // Other metrics can publish newer snapshots containing the previous GPU
-      // sample. Wait for a temperature sample taken after the selection change.
-      gpuSelectionObservedAtMs.value = gpuTemperatureObservedAtMs.value;
-    }
-  },
-  { flush: 'sync' }
-);
-const gpuTemperatureAvailable = computed(() => {
-  if (settings.draft?.gpuAdapter !== settings.preferences?.gpuAdapter) return false;
-  if (
-    gpuSelectionObservedAtMs.value !== null &&
-    (gpuTemperatureReading.value.sampledAtMs ?? 0) <= gpuSelectionObservedAtMs.value
-  ) {
-    return false;
-  }
-  const value = currentGpuTemperature(gpuTemperatureReading.value, gpuTemperatureObservedAtMs.value);
-  return value !== null && (!settings.draft?.gpuAdapter || value.adapterId === settings.draft.gpuAdapter);
+const temperatureDisplay = computed(() => {
+  const draft = settings.draft;
+  return draft?.gpuTemperatureDisplay.mode === 'selected' ? draft.gpuTemperatureDisplay : draft?.gpuDisplay;
 });
+const temperatureStatuses = computed(() => {
+  const display = temperatureDisplay.value;
+  const now = gpuTemperatureObservedAtMs.value;
+  if (display?.mode === 'selected')
+    return display.adapterIds.map(id => {
+      const device = gpuDevices.value.find(device => device.adapterId === id);
+      return device
+        ? gpuDeviceMetrics(device, now).temperatureStatus
+        : gpuAdapters.value.some(adapter => adapter.id === id)
+          ? ('loading' as const)
+          : ('disconnected' as const);
+    });
+  const device = automaticGpuDevice(gpuDevices.value, now);
+  if (device) return [gpuDeviceMetrics(device, now).temperatureStatus];
+  const reading = gpuTemperatureReading.value;
+  return [reading.status === 'ready' && !currentGpuTemperature(reading, now) ? ('stale' as const) : reading.status];
+});
+const gpuTemperatureAvailable = computed(() => temperatureStatuses.value.includes('ready'));
 const gpuTemperatureStatus = computed(() =>
-  gpuTemperatureReading.value.status === 'ready' && !gpuTemperatureAvailable.value
-    ? 'loading'
-    : gpuTemperatureReading.value.status
+  gpuTemperatureAvailable.value ? 'ready' : (temperatureStatuses.value[0] ?? 'loading')
 );
 const batteryPresent = ref<boolean | null>(null);
 const batteryTemperatureStatus = ref<ResidentReading['batteryTemperature']['status']>('loading');
@@ -236,14 +236,6 @@ const missingInterface = computed(
 const missingVolume = computed(
   () => settings.draft?.diskVolume && !volumes.value.some(item => item.id === settings.draft?.diskVolume)
 );
-const missingGpu = computed(
-  () => settings.draft?.gpuAdapter && !gpuAdapters.value.some(item => item.id === settings.draft?.gpuAdapter)
-);
-const selectedGpuLabel = computed(() => {
-  const id = settings.draft?.gpuAdapter;
-  if (!id) return t('systemStatus.automatic');
-  return gpuAdapters.value.find(item => item.id === id)?.name ?? t('systemStatus.savedDisconnected');
-});
 // Select's inferred item text can outlive a locale or catalogue update while
 // its popup is closed. Keep the displayed selection reactive without reopening it.
 const selectedInterfaceLabel = computed(() => {
@@ -263,6 +255,7 @@ function accept(value: ResidentReading) {
   interfaces.value = value.interfaces;
   volumes.value = value.volumes;
   gpuAdapters.value = value.gpuAdapters;
+  gpuDevices.value = value.gpuDevices;
   gpuTemperatureReading.value = value.gpuTemperature;
   gpuTemperatureObservedAtMs.value = value.observedAtMs;
   batteryPresent.value = value.batteryPresent;
@@ -491,58 +484,49 @@ defineExpose({
                       @update:open="setSelectionOpen(row.id, $event)"
                       @change="settings.change($event)"
                     />
-                    <Select
-                      v-if="
-                        row.id === 'network' ||
-                        row.id === 'disk' ||
-                        row.id === 'diskTemperature' ||
-                        row.id === 'gpu' ||
-                        row.id === 'gpuTemperature'
+                    <MdGpuDisplaySettings
+                      v-if="(row.id === 'gpu' || row.id === 'gpuTemperature') && settings.draft"
+                      :temperature="row.id === 'gpuTemperature'"
+                      :selection="
+                        row.id === 'gpuTemperature' ? settings.draft.gpuTemperatureDisplay : settings.draft.gpuDisplay
                       "
-                      :disabled="row.id === 'gpuTemperature' ? !settings.draft || settings.saving : !row.enabled"
+                      :adapters="gpuAdapters"
+                      :devices="gpuDevices"
+                      :observed-at-ms="gpuTemperatureObservedAtMs"
+                      :disabled="row.id === 'gpuTemperature' ? settings.saving : !row.enabled"
+                      :open="expandedSelection === row.id"
+                      @update:open="setSelectionOpen(row.id, $event)"
+                      @change="settings.change($event)"
+                    />
+                    <Select
+                      v-if="row.id === 'network' || row.id === 'disk' || row.id === 'diskTemperature'"
+                      :disabled="!row.enabled"
                       :open="expandedSelection === row.id"
                       :model-value="
                         row.id === 'network'
                           ? (settings.draft?.networkInterface ?? 'automatic')
-                          : row.id === 'gpu' || row.id === 'gpuTemperature'
-                            ? (settings.draft?.gpuAdapter ?? 'automatic')
-                            : (settings.draft?.diskVolume ?? 'system')
+                          : (settings.draft?.diskVolume ?? 'system')
                       "
                       @update:open="setSelectionOpen(row.id, $event)"
                       @update:model-value="
                         row.id === 'network'
                           ? settings.change({ networkInterface: $event === 'automatic' ? null : String($event) })
-                          : row.id === 'gpu' || row.id === 'gpuTemperature'
-                            ? settings.change({ gpuAdapter: $event === 'automatic' ? null : String($event) })
-                            : settings.change({ diskVolume: $event === 'system' ? null : String($event) })
+                          : settings.change({ diskVolume: $event === 'system' ? null : String($event) })
                       "
                     >
                       <SelectTrigger as-child>
-                        <MdTooltip
-                          :text="
-                            row.id === 'network'
-                              ? selectedInterfaceLabel
-                              : row.id === 'gpu' || row.id === 'gpuTemperature'
-                                ? selectedGpuLabel
-                                : selectedVolumeLabel
-                          "
+                        <MdTooltip :text="row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel"
                           ><button
                             type="button"
                             class="selection-toggle"
                             :aria-label="
                               row.id === 'network'
                                 ? `${t('systemStatus.interface')}: ${selectedInterfaceLabel}`
-                                : row.id === 'gpu' || row.id === 'gpuTemperature'
-                                  ? `${t('systemStatus.gpu')}: ${selectedGpuLabel}`
-                                  : `${t('systemStatus.volume')}: ${selectedVolumeLabel}`
+                                : `${t('systemStatus.volume')}: ${selectedVolumeLabel}`
                             "
                           >
                             <span class="truncate">{{
-                              row.id === 'network'
-                                ? selectedInterfaceLabel
-                                : row.id === 'gpu' || row.id === 'gpuTemperature'
-                                  ? selectedGpuLabel
-                                  : selectedVolumeLabel
+                              row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel
                             }}</span>
                             <MdIcon
                               :name="expandedSelection === row.id ? ICON_NAMES.chevronUp : ICON_NAMES.chevronDown"
@@ -558,15 +542,6 @@ defineExpose({
                             {{ item.name }}{{ item.connected ? '' : ` · ${t('systemStatus.disconnected')}` }}
                           </SelectItem>
                           <SelectItem v-if="missingInterface" :value="settings.draft!.networkInterface!">{{
-                            t('systemStatus.savedDisconnected')
-                          }}</SelectItem>
-                        </template>
-                        <template v-else-if="row.id === 'gpu' || row.id === 'gpuTemperature'">
-                          <SelectItem value="automatic">{{ t('systemStatus.automatic') }}</SelectItem>
-                          <SelectItem v-for="item in gpuAdapters" :key="item.id" :value="item.id" class="break-all">{{
-                            item.name
-                          }}</SelectItem>
-                          <SelectItem v-if="missingGpu" :value="settings.draft!.gpuAdapter!">{{
                             t('systemStatus.savedDisconnected')
                           }}</SelectItem>
                         </template>
@@ -705,11 +680,11 @@ defineExpose({
   min-width: 0;
   gap: 8px;
 }
-.status-item[data-metric='fanSpeed'] .color-toggle {
+.status-item:is([data-metric='fanSpeed'], [data-metric='gpu'], [data-metric='gpuTemperature']) .color-toggle {
   grid-column: 4;
   grid-row: 1;
 }
-.status-item[data-metric='fanSpeed'] .metric-heading {
+.status-item:is([data-metric='fanSpeed'], [data-metric='gpu'], [data-metric='gpuTemperature']) .metric-heading {
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr) auto auto;
   column-gap: 8px;
@@ -801,7 +776,7 @@ defineExpose({
   cursor: default;
 }
 @media (pointer: coarse) {
-  .status-item[data-metric='fanSpeed'] .metric-heading {
+  .status-item:is([data-metric='fanSpeed'], [data-metric='gpu'], [data-metric='gpuTemperature']) .metric-heading {
     grid-template-columns: 44px minmax(0, 1fr) auto auto;
   }
   .status-item label,

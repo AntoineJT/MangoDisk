@@ -63,7 +63,7 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 28; resource readings use version 29.
+Resident preferences use schema version 28; resource readings use version 30.
 The runtime and IPC accept only the current structure. Persisted configurations from
 release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) upgrade directly to schema 28;
 development-only schemas, including 26 and 27, have no migration contract. Each
@@ -502,7 +502,7 @@ shared tray text and tooltips keep their existing precision.
 
 ### Overview history and disk activity
 
-Resource readings use schema version 29 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
+Resource readings use schema version 30 and nested `SystemResourceSnapshot` payloads use version 4; frontend adapters reject mismatched versions. Memory history records occupancy from the existing three-second sampler. CPU, GPU and memory use a fixed 0–100% scale. Network and disk activity share a symmetric scale: upload/write above zero, download/read below it. Gaps remain blank. The frontend buffers one sampling interval plus 250 ms before revealing each completed segment from the right; numeric readings remain live. Core retains up to 80 seconds / 96 samples so a reopened chart can reconstruct the buffered minute and offscreen endpoints. The frontend retains two additional intervals at the left edge. During a brief delivery delay, the playhead waits for completed data and catches up at no more than 1.1× speed; genuinely expired data still scrolls out. Pausing demand preserves existing readings and history with their original timestamps, while source changes clear the corresponding history. Rate scales hold their range for 30 seconds before a substantial reduction, and range changes ease over 600 ms using a shared SVG group. Continuous SVG updates are capped at 30 frames per second regardless of display refresh rate, without changing sample cadence or live numeric updates. Horizontal scrolling uses that group’s native transform instead of a composited CSS bitmap, preserving vector strokes at fractional positions. Reduced-motion mode applies scale changes immediately and disables continuous scrolling; hidden or fully expired charts stop their frame loop.
 
 Memory pressure is independent of occupancy. macOS reads `kern.memorystatus_vm_pressure_level` in the existing three-second memory sample and decodes dispatch flags 1/2/4 as normal/warning/critical. Unknown flags, unexpected lengths and read errors publish unavailable; Windows and Linux publish unsupported. The panel hides unsupported pressure and marks non-ready samples as not updated. Diagnostics record the first observation, transitions, failures and recovery rather than every sample.
 
@@ -949,12 +949,34 @@ temperature section in CPU details.
 
 ### Cross-platform GPU temperature
 
-Preference schema 13 adds a separate, default-off `gpuTemperature` display item.
-Versions 1–12 retain their saved order and selections; migration appends the new
-item disabled. Resource schema 17 exposes an identified `gpuTemperature` reading
-and `gpuTemperatureHistory`, independent of utilization and detail visibility.
-GPU usage and temperature share `gpuAdapter`; device changes clear temperature
-history rather than attributing a previous GPU's samples to the new selection.
+GPU temperature has a separate, default-off display item. Preference schema 28
+uses `gpuDisplay` and `gpuTemperatureDisplay`, each with `automatic` or `selected`
+mode and bounded device IDs for explicit selections. The display editor expands
+per-device checkboxes only in selected mode. Single-GPU settings and details hide
+redundant selection controls; a disconnected fixed selection retains its recovery
+control. Automatic utilization selects the
+busiest fresh device. Automatic temperature follows the menu-bar utilization
+selection, including multiple devices. Explicit temperature choices are independent.
+`gpuAdapter` selects only the detail-panel device. During a released-configuration
+upgrade, its saved single-device choice initializes `gpuDisplay`; automatic
+temperature follows that same selection. Development-only selection fields have
+no migration path and are absent from the current protocol.
+
+Resource schema 30 exposes `gpuDevices`, with each device's original sample
+status, timestamps and bounded, shared histories. No extra native polls are
+introduced. The detail panel retains its single-GPU layout; utilization,
+temperature and curves switch together, independently of menu-bar checkboxes.
+Settings, detail selectors, macOS menu-bar and Windows taskbar columns use the
+same sequential catalogue positions: GPU0, GPU1, and so on. Linked physical devices
+receive separate positions. Device IDs, rather than display numbers, retain
+selections and histories when the catalogue changes. Missing selections remain unavailable
+rather than falling back to another card. The Windows notification-area fallback
+has one icon per metric: it retains the first device value and includes every
+device in the tooltip, rather than repeatedly overwriting one native handle.
+
+Display selection projects cached observations without resetting utilization
+counters or changing sampling demand. Device switches retain each device's real
+timestamps and gaps; removal discards only that device's cache.
 
 The resident GPU worker reads temperature at four-second intervals while
 macOS or Windows monitoring is enabled, including when its display item or detail panel is hidden.
@@ -963,7 +985,7 @@ a fresh, valid reading from the selected adapter; a loading or failed observatio
 does not establish support. Settings show the unavailable status beside the label
 and keep device selection and disabling a saved item available.
 GPU and CPU cards share their
-numeric, tooltip and chart presentation; unsupported temperature sections are omitted.
+numeric, tooltip and chart presentation; GPU temperature cards retain selection and explicit unavailable states when adapters are present.
 Transient failures preserve original timestamps and real history without adding
 points or replacing missing values with zero. Values expire after ten seconds.
 

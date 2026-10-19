@@ -4199,6 +4199,7 @@
     "quitAction": "Завершить"
   },
   "gpuDetails": {
+    "selectedAdapters": "Выбранные GPU",
     "allocatableMemoryHint": "Выделенная ёмкость доступна системе и может не включать резерв оборудования\nЭто влияет и на общую ёмкость GPU",
     "cachedLabel": "Кэш",
     "cached": "Показаны последние доступные данные; ожидается обновление",
@@ -4238,6 +4239,7 @@
     "cached": "Кэш"
   },
   "gpuTemperature": {
+    "followUsage": "Следовать выбору загрузки GPU",
     "label": "Температура GPU",
     "sensorAverageHint": "Среднее значение {count} датчиков температуры GPU",
     "deviceHint": "Температура GPU по данным устройства",

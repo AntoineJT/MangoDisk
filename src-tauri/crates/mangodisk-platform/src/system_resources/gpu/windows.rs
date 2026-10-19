@@ -276,15 +276,14 @@ impl GpuReader {
             .flat_map(|value| {
                 (0..value.physical_count).map(|physical| GpuAdapter {
                     id: format!("{}:{physical}", value.id),
-                    name: if value.physical_count == 1 {
-                        format!("GPU {} · {}", value.ordinal, value.name)
-                    } else {
-                        format!("GPU {}.{physical} · {}", value.ordinal, value.name)
-                    },
+                    name: value.name.clone(),
                 })
             })
             .collect();
         values.sort_by(|a, b| a.id.cmp(&b.id));
+        for (index, adapter) in values.iter_mut().enumerate() {
+            adapter.name = format!("GPU{index} · {}", adapter.name);
+        }
         values
     }
 
@@ -476,6 +475,37 @@ mod tests {
             telemetry: Default::default(),
         }
     }
+    #[test]
+    fn catalogue_numbers_devices_sequentially_after_identity_sorting() {
+        let mut reader = GpuReader::default();
+        let mut linked = test_metadata("a", "Linked GPU", &[]);
+        linked.ordinal = 7;
+        let mut discrete = test_metadata("z", "Discrete GPU", &[]);
+        discrete.ordinal = 2;
+        discrete.physical_count = 1;
+        reader.names.insert((0, 1), linked);
+        reader.names.insert((0, 2), discrete);
+        let catalogue = reader.adapters();
+        assert_eq!(
+            catalogue
+                .iter()
+                .map(|adapter| adapter.id.as_str())
+                .collect::<Vec<_>>(),
+            ["a:0", "a:1", "z:0"]
+        );
+        assert_eq!(
+            catalogue
+                .iter()
+                .map(|adapter| adapter.name.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "GPU0 · Linked GPU",
+                "GPU1 · Linked GPU",
+                "GPU2 · Discrete GPU"
+            ]
+        );
+    }
+
     #[test]
     fn session_adapter_addresses_cannot_alias_hardware_selections() {
         assert!(physical_address_valid(&D3DKMT_ADAPTERADDRESS {

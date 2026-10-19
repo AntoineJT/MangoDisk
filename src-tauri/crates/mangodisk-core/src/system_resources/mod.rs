@@ -18,6 +18,8 @@ pub mod release_policy;
 pub mod service;
 
 mod gpu_history;
+#[cfg(test)]
+mod gpu_selection_tests;
 mod gpu_temperature;
 
 #[cfg(test)]

@@ -4199,6 +4199,7 @@
     "quitAction": "結束"
   },
   "gpuDetails": {
+    "selectedAdapters": "指定顯示卡",
     "allocatableMemoryHint": "專用容量為系統可配置量，可能不含硬體保留\nGPU 總容量也受此影響",
     "cachedLabel": "快取",
     "cached": "正在顯示上次資料，等待更新",
@@ -4238,6 +4239,7 @@
     "cached": "快取"
   },
   "gpuTemperature": {
+    "followUsage": "跟隨 GPU 使用率",
     "label": "GPU 溫度",
     "sensorAverageHint": "{count} 個 GPU 溫度感測器的平均值",
     "deviceHint": "裝置回報的 GPU 溫度",

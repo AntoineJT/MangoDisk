@@ -9,6 +9,12 @@ use crate::resident::{
 };
 use std::collections::HashMap;
 
+#[derive(PartialEq, Eq, Hash)]
+struct ColorKey {
+    id: DisplayId,
+    gpu_device: Option<(String, String)>,
+}
+
 #[derive(Default)]
 pub(super) struct ColorState {
     rules: Option<(bool, Vec<MetricColorRule>)>,
@@ -16,7 +22,7 @@ pub(super) struct ColorState {
     disk_temperature_volume: Option<String>,
     gpu_adapter: Option<String>,
     gpu_temperature_adapter: Option<String>,
-    matches: HashMap<DisplayId, Option<usize>>,
+    matches: HashMap<ColorKey, Option<usize>>,
     fan_source: Option<(FanDisplayMode, Vec<u8>)>,
     fan_matches: HashMap<u8, Option<usize>>,
 }
@@ -74,8 +80,15 @@ impl ColorState {
                 }
                 _ => true,
             };
-            let previous = if same_rules && same_source {
-                self.matches.get(&entry.id).copied().flatten()
+            let key = ColorKey {
+                id: entry.id,
+                gpu_device: entry
+                    .gpu_device
+                    .as_ref()
+                    .map(|device| (device.id.clone(), device.name.clone())),
+            };
+            let previous = if same_rules && (entry.gpu_device.is_some() || same_source) {
+                self.matches.get(&key).copied().flatten()
             } else {
                 None
             };
@@ -86,7 +99,7 @@ impl ColorState {
             entry.tone = matched
                 .and_then(|index| rule.map(|rule| rule.rules[index].color().into()))
                 .unwrap_or_default();
-            self.matches.insert(entry.id, matched);
+            self.matches.insert(key, matched);
             if let Some(rows) = &mut entry.fan_rows {
                 for row in rows {
                     let previous = self.fan_matches.get(&row.id).copied().flatten();
@@ -101,8 +114,16 @@ impl ColorState {
             }
         }
         // Unavailable or hidden entries must not retain an older match.
-        self.matches
-            .retain(|id, _| entries.iter().any(|entry| entry.id == *id));
+        self.matches.retain(|key, _| {
+            entries.iter().any(|entry| {
+                entry.id == key.id
+                    && entry
+                        .gpu_device
+                        .as_ref()
+                        .map(|device| (&device.id, &device.name))
+                        == key.gpu_device.as_ref().map(|(id, name)| (id, name))
+            })
+        });
         self.fan_matches.retain(|id, _| {
             entries
                 .iter()

@@ -23,16 +23,34 @@ const props = defineProps<{ reading: ResourceReadings; active: boolean }>();
 const { t } = useI18n({ useScope: 'global' });
 const settings = useResidentSettingsStore();
 const deviceMenuOpen = ref(false);
+const temperatureDevice = computed(() =>
+  props.reading.gpuDevices.find(device => device.adapterId === (selectedId.value ?? value.value?.adapterId))
+);
 const temperatureMatches = computed(
   () =>
     !selectedId.value ||
     !props.reading.gpuTemperature.value ||
     props.reading.gpuTemperature.value.adapterId === selectedId.value
 );
+const temperatureReading = computed(
+  () =>
+    temperatureDevice.value?.temperature ??
+    (temperatureMatches.value
+      ? props.reading.gpuTemperature
+      : { status: 'loading' as const, sampledAtMs: null, value: null })
+);
+const temperatureHistory = computed(
+  () =>
+    temperatureDevice.value?.temperatureHistory ?? (temperatureMatches.value ? props.reading.gpuTemperatureHistory : [])
+);
 const selectedId = computed(() => settings.draft?.gpuAdapter ?? null);
 const missing = computed(
   () => selectedId.value && !props.reading.gpuAdapters.some(adapter => adapter.id === selectedId.value)
 );
+const canSelectDevice = computed(() => props.reading.gpuAdapters.length > 1 || missing.value);
+watch(canSelectDevice, visible => {
+  if (!visible) deviceMenuOpen.value = false;
+});
 const selectedLabel = computed(() =>
   !selectedId.value
     ? t('systemStatus.automatic')
@@ -52,7 +70,7 @@ const value = computed(() => {
 });
 const deviceIdentity = computed(() => JSON.stringify([value.value?.adapterId, value.value?.adapterName]));
 const temperatureIdentity = computed(() => {
-  const temperature = props.reading.gpuTemperature.value;
+  const temperature = temperatureReading.value.value;
   return JSON.stringify([
     temperature?.adapterId,
     temperature?.adapterName,
@@ -81,7 +99,11 @@ const history = computed(() =>
 const historySummary = computed(() => summarizeUtilizationHistory(history.value, props.reading.observedAtMs));
 const deviceTooltip = computed(() => {
   if (!value.value) return '';
-  const device = selectedId.value ? selectedLabel.value : `${selectedLabel.value} · ${value.value.adapterName}`;
+  const device = !canSelectDevice.value
+    ? value.value.adapterName
+    : selectedId.value
+      ? selectedLabel.value
+      : `${selectedLabel.value} · ${value.value.adapterName}`;
   return cached.value ? `${device} · ${t('gpuDetails.cached')} · ${t(METRIC_STATUS_KEYS[cacheStatus.value])}` : device;
 });
 const facts = computed(() => {
@@ -148,6 +170,7 @@ onMounted(() => {
       <div class="gpu-usage">
         <header>
           <Select
+            v-if="canSelectDevice"
             v-model:open="deviceMenuOpen"
             :model-value="selectedId ?? 'automatic'"
             :disabled="!settings.draft || settings.loading || settings.saving"
@@ -169,6 +192,7 @@ onMounted(() => {
               <SelectItem v-if="missing" :value="selectedId!">{{ t('systemStatus.savedDisconnected') }}</SelectItem>
             </SelectContent>
           </Select>
+          <span v-else class="device-label">{{ t('systemStatus.gpuUsage') }}</span>
           <strong>{{ value ? value.usedPercent.toFixed(0) : '—' }}<small v-if="value">%</small></strong>
         </header>
         <MdResourceTrend
@@ -197,15 +221,15 @@ onMounted(() => {
       </div>
     </section>
     <MdTemperatureDetails
-      v-if="temperatureMatches && reading.gpuTemperature.status !== 'unsupported'"
-      :history="reading.gpuTemperatureHistory"
+      v-if="reading.gpuAdapters.length > 0 || temperatureReading.status !== 'unsupported'"
+      :history="temperatureHistory"
       :observed-at-ms="reading.observedAtMs"
       :active="active"
       :label="t('gpuTemperature.trend')"
       :aria-label="t('gpuTemperature.label')"
       :identity="temperatureIdentity"
     >
-      <MdResourceTemperature metric="gpu" :reading="reading.gpuTemperature" :observed-at-ms="reading.observedAtMs" />
+      <MdResourceTemperature metric="gpu" :reading="temperatureReading" :observed-at-ms="reading.observedAtMs" />
     </MdTemperatureDetails>
     <MdResourceFacts v-if="value" :active="active" :facts="facts" class="gpu-facts" />
     <div class="gpu-details-body scrollbar-stable-end">

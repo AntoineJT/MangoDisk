@@ -278,8 +278,17 @@ export interface DiskHealth {
   } | null;
 }
 
+export interface GpuDeviceReading {
+  adapterId: string;
+  adapterName: string;
+  usage: MetricReading<GpuUsage>;
+  usageHistory: TrendPoint[];
+  temperature: MetricReading<GpuTemperature>;
+  temperatureHistory: TrendPoint[];
+}
+
 export interface ResourceReadings {
-  schemaVersion: 29;
+  schemaVersion: 30;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;
@@ -311,6 +320,7 @@ export interface ResourceReadings {
   interfaces: NetworkInterface[];
   volumes: ResourceVolume[];
   gpuAdapters: { id: string; name: string }[];
+  gpuDevices: GpuDeviceReading[];
   cpuHistory: TrendPoint[];
   gpuHistory: TrendPoint[];
   networkHistory: TrendPoint[];

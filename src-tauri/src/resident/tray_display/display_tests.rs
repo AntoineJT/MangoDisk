@@ -266,7 +266,13 @@ fn gpu_temperature_preserves_celsius_and_rounded_color_value() {
     for metric in &mut prefs.metrics {
         metric.enabled = metric.id == DisplayMetricId::GpuTemperature;
     }
-    let entry = gpu_temperature_entry(&readings, &labels);
+    let pending = gpu_temperature_entry(&readings, &labels, Some("different-device"));
+    assert_eq!(pending.digits, "—");
+    assert!(pending.color_value.is_none());
+    assert!(pending
+        .tooltip
+        .contains(labels.status(MetricStatus::Loading)));
+    let entry = gpu_temperature_entry(&readings, &labels, None);
     assert_eq!(entry.text, "GPU 49°C");
     assert_eq!(entry.color_value, Some(49));
     assert!(entry.tooltip.contains("Apple M3 Max"));
@@ -275,9 +281,9 @@ fn gpu_temperature_preserves_celsius_and_rounded_color_value() {
         usize::from(cfg!(any(target_os = "macos", windows)))
     );
     readings.observed_at_ms = 11001;
-    assert_eq!(gpu_temperature_entry(&readings, &labels).digits, "—");
+    assert_eq!(gpu_temperature_entry(&readings, &labels, None).digits, "—");
     readings.observed_at_ms = 999;
-    assert_eq!(gpu_temperature_entry(&readings, &labels).digits, "—");
+    assert_eq!(gpu_temperature_entry(&readings, &labels, None).digits, "—");
 }
 
 #[test]
@@ -436,6 +442,7 @@ fn temperature_entries_follow_saved_order_including_without_cpu_usage() {
 #[cfg(target_os = "linux")]
 fn display_entry(id: DisplayId, text: &str) -> DisplayEntry {
     DisplayEntry {
+        gpu_device: None,
         id,
         tone: Default::default(),
         power_state: None,
@@ -737,4 +744,147 @@ fn menu_bar_rate_fields_keep_their_width_across_rounding_and_unit_changes() {
     }
     assert_eq!(rate_title(999.95, 1000.0), "  1.0 KB/s");
     assert_eq!(rate_title(0.0, 1000.0), "  0.0  B/s");
+}
+
+#[test]
+fn all_gpu_displays_keep_device_identity_values_and_unavailable_temperatures_separate() {
+    use mangodisk_core::system_resources::{
+        gpu::GpuUsage, metrics::MetricReading, readings::GpuDeviceReading,
+    };
+    let mut preferences = ResidentPreferences {
+        gpu_display: crate::resident::preference_schema::GpuDisplaySelection::Selected {
+            adapter_ids: vec!["a".into(), "b".into()],
+        },
+        ..Default::default()
+    };
+    for metric in &mut preferences.metrics {
+        metric.enabled = matches!(
+            metric.id,
+            DisplayMetricId::Gpu | DisplayMetricId::GpuTemperature
+        );
+    }
+    let mut values = ResourceReadings {
+        observed_at_ms: 1000,
+        ..Default::default()
+    };
+    values.gpu_devices = [("a", 90.0), ("b", 10.0)]
+        .into_iter()
+        .map(|(id, used_percent)| GpuDeviceReading {
+            adapter_id: id.into(),
+            adapter_name: id.into(),
+            usage: MetricReading::ready(
+                GpuUsage {
+                    adapter_id: id.into(),
+                    adapter_name: id.into(),
+                    used_percent,
+                    details: None,
+                },
+                1000,
+            ),
+            usage_history: Default::default(),
+            temperature: MetricReading {
+                status: MetricStatus::Unsupported,
+                sampled_at_ms: None,
+                value: None,
+            },
+            temperature_history: Default::default(),
+        })
+        .collect();
+    let labels = super::super::labels::Labels::for_locale("en-US");
+    values.gpu_adapters = values
+        .gpu_devices
+        .iter()
+        .map(
+            |device| mangodisk_platform::system_resources::gpu::GpuAdapter {
+                id: device.adapter_id.clone(),
+                name: device.adapter_name.clone(),
+            },
+        )
+        .collect();
+    let entries = entries(&preferences, &values, &labels, 1000.0);
+    assert_eq!(
+        entries.len(),
+        if cfg!(any(target_os = "macos", windows)) {
+            4
+        } else {
+            2
+        }
+    );
+    let notifications = notification_entries(&entries);
+    assert_eq!(
+        notifications.len(),
+        if cfg!(any(target_os = "macos", windows)) {
+            2
+        } else {
+            1
+        }
+    );
+    assert!(notifications[0].tooltip.contains("a"));
+    assert!(notifications[0].tooltip.contains("b"));
+    assert_eq!(notifications[0].digits, "90");
+    assert_eq!(entries[0].digits, "90");
+    assert_eq!(entries[1].digits, "10");
+    assert_eq!(entries[0].gpu_device.as_ref().unwrap().label, "GPU0");
+    assert_eq!(entries[1].gpu_device.as_ref().unwrap().id, "b");
+    for entry in entries.iter().skip(2) {
+        assert_eq!(entry.digits, "—");
+        assert!(entry.color_value.is_none());
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let columns = super::super::macos_presentation::columns(&entries, true);
+        assert_eq!(columns[0].top, "GPU0");
+        assert_eq!(columns[1].top, "GPU1");
+        assert_eq!(columns[2].top, "GPU0");
+    }
+}
+
+#[test]
+fn automatic_gpu_display_is_independent_of_detail_selection_and_missing_fixed_ids() {
+    use crate::resident::preference_schema::GpuDisplaySelection;
+    use mangodisk_core::system_resources::{
+        gpu::GpuUsage, metrics::MetricReading, readings::GpuDeviceReading,
+    };
+    let mut preferences = ResidentPreferences {
+        gpu_adapter: Some("b".into()),
+        ..Default::default()
+    };
+    for metric in &mut preferences.metrics {
+        metric.enabled = metric.id == DisplayMetricId::Gpu;
+    }
+    let values = ResourceReadings {
+        observed_at_ms: 1000,
+        gpu_devices: [("a", 90.0), ("b", 10.0)]
+            .into_iter()
+            .map(|(id, used_percent)| GpuDeviceReading {
+                adapter_id: id.into(),
+                adapter_name: id.into(),
+                usage: MetricReading::ready(
+                    GpuUsage {
+                        adapter_id: id.into(),
+                        adapter_name: id.into(),
+                        used_percent,
+                        details: None,
+                    },
+                    1000,
+                ),
+                usage_history: Default::default(),
+                temperature: Default::default(),
+                temperature_history: Default::default(),
+            })
+            .collect(),
+        ..Default::default()
+    };
+    let labels = super::super::labels::Labels::for_locale("en-US");
+    let automatic = entries(&preferences, &values, &labels, 1000.0);
+    assert_eq!(automatic.len(), 1);
+    assert_eq!(automatic[0].gpu_device.as_ref().unwrap().id, "a");
+    preferences.gpu_display = GpuDisplaySelection::Selected {
+        adapter_ids: vec!["gone".into()],
+    };
+    let missing = entries(&preferences, &values, &labels, 1000.0);
+    assert_eq!(missing.len(), 1);
+    assert_eq!(missing[0].digits, "—");
+    assert_eq!(missing[0].gpu_device.as_ref().unwrap().id, "gone");
+    assert!(missing[0].color_value.is_none());
 }

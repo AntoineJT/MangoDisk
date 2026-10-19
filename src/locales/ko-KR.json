@@ -4199,6 +4199,7 @@
     "quitAction": "종료"
   },
   "gpuDetails": {
+    "selectedAdapters": "선택한 GPU",
     "allocatableMemoryHint": "전용 용량은 시스템이 할당할 수 있는 양이며 하드웨어 예약분이 제외될 수 있습니다\n전체 GPU 용량에도 영향을 줍니다",
     "cachedLabel": "캐시",
     "cached": "마지막 데이터를 표시하고 있습니다. 업데이트를 기다리는 중입니다",
@@ -4238,6 +4239,7 @@
     "cached": "캐시"
   },
   "gpuTemperature": {
+    "followUsage": "GPU 사용률 선택 따르기",
     "label": "GPU 온도",
     "sensorAverageHint": "GPU 온도 센서 {count}개의 평균값",
     "deviceHint": "기기에서 보고한 GPU 온도",

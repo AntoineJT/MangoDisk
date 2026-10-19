@@ -176,6 +176,12 @@ pub fn columns(entries: &[DisplayEntry], compact: bool) -> Vec<Column> {
                     if compact { 34 } else { 36 },
                 ),
             };
+            let top = entry
+                .gpu_device
+                .as_ref()
+                .map(|device| device.label.clone())
+                .unwrap_or(top);
+            let width = width.max((top.chars().count() as u32) * 7);
             Some(Column {
                 id: entry.id,
                 tone: entry.tone,
@@ -291,6 +297,7 @@ mod tests {
     }
     fn entry(id: DisplayId, digits: &str, marker: &str) -> DisplayEntry {
         DisplayEntry {
+            gpu_device: None,
             tone: Default::default(),
             power_state: None,
             fan_rows: None,

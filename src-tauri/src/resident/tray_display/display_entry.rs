@@ -85,9 +85,19 @@ pub struct FanRow {
     pub tone: super::usage_color::UsageTone,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GpuDisplayDevice {
+    pub id: String,
+    pub name: String,
+    pub label: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DisplayEntry {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gpu_device: Option<GpuDisplayDevice>,
     pub id: DisplayId,
     pub tone: super::usage_color::UsageTone,
     #[serde(skip_serializing_if = "Option::is_none")]

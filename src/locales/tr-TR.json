@@ -4199,6 +4199,7 @@
     "quitAction": "Çık"
   },
   "gpuDetails": {
+    "selectedAdapters": "Seçili GPU’lar",
     "allocatableMemoryHint": "Ayrılmış kapasite sistemin ayırabildiği miktardır; donanım rezervleri hariç olabilir\nBu, toplam GPU kapasitesini de etkiler",
     "cachedLabel": "Önbellek",
     "cached": "Son kullanılabilir veriler gösteriliyor; güncelleme bekleniyor",
@@ -4238,6 +4239,7 @@
     "cached": "Önbellek"
   },
   "gpuTemperature": {
+    "followUsage": "GPU kullanım seçimini izle",
     "label": "GPU sıcaklığı",
     "sensorAverageHint": "{count} GPU sıcaklık sensörünün ortalaması",
     "deviceHint": "Cihazın bildirdiği GPU sıcaklığı",

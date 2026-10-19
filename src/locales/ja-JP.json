@@ -4199,6 +4199,7 @@
     "quitAction": "終了"
   },
   "gpuDetails": {
+    "selectedAdapters": "指定したGPU",
     "allocatableMemoryHint": "専用容量はシステムが割り当て可能な量で、ハードウェア予約分を除く場合があります\nGPU の合計容量にも影響します",
     "cachedLabel": "キャッシュ",
     "cached": "前回のデータを表示中。更新待ち",
@@ -4238,6 +4239,7 @@
     "cached": "キャッシュ"
   },
   "gpuTemperature": {
+    "followUsage": "GPU 使用率の選択に従う",
     "label": "GPU 温度",
     "sensorAverageHint": "GPU 温度センサー {count} 個の平均値",
     "deviceHint": "デバイスが報告する GPU 温度",
