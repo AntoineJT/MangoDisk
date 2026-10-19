@@ -140,11 +140,18 @@ export interface NetworkRate {
   transmitLinkBps: number | null;
   selectionReason: 'manual' | 'defaultRoute' | 'physicalFallback' | 'disconnected';
 }
+export interface ResourceDisk {
+  id: string;
+  number: number | null;
+  model: string | null;
+}
 export interface ResourceVolume {
   id: string;
   name: string;
   system: boolean;
   fileSystem: string | null;
+  mountPoints: string[];
+  devices: ResourceDisk[];
 }
 export interface DiskUsage {
   volume: ResourceVolume;
@@ -315,6 +322,7 @@ export interface ResourceReadings {
   network: MetricReading<NetworkRate>;
   disk: MetricReading<DiskUsage>;
   diskTemperature: MetricReading<DiskTemperature>;
+  diskDetailTemperature: MetricReading<DiskTemperature>;
   diskIo: MetricReading<DiskIoRate>;
   diskHealth: MetricReading<DiskHealth>;
   interfaces: NetworkInterface[];

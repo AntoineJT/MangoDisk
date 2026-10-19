@@ -30,6 +30,7 @@ export function emptyReadings(): ResourceReadings {
     network: empty(),
     disk: empty(),
     diskTemperature: empty(),
+    diskDetailTemperature: empty(),
     diskIo: empty(),
     diskHealth: empty(),
     interfaces: [],

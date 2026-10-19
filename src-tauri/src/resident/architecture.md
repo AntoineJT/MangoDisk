@@ -1098,10 +1098,25 @@ Disk temperature colors default to green below 50°C, orange from 50°C to below
 60°C, and red at 60°C or above. These editable display presets do not represent
 universal drive health limits. Saved color rules, including disabled or empty
 ones, remain unchanged until the user restores defaults and saves. Disk capacity
-and temperature share `diskVolume` but retain
-independent results, freshness and color state. The existing disk worker collects
+selects a mounted `diskVolume`, grouped by physical device. Temperature uses
+`diskTemperatureDevice`: null follows that volume's physical disk; a fixed hardware
+identity selects an unambiguous mounted volume on the chosen disk. These selections
+retain independent results, freshness and color state. Display disk numbers never
+serve as saved identities. Hardware model and serial (or Windows GPT/MBR identity)
+form the device key; unavailable hardware identity uses a conservative volume-bound
+fallback, so an unrelated replacement is never selected by its display number.
+The volume catalogue exposes models, physical numbers, mounted names/letters and
+all backing devices. Spanning volumes stay selectable for capacity but cannot
+provide one inferred temperature. Unknown topology is labelled explicitly.
+`diskDetailTemperature` remains tied to the capacity/detail volume while
+`diskTemperature` follows the independent display choice. Both sources share a
+bounded two-entry cache: volumes mapped to the same physical disk reuse successful
+observations with their own volume labels and the original timestamp. Failed reads
+remain volume-specific. Two distinct sources each retain the original 30-second
+cadence, only while demanded. The existing disk worker collects
 temperature every 30 seconds only while its display item and resident monitoring
-are enabled. Switching volumes or disabling collection clears the old temperature.
+are enabled, or while disk details are visible. Changing temperature selection rejects
+in-flight old-source results without resetting capacity or other metric baselines.
 Values expire after 90 seconds and unavailable observations display an em dash.
 
 macOS resolves the selected mounted volume through the IORegistry to one physical

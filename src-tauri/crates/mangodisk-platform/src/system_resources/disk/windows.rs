@@ -89,11 +89,17 @@ pub fn list() -> PlatformResult<Vec<ResourceVolume>> {
                     );
                     let label = text(&label);
                     let name = if label.is_empty() {
-                        mount_point.clone()
+                        mount_point.trim_end_matches('\\').to_owned()
                     } else {
-                        format!("{label} ({mount_point})")
+                        format!("{label} ({})", mount_point.trim_end_matches('\\'))
                     };
                     volumes.push(ResourceVolume {
+                        devices: Vec::new(),
+                        mount_points: paths
+                            .split(|unit| *unit == 0)
+                            .take_while(|path| !path.is_empty())
+                            .map(|path| text(path).trim_end_matches('\\').to_owned())
+                            .collect(),
                         file_system: (metadata_valid != 0 && !text(&file_system).is_empty())
                             .then(|| text(&file_system)),
                         system: id.eq_ignore_ascii_case(&system),

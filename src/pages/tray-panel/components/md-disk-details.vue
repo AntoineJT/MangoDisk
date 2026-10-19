@@ -62,7 +62,7 @@ const detailFacts = computed(() => {
       value: ByteSizeService.bytes(Number(value.totalReadBytes)),
       unit: '',
     });
-  const temperature = props.reading.diskTemperature;
+  const temperature = props.reading.diskDetailTemperature;
   rows.push({
     key: 'temperature',
     label: t('diskHealth.temperature'),

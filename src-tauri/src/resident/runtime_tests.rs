@@ -362,3 +362,20 @@ fn gpu_background_demand_retains_history_until_global_disable() {
     state.preferences.lock().unwrap().enabled = false;
     assert!(!state.demands(false)[gpu].active);
 }
+
+#[test]
+fn fixed_disk_temperature_source_does_not_change_capacity_or_other_demands() {
+    let state = test_state();
+    let before = state.demands(false);
+    state.preferences.lock().unwrap().disk_temperature_device = Some("physical-device".into());
+    let after = state.demands(false);
+    assert_eq!(&before[..4], &after[..4]);
+    assert_eq!(after[4].selection, before[4].selection);
+    assert_eq!(
+        after[4].temperature_device.as_deref(),
+        Some("physical-device")
+    );
+    assert_eq!(after[4].active, before[4].active);
+    assert_eq!(after[4].temperature, before[4].temperature);
+    assert_eq!(MetricId::Disk.interval_ms(), 30_000);
+}

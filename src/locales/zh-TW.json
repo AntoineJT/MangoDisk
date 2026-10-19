@@ -4079,7 +4079,7 @@
     "interface": "網路介面",
     "automatic": "自動選擇",
     "volume": "磁碟",
-    "systemDisk": "系統磁碟",
+    "systemDisk": "系統碟",
     "diskCapacityHint": "可用空間為系統估計值\nmacOS 包含可視需要回收的空間",
     "savedDisconnected": "已選裝置 · 未連線",
     "saveFailed": "無法儲存，請重試",
@@ -4148,7 +4148,18 @@
     "batteryCharging": "充電中",
     "batteryDischarging": "放電中",
     "batteryIdle": "未充放電",
-    "batteryUnsupportedHint": "此 Mac 無法讀取電池資料"
+    "batteryUnsupportedHint": "此 Mac 無法讀取電池資料",
+    "diskUsage": "磁碟用量",
+    "physicalDisk": "實體硬碟",
+    "diskNumber": "磁碟 {number}",
+    "diskModelUnknown": "型號未知",
+    "localDisk": "本機磁碟",
+    "systemDiskAutomatic": "系統碟（自動）",
+    "diskTemperatureFollow": "跟隨磁碟使用量",
+    "spanningVolume": "跨多顆硬碟的卷宗",
+    "diskTopologyUnknown": "硬碟歸屬未知",
+    "systemDiskSelected": "系統碟（{name}）",
+    "currentDiskSource": "目前：{name}"
   },
   "webviewRuntime": {
     "updateRequired": "目前的介面執行元件版本較舊。請更新 Microsoft Edge WebView2 Runtime，然後重新開啟 MangoDisk",

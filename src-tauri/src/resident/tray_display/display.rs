@@ -147,6 +147,7 @@ pub fn entries(
                     values,
                     labels,
                     preferences.disk_volume.as_deref(),
+                    preferences.disk_temperature_device.as_deref(),
                 ));
             }
             continue;

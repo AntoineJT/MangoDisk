@@ -48,7 +48,7 @@ function disk(): ResourceReadings {
     status: 'ready',
     sampledAtMs: 1000,
     value: {
-      volume: { id: 'one', name: 'System', system: true, fileSystem: 'APFS' },
+      volume: { id: 'one', name: 'System', system: true, fileSystem: 'APFS', mountPoints: [], devices: [] },
       totalBytes: 100,
       availableBytes: 50,
       usedBytes: 50,
@@ -144,7 +144,7 @@ describe('disk health and network detail presentation', () => {
   });
   it.each([en, zh, tw, ja, ko, pt, ru, tr])('shows supported zero readings and health in every locale', messages => {
     const reading = disk();
-    reading.diskTemperature = {
+    reading.diskDetailTemperature = {
       status: 'ready',
       sampledAtMs: 1000,
       value: { volumeId: 'one', volumeName: 'System', celsius: 35, source: 'nvmeSmart' },
@@ -220,7 +220,7 @@ describe('disk health and network detail presentation', () => {
     const labels = () => wrapper.findAll('.health-metadata dt').map(row => row.text());
     const before = labels();
     expect(before).toContain(en.diskHealth.temperature);
-    reading.diskTemperature = {
+    reading.diskDetailTemperature = {
       status: 'ready',
       sampledAtMs: 2000,
       value: {
@@ -248,7 +248,7 @@ describe('disk health and network detail presentation', () => {
       powerOnHours: null,
       mediaErrors: null,
     };
-    reading.diskTemperature = {
+    reading.diskDetailTemperature = {
       status: 'ready',
       sampledAtMs: 2000,
       value: { volumeId: 'one', volumeName: 'System', celsius: 34, source: 'windowsStorage' },
@@ -258,7 +258,9 @@ describe('disk health and network detail presentation', () => {
     const before = labels();
     expect(before).toContain(en.diskHealth.temperature);
     for (const status of ['loading', 'failed', 'unsupported'] as const) {
-      await wrapper.setProps({ reading: { ...reading, diskTemperature: { status, sampledAtMs: null, value: null } } });
+      await wrapper.setProps({
+        reading: { ...reading, diskDetailTemperature: { status, sampledAtMs: null, value: null } },
+      });
       expect(labels()).toEqual(before);
       expect(wrapper.find('.health-metadata').text()).not.toContain('34°C');
     }
@@ -269,7 +271,7 @@ describe('disk health and network detail presentation', () => {
   it('uses a fresh temperature for the selected disk instead of the cached SMART temperature', async () => {
     const reading = disk();
     reading.diskHealth.value!.temperatureCelsius = 99;
-    reading.diskTemperature = {
+    reading.diskDetailTemperature = {
       status: 'ready',
       sampledAtMs: 2000,
       value: {
@@ -279,15 +281,21 @@ describe('disk health and network detail presentation', () => {
         source: 'nvmeSmart',
       },
     };
+    reading.diskTemperature = {
+      status: 'ready',
+      sampledAtMs: 2000,
+      value: { volumeId: 'other', volumeName: 'Archive', celsius: 80, source: 'nvmeSmart' },
+    };
     const wrapper = render(DiskDetails, reading);
+    expect(wrapper.text()).not.toContain('80°C');
     expect(wrapper.text()).toContain('35°C');
     expect(wrapper.text()).not.toContain('99°C');
     await wrapper.setProps({
       reading: {
         ...reading,
-        diskTemperature: {
-          ...reading.diskTemperature,
-          value: { ...reading.diskTemperature.value!, volumeId: 'other' },
+        diskDetailTemperature: {
+          ...reading.diskDetailTemperature,
+          value: { ...reading.diskDetailTemperature.value!, volumeId: 'other' },
         },
       },
     });

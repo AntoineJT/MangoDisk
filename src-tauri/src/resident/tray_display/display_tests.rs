@@ -9,6 +9,8 @@ fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
     let mut readings = ResourceReadings {
         observed_at_ms: 1000,
         volumes: vec![mangodisk_platform::system_resources::disk::ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "disk".into(),
             name: "System".into(),
@@ -26,22 +28,28 @@ fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
         ),
         ..Default::default()
     };
-    let entry = disk_temperature_entry(&readings, &labels, None);
+    let entry = disk_temperature_entry(&readings, &labels, None, None);
     assert_eq!(entry.digits, "35");
     assert_eq!(entry.text, "DISK 35°C");
     assert_eq!(entry.tooltip, "Disk temperature 35°C · System");
     assert_eq!(
-        disk_temperature_entry(&readings, &labels, Some("another-disk")).digits,
+        disk_temperature_entry(&readings, &labels, Some("another-disk"), None).digits,
         "—"
     );
     assert_eq!(
-        disk_temperature_entry(&readings, &labels, Some("disk")).digits,
+        disk_temperature_entry(&readings, &labels, Some("disk"), None).digits,
         "35"
     );
     readings.observed_at_ms = 91_001;
-    assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+    assert_eq!(
+        disk_temperature_entry(&readings, &labels, None, None).digits,
+        "—"
+    );
     readings.observed_at_ms = 999;
-    assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+    assert_eq!(
+        disk_temperature_entry(&readings, &labels, None, None).digits,
+        "—"
+    );
     readings.observed_at_ms = 1000;
     for status in [
         MetricStatus::Loading,
@@ -50,7 +58,10 @@ fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
         MetricStatus::Unsupported,
     ] {
         readings.disk_temperature.status = status;
-        assert_eq!(disk_temperature_entry(&readings, &labels, None).digits, "—");
+        assert_eq!(
+            disk_temperature_entry(&readings, &labels, None, None).digits,
+            "—"
+        );
     }
 }
 
@@ -531,6 +542,8 @@ fn disk_tooltips_use_shared_capacity_precision_without_explanatory_text() {
     use mangodisk_platform::system_resources::disk::{ResourceVolume, VolumeCapacity};
     let value = disk::usage(
         ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "test".into(),
             name: "Test".into(),

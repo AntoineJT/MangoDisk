@@ -8,6 +8,8 @@ use mangodisk_platform::system_resources::{
 
 fn volume(id: &str) -> ResourceVolume {
     ResourceVolume {
+        devices: Vec::new(),
+        mount_points: Vec::new(),
         file_system: None,
         id: id.into(),
         name: "Disk".into(),
@@ -75,4 +77,37 @@ fn health_has_independent_freshness_and_rejects_other_devices_or_failed_observat
         MetricStatus::Disconnected
     );
     assert!(cache.snapshot(4001).disk_health.value.is_none());
+}
+
+#[test]
+fn display_temperature_and_detail_temperature_remain_independent_and_expire_separately() {
+    use mangodisk_platform::system_resources::disk_temperature::DiskTemperature;
+    let mut cache = ResourceCache::default();
+    let sample = |id: &str, celsius| DiskTemperature {
+        volume_id: id.into(),
+        volume_name: id.into(),
+        celsius,
+        source: DiskTemperatureSource::NvmeSmart,
+    };
+    cache.disk_temperature(Ok(sample("display", 40.0)), 1000);
+    cache.disk_detail_temperature(Ok(sample("detail", 35.0)), 2000);
+    let snapshot = cache.snapshot(2000);
+    assert_eq!(
+        snapshot.disk_temperature.value.unwrap().volume_id,
+        "display"
+    );
+    assert_eq!(
+        snapshot.disk_detail_temperature.value.unwrap().volume_id,
+        "detail"
+    );
+    cache.clear_disk_temperature();
+    assert_eq!(
+        cache.snapshot(2000).disk_detail_temperature.status,
+        MetricStatus::Ready
+    );
+    assert!(cache.expire(92_001));
+    assert_eq!(
+        cache.snapshot(92_001).disk_detail_temperature.status,
+        MetricStatus::Stale
+    );
 }

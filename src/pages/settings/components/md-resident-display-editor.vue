@@ -19,6 +19,7 @@ import { SelectTrigger } from 'reka-ui';
 import MdTaskbarPosition from './md-taskbar-position.vue';
 import MdStatusAppearance from './md-status-appearance.vue';
 import MdFanDisplaySettings from './md-fan-display-settings.vue';
+import MdDiskDisplaySettings from './md-disk-display-settings.vue';
 import MdGpuDisplaySettings from './md-gpu-display-settings.vue';
 import MdStatusColorRuleEditor from './md-status-color-rule-editor.vue';
 import type { ColorMetricId, MetricColorRule } from '@/lib/models/resident/resident-color-rules';
@@ -119,6 +120,7 @@ const displayLabelKeys = {
   cpuTemperature: 'cpuTemperature.label',
   gpuTemperature: 'gpuTemperature.label',
   diskTemperature: 'systemStatus.diskTemperature',
+  disk: 'systemStatus.diskUsage',
   batteryTemperature: 'systemStatus.batteryTemperature',
   chargingPower: 'systemStatus.chargingPower',
   batteryPower: 'systemStatus.batteryPower',
@@ -233,9 +235,6 @@ watch(rows, value => {
 const missingInterface = computed(
   () => settings.draft?.networkInterface && !interfaces.value.some(item => item.id === settings.draft?.networkInterface)
 );
-const missingVolume = computed(
-  () => settings.draft?.diskVolume && !volumes.value.some(item => item.id === settings.draft?.diskVolume)
-);
 // Select's inferred item text can outlive a locale or catalogue update while
 // its popup is closed. Keep the displayed selection reactive without reopening it.
 const selectedInterfaceLabel = computed(() => {
@@ -244,11 +243,6 @@ const selectedInterfaceLabel = computed(() => {
   const item = interfaces.value.find(item => item.id === id);
   if (!item) return t('systemStatus.savedDisconnected');
   return `${item.name}${item.connected ? '' : ` · ${t('systemStatus.disconnected')}`}`;
-});
-const selectedVolumeLabel = computed(() => {
-  const id = settings.draft?.diskVolume;
-  if (!id) return t('systemStatus.systemDisk');
-  return volumes.value.find(item => item.id === id)?.name ?? t('systemStatus.savedDisconnected');
 });
 let disposed = false;
 function accept(value: ResidentReading) {
@@ -413,7 +407,7 @@ defineExpose({
                           row.id === 'cpu'
                             ? t('systemStatus.cpuShort')
                             : row.id === 'disk'
-                              ? t('systemStatus.volume')
+                              ? t('systemStatus.diskUsage')
                               : t(displayLabelKeys[row.id])
                         }}
                       </label>
@@ -498,62 +492,49 @@ defineExpose({
                       @update:open="setSelectionOpen(row.id, $event)"
                       @change="settings.change($event)"
                     />
-                    <Select
-                      v-if="row.id === 'network' || row.id === 'disk' || row.id === 'diskTemperature'"
+                    <MdDiskDisplaySettings
+                      v-if="(row.id === 'disk' || row.id === 'diskTemperature') && settings.draft"
+                      :temperature="row.id === 'diskTemperature'"
+                      :volume-id="settings.draft.diskVolume"
+                      :device-id="settings.draft.diskTemperatureDevice"
+                      :volumes="volumes"
                       :disabled="!row.enabled"
                       :open="expandedSelection === row.id"
-                      :model-value="
-                        row.id === 'network'
-                          ? (settings.draft?.networkInterface ?? 'automatic')
-                          : (settings.draft?.diskVolume ?? 'system')
-                      "
+                      @update:open="setSelectionOpen(row.id, $event)"
+                      @change="settings.change($event)"
+                    />
+                    <Select
+                      v-if="row.id === 'network'"
+                      :disabled="!row.enabled"
+                      :open="expandedSelection === row.id"
+                      :model-value="settings.draft?.networkInterface ?? 'automatic'"
                       @update:open="setSelectionOpen(row.id, $event)"
                       @update:model-value="
-                        row.id === 'network'
-                          ? settings.change({ networkInterface: $event === 'automatic' ? null : String($event) })
-                          : settings.change({ diskVolume: $event === 'system' ? null : String($event) })
+                        settings.change({ networkInterface: $event === 'automatic' ? null : String($event) })
                       "
                     >
-                      <SelectTrigger as-child>
-                        <MdTooltip :text="row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel"
+                      <SelectTrigger as-child
+                        ><MdTooltip :text="selectedInterfaceLabel"
                           ><button
                             type="button"
                             class="selection-toggle"
-                            :aria-label="
-                              row.id === 'network'
-                                ? `${t('systemStatus.interface')}: ${selectedInterfaceLabel}`
-                                : `${t('systemStatus.volume')}: ${selectedVolumeLabel}`
-                            "
+                            :aria-label="`${t('systemStatus.interface')}: ${selectedInterfaceLabel}`"
                           >
-                            <span class="truncate">{{
-                              row.id === 'network' ? selectedInterfaceLabel : selectedVolumeLabel
-                            }}</span>
-                            <MdIcon
+                            <span class="truncate">{{ selectedInterfaceLabel }}</span
+                            ><MdIcon
                               :name="expandedSelection === row.id ? ICON_NAMES.chevronUp : ICON_NAMES.chevronDown"
                               :size="14"
                               class="shrink-0"
-                            /></button
-                        ></MdTooltip>
-                      </SelectTrigger>
+                            /></button></MdTooltip
+                      ></SelectTrigger>
                       <SelectContent align="end" class="z-60 max-w-[min(20rem,calc(100vw-2rem))]">
-                        <template v-if="row.id === 'network'">
-                          <SelectItem value="automatic">{{ t('systemStatus.automatic') }}</SelectItem>
-                          <SelectItem v-for="item in interfaces" :key="item.id" :value="item.id" class="break-all">
-                            {{ item.name }}{{ item.connected ? '' : ` · ${t('systemStatus.disconnected')}` }}
-                          </SelectItem>
-                          <SelectItem v-if="missingInterface" :value="settings.draft!.networkInterface!">{{
-                            t('systemStatus.savedDisconnected')
-                          }}</SelectItem>
-                        </template>
-                        <template v-else>
-                          <SelectItem value="system">{{ t('systemStatus.systemDisk') }}</SelectItem>
-                          <SelectItem v-for="item in volumes" :key="item.id" :value="item.id" class="break-all">{{
-                            item.name
-                          }}</SelectItem>
-                          <SelectItem v-if="missingVolume" :value="settings.draft!.diskVolume!">{{
-                            t('systemStatus.savedDisconnected')
-                          }}</SelectItem>
-                        </template>
+                        <SelectItem value="automatic">{{ t('systemStatus.automatic') }}</SelectItem>
+                        <SelectItem v-for="item in interfaces" :key="item.id" :value="item.id" class="break-all"
+                          >{{ item.name }}{{ item.connected ? '' : ` · ${t('systemStatus.disconnected')}` }}</SelectItem
+                        >
+                        <SelectItem v-if="missingInterface" :value="settings.draft!.networkInterface!">{{
+                          t('systemStatus.savedDisconnected')
+                        }}</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button
@@ -697,6 +678,12 @@ defineExpose({
   flex-wrap: wrap;
   min-width: 0;
   gap: 4px 8px;
+}
+/* A longer selected model must shrink its own trigger rather than wrap the fixed label. */
+.status-item:is([data-metric='disk'], [data-metric='diskTemperature']) .metric-label-group {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 .metric-heading label,
 .logo-label {

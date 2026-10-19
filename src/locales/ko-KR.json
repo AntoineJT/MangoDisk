@@ -4148,7 +4148,18 @@
     "batteryCharging": "충전 중",
     "batteryDischarging": "방전 중",
     "batteryIdle": "충방전 대기",
-    "batteryUnsupportedHint": "이 Mac에서는 배터리 데이터를 읽을 수 없습니다"
+    "batteryUnsupportedHint": "이 Mac에서는 배터리 데이터를 읽을 수 없습니다",
+    "diskUsage": "디스크 사용량",
+    "physicalDisk": "물리 디스크",
+    "diskNumber": "디스크 {number}",
+    "diskModelUnknown": "알 수 없는 모델",
+    "localDisk": "로컬 디스크",
+    "systemDiskAutomatic": "시스템 디스크(자동)",
+    "diskTemperatureFollow": "디스크 사용량 선택 따르기",
+    "spanningVolume": "여러 디스크에 걸친 볼륨",
+    "diskTopologyUnknown": "디스크 매핑을 확인할 수 없음",
+    "systemDiskSelected": "시스템 디스크({name})",
+    "currentDiskSource": "현재: {name}"
   },
   "webviewRuntime": {
     "updateRequired": "MangoDisk 화면 표시에 필요한 구성 요소의 버전이 오래되었습니다. Microsoft Edge WebView2 Runtime을 업데이트한 후 MangoDisk를 다시 실행해 주세요",

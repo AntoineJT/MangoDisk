@@ -40,7 +40,7 @@ pub enum Observation {
     Disk {
         volumes: Vec<ResourceVolume>,
         selected: Option<(
-            ResourceVolume,
+            Box<ResourceVolume>,
             mangodisk_platform::PlatformResult<VolumeCapacity>,
         )>,
         health: Option<(
@@ -50,6 +50,12 @@ pub enum Observation {
             >,
         )>,
         temperature: Option<(
+            u64,
+            mangodisk_platform::PlatformResult<
+                mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
+            >,
+        )>,
+        detail_temperature: Option<(
             u64,
             mangodisk_platform::PlatformResult<
                 mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
@@ -200,6 +206,7 @@ enum Sensor {
         health: Box<super::disk_health_sampling::HealthSampler>,
         temperature: Box<super::disk_temperature_sampling::TemperatureSampler>,
         temperature_state: Option<String>,
+        detail_temperature_state: Option<String>,
         capacity_state: Option<String>,
     },
     #[cfg(test)]
@@ -221,6 +228,7 @@ impl Sensor {
                 health: Default::default(),
                 temperature: Default::default(),
                 temperature_state: None,
+                detail_temperature_state: None,
                 capacity_state: None,
             },
         }
@@ -274,6 +282,7 @@ impl Sensor {
                 health,
                 temperature: temperature_sampler,
                 temperature_state,
+                detail_temperature_state,
                 capacity_state,
             } => {
                 let volumes = disk::list()?;
@@ -288,29 +297,36 @@ impl Sensor {
                 };
                 if selected.is_none() {
                     health.clear();
+                }
+                let temperature_volume = mangodisk_core::system_resources::disk::temperature_volume(
+                    &volumes,
+                    demand.selection.as_deref(),
+                    demand.temperature_device.as_deref(),
+                );
+                if temperature_volume.is_none() && selected.is_none() {
                     temperature_sampler.clear();
                 }
                 let temperature = if demand.temperature {
-                    selected.map(|volume| temperature_sampler.read_with(volume, timestamp_ms, || {
-                        let reused = health_reading.as_ref().and_then(|(sampled_at_ms, result)| (*sampled_at_ms == timestamp_ms).then(|| result.as_ref().ok()).flatten())
-                            .and_then(|health| health.temperature_celsius.map(|celsius| mangodisk_platform::system_resources::disk_temperature::DiskTemperature {
-                                volume_id: volume.id.clone(), volume_name: volume.name.clone(), celsius, source: health.source,
-                            }));
-                        let result = reused.map(Ok).unwrap_or_else(|| mangodisk_platform::system_resources::disk_temperature::read(volume));
-                        let outcome = match &result {
-                            Ok(value) => format!("{:?}", value.source),
-                            Err(error) => format!("{:?}:{}", error.code(), error.diagnostic()),
-                        };
-                        let identity = format!("{}:{outcome}", volume.id);
-                        if temperature_state.as_ref() != Some(&identity) {
-                            match &result {
-                                Ok(value) => log::info!("disk_temperature_state volume={} outcome=ready source={:?} celsius={:.1}", mangodisk_platform::diagnostics::text(&volume.name), value.source, value.celsius),
-                                Err(error) => log::info!("disk_temperature_state volume={} outcome=unavailable code={:?} error={}", mangodisk_platform::diagnostics::text(&volume.name), error.code(), mangodisk_platform::diagnostics::text(&error)),
-                            }
-                            *temperature_state = Some(identity);
-                        }
-                        (self::timestamp_ms(), result)
-                    }))
+                    temperature_volume.map(|volume| {
+                        temperature_sampler.read(
+                            volume,
+                            timestamp_ms,
+                            health_reading.as_ref(),
+                            temperature_state,
+                        )
+                    })
+                } else {
+                    None
+                };
+                let detail_temperature = if demand.detailed && demand.temperature {
+                    selected.map(|volume| {
+                        temperature_sampler.read(
+                            volume,
+                            timestamp_ms,
+                            health_reading.as_ref(),
+                            detail_temperature_state,
+                        )
+                    })
                 } else {
                     None
                 };
@@ -338,13 +354,14 @@ impl Sensor {
                         }
                         *capacity_state = Some(identity);
                     }
-                    (volume.clone(), capacity)
+                    (Box::new(volume.clone()), capacity)
                 });
                 Observation::Disk {
                     volumes,
                     selected,
                     health: health_reading,
                     temperature,
+                    detail_temperature,
                 }
             }
             #[cfg(test)]

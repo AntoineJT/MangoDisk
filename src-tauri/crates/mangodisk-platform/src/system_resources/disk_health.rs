@@ -170,6 +170,8 @@ mod tests {
     use super::*;
     fn volume() -> ResourceVolume {
         ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "disk".into(),
             name: "System".into(),

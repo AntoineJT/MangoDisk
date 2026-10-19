@@ -72,6 +72,9 @@ impl ResidentState {
                         && panel_open
                         && selected == metric)),
             catalogue_only: metric == MetricId::Gpu && !gpu_sampling,
+            temperature_device: (metric == MetricId::Disk)
+                .then(|| preferences.disk_temperature_device.clone())
+                .flatten(),
             selection: match metric {
                 MetricId::Network => preferences.network_interface.clone(),
                 MetricId::Disk => preferences.disk_volume.clone(),

@@ -206,11 +206,12 @@ impl ObservationState {
                 selected,
                 health,
                 temperature,
+                detail_temperature,
             }) => {
                 cache.volumes(volumes);
                 if let Some((volume, capacity)) = selected {
                     match capacity {
-                        Ok(capacity) => cache.disk(volume, capacity, completion.timestamp_ms),
+                        Ok(capacity) => cache.disk(*volume, capacity, completion.timestamp_ms),
                         Err(_) => cache.fail(MetricId::Disk, MetricStatus::Failed),
                     }
                 } else {
@@ -222,6 +223,16 @@ impl ObservationState {
                     cache.disk_temperature(
                         Err(mangodisk_platform::PlatformError::item_changed(
                             "disk_temperature selected volume unavailable",
+                        )),
+                        completion.timestamp_ms,
+                    );
+                }
+                if let Some((sampled_at_ms, result)) = detail_temperature {
+                    cache.disk_detail_temperature(result, sampled_at_ms);
+                } else if slot.demand.detailed {
+                    cache.disk_detail_temperature(
+                        Err(mangodisk_platform::PlatformError::item_changed(
+                            "disk_temperature detail volume unavailable",
                         )),
                         completion.timestamp_ms,
                     );

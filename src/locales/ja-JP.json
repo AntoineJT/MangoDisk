@@ -4148,7 +4148,18 @@
     "batteryCharging": "充電中",
     "batteryDischarging": "放電中",
     "batteryIdle": "充放電停止",
-    "batteryUnsupportedHint": "この Mac ではバッテリーデータを取得できません"
+    "batteryUnsupportedHint": "この Mac ではバッテリーデータを取得できません",
+    "diskUsage": "ディスク使用量",
+    "physicalDisk": "物理ディスク",
+    "diskNumber": "ディスク {number}",
+    "diskModelUnknown": "モデル不明",
+    "localDisk": "ローカル ディスク",
+    "systemDiskAutomatic": "システムディスク（自動）",
+    "diskTemperatureFollow": "ディスク使用率の選択に連動",
+    "spanningVolume": "複数のディスクにまたがるボリューム",
+    "diskTopologyUnknown": "ディスクの対応関係が不明",
+    "systemDiskSelected": "システムディスク（{name}）",
+    "currentDiskSource": "現在：{name}"
   },
   "webviewRuntime": {
     "updateRequired": "MangoDisk の画面表示に必要なコンポーネントが古くなっています。Microsoft Edge WebView2 Runtime を更新してから、MangoDisk を再起動してください",

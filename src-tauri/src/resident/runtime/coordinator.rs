@@ -125,7 +125,12 @@ pub(super) fn run(
         }
         for (index, metric) in MetricId::ALL.into_iter().enumerate() {
             let selection_changed = slots[index].demand.selection != demands[index].selection;
+            let temperature_device_changed =
+                slots[index].demand.temperature_device != demands[index].temperature_device;
             if slots[index].update(demands[index].clone()) {
+                if temperature_device_changed {
+                    cache.clear_disk_temperature();
+                }
                 if selection_changed {
                     cache.reset(metric);
                 } else if !demands[index].active {
@@ -291,7 +296,12 @@ pub(super) fn run(
                 worker.demands(observations.warm_icons)[index].clone(),
             );
             let selection_changed = slots[index].demand.selection != demand.selection;
+            let temperature_device_changed =
+                slots[index].demand.temperature_device != demand.temperature_device;
             if slots[index].update(demand) {
+                if temperature_device_changed {
+                    cache.clear_disk_temperature();
+                }
                 if selection_changed {
                     cache.reset(completion.metric);
                 } else if !slots[index].demand.active {

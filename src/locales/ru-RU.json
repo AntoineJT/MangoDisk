@@ -4148,7 +4148,18 @@
     "batteryCharging": "Заряжается",
     "batteryDischarging": "Разряжается",
     "batteryIdle": "Без заряда и разряда",
-    "batteryUnsupportedHint": "На этом Mac данные батареи недоступны"
+    "batteryUnsupportedHint": "На этом Mac данные батареи недоступны",
+    "diskUsage": "Заполнение диска",
+    "physicalDisk": "Физический диск",
+    "diskNumber": "Диск {number}",
+    "diskModelUnknown": "Неизвестная модель",
+    "localDisk": "Локальный диск",
+    "systemDiskAutomatic": "Системный диск (авто)",
+    "diskTemperatureFollow": "Как для заполнения диска",
+    "spanningVolume": "Том на нескольких дисках",
+    "diskTopologyUnknown": "Диск тома не определён",
+    "systemDiskSelected": "Системный диск ({name})",
+    "currentDiskSource": "Сейчас: {name}"
   },
   "webviewRuntime": {
     "updateRequired": "Обновите WebView2 Runtime и перезапустите MangoDisk",

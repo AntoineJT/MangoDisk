@@ -103,6 +103,8 @@ mod tests {
     fn unsupported_reopens_are_throttled_and_changed_devices_or_clocks_retry() {
         let mut reader = HealthSampler::default();
         let mut volume = ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "one".into(),
             name: "Disk".into(),
@@ -138,6 +140,8 @@ mod tests {
     fn transient_failures_wait_thirty_seconds() {
         let mut reader = HealthSampler::default();
         let volume = ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "disk".into(),
             name: "Disk".into(),
@@ -159,6 +163,8 @@ mod tests {
     fn successful_health_reads_survive_reopening_until_the_five_minute_deadline() {
         let mut reader = HealthSampler::default();
         let volume = ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "disk".into(),
             name: "Disk".into(),

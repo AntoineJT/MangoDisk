@@ -69,6 +69,8 @@ pub struct ResourceReadings {
     pub disk: MetricReading<DiskUsage>,
     pub disk_temperature:
         MetricReading<mangodisk_platform::system_resources::disk_temperature::DiskTemperature>,
+    pub disk_detail_temperature:
+        MetricReading<mangodisk_platform::system_resources::disk_temperature::DiskTemperature>,
     pub disk_io: MetricReading<DiskIoRate>,
     pub disk_health: MetricReading<mangodisk_platform::system_resources::disk_health::DiskHealth>,
     pub interfaces: Vec<NetworkInterface>,
@@ -112,6 +114,7 @@ impl Default for ResourceReadings {
             network: MetricReading::default(),
             disk: MetricReading::default(),
             disk_temperature: MetricReading::default(),
+            disk_detail_temperature: MetricReading::default(),
             disk_io: MetricReading::default(),
             disk_health: MetricReading::default(),
             interfaces: Vec::new(),
@@ -715,12 +718,32 @@ impl ResourceCache {
         >,
         timestamp_ms: u64,
     ) {
+        self.readings.disk_temperature = Self::temperature_reading(result, timestamp_ms);
+    }
+
+    pub fn disk_detail_temperature(
+        &mut self,
+        result: mangodisk_platform::PlatformResult<
+            mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
+        >,
+        timestamp_ms: u64,
+    ) {
+        self.readings.disk_detail_temperature = Self::temperature_reading(result, timestamp_ms);
+    }
+
+    fn temperature_reading(
+        result: mangodisk_platform::PlatformResult<
+            mangodisk_platform::system_resources::disk_temperature::DiskTemperature,
+        >,
+        timestamp_ms: u64,
+    ) -> MetricReading<mangodisk_platform::system_resources::disk_temperature::DiskTemperature>
+    {
         let unavailable = |status| MetricReading {
             status,
             sampled_at_ms: None,
             value: None,
         };
-        self.readings.disk_temperature = match result {
+        match result {
             Ok(value) if value.valid() => MetricReading::ready(value, timestamp_ms),
             Ok(_) => unavailable(MetricStatus::Failed),
             Err(error) => unavailable(
@@ -732,7 +755,7 @@ impl ResourceCache {
                     MetricStatus::Failed
                 },
             ),
-        };
+        }
     }
 
     pub fn fail(&mut self, metric: MetricId, status: MetricStatus) {
@@ -770,6 +793,11 @@ impl ResourceCache {
                     sampled_at_ms: None,
                 };
                 self.readings.disk_temperature = MetricReading {
+                    status,
+                    sampled_at_ms: None,
+                    value: None,
+                };
+                self.readings.disk_detail_temperature = MetricReading {
                     status,
                     sampled_at_ms: None,
                     value: None,
@@ -820,6 +848,7 @@ impl ResourceCache {
                 self.readings.disk = MetricReading::default();
                 self.readings.disk_health = MetricReading::default();
                 self.clear_disk_temperature();
+                self.readings.disk_detail_temperature = MetricReading::default();
             }
         }
     }
@@ -873,6 +902,10 @@ impl ResourceCache {
             mangodisk_platform::system_resources::disk_health::DISK_HEALTH_FRESHNESS_MS,
         );
         self.readings.disk_io.expire(now_ms, 5000);
+        self.readings.disk_detail_temperature.expire(
+            now_ms,
+            mangodisk_platform::system_resources::disk_temperature::DISK_TEMPERATURE_FRESHNESS_MS,
+        );
         self.readings.disk_temperature.expire(
             now_ms,
             mangodisk_platform::system_resources::disk_temperature::DISK_TEMPERATURE_FRESHNESS_MS,
@@ -895,7 +928,7 @@ impl ResourceCache {
         gpu_changed || before != self.statuses()
     }
 
-    fn statuses(&self) -> [MetricStatus; 19] {
+    fn statuses(&self) -> [MetricStatus; 20] {
         [
             self.readings.fan_speed.status,
             self.readings.system_power.status,
@@ -912,6 +945,7 @@ impl ResourceCache {
             self.readings.network.status,
             self.readings.disk.status,
             self.readings.disk_temperature.status,
+            self.readings.disk_detail_temperature.status,
             self.readings.disk_health.status,
             self.readings.disk_io.status,
             self.readings.cpu_processes.status,

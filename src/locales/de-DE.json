@@ -4079,7 +4079,7 @@
     "interface": "Netzwerkschnittstelle",
     "automatic": "Automatisch",
     "volume": "Laufwerk",
-    "systemDisk": "Systemfestplatte",
+    "systemDisk": "Systemlaufwerk",
     "diskCapacityHint": "Der verfügbare Speicherplatz ist eine Systemschätzung\nUnter macOS umfasst es zurückgewinnbaren Speicherplatz",
     "savedDisconnected": "Gespeichertes Gerät · Verbindung getrennt",
     "saveFailed": "Konnte nicht gespeichert werden. Versuchen Sie es noch einmal",
@@ -4148,7 +4148,18 @@
     "batteryCharging": "Laden",
     "batteryDischarging": "Entladen",
     "batteryIdle": "Leerlauf",
-    "batteryUnsupportedHint": "Batterietelemetrie ist auf diesem Mac nicht verfügbar"
+    "batteryUnsupportedHint": "Batterietelemetrie ist auf diesem Mac nicht verfügbar",
+    "diskUsage": "Datenträgerbelegung",
+    "physicalDisk": "Physischer Datenträger",
+    "diskNumber": "Datenträger {number}",
+    "diskModelUnknown": "Unbekanntes Modell",
+    "localDisk": "Lokaler Datenträger",
+    "systemDiskAutomatic": "Systemlaufwerk (automatisch)",
+    "diskTemperatureFollow": "Speicherbelegung folgen",
+    "spanningVolume": "Volume auf mehreren Datenträgern",
+    "diskTopologyUnknown": "Datenträgerzuordnung nicht verfügbar",
+    "systemDiskSelected": "Systemlaufwerk ({name})",
+    "currentDiskSource": "Aktuell: {name}"
   },
   "webviewRuntime": {
     "updateRequired": "Die Anzeigekomponente von MangoDisk ist veraltet. Aktualisieren Sie Microsoft Edge WebView2 Runtime und öffnen Sie MangoDisk erneut",

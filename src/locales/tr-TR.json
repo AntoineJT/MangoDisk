@@ -4148,7 +4148,18 @@
     "batteryCharging": "Şarj oluyor",
     "batteryDischarging": "Deşarj oluyor",
     "batteryIdle": "Boşta",
-    "batteryUnsupportedHint": "Bu Mac üzerinde pil verileri okunamıyor"
+    "batteryUnsupportedHint": "Bu Mac üzerinde pil verileri okunamıyor",
+    "diskUsage": "Disk kullanımı",
+    "physicalDisk": "Fiziksel disk",
+    "diskNumber": "Disk {number}",
+    "diskModelUnknown": "Bilinmeyen model",
+    "localDisk": "Yerel disk",
+    "systemDiskAutomatic": "Sistem diski (otomatik)",
+    "diskTemperatureFollow": "Disk kullanımı seçimini izle",
+    "spanningVolume": "Birden çok diske yayılan birim",
+    "diskTopologyUnknown": "Disk eşlemesi kullanılamıyor",
+    "systemDiskSelected": "Sistem diski ({name})",
+    "currentDiskSource": "Geçerli: {name}"
   },
   "webviewRuntime": {
     "updateRequired": "MangoDisk'i görüntüleyen bileşen güncel değil. Microsoft Edge WebView2 Runtime'ı güncelleyin, ardından MangoDisk'i yeniden açın",

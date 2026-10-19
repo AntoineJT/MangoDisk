@@ -22,6 +22,8 @@ unsafe extern "C" {
     fn IOObjectConformsTo(object: u32, class: *const c_char) -> u32;
     fn IOObjectRelease(object: u32) -> i32;
     fn IOIteratorNext(iterator: u32) -> u32;
+    fn IORegistryEntryGetChildIterator(entry: u32, plane: *const c_char, iterator: *mut u32)
+        -> i32;
     fn IORegistryEntryGetParentIterator(
         entry: u32,
         plane: *const c_char,
@@ -152,7 +154,7 @@ fn native_error(stage: &str, code: i32) -> PlatformError {
     )
 }
 
-fn storage_device(volume: &ResourceVolume) -> PlatformResult<Object> {
+fn storage_devices(volume: &ResourceVolume) -> PlatformResult<Vec<Object>> {
     let path = CString::new(volume.mount_point.as_str()).map_err(|_| unsupported("volume_path"))?;
     let mut stats: libc::statfs = unsafe { std::mem::zeroed() };
     if unsafe { libc::statfs(path.as_ptr(), &mut stats) } != 0 {
@@ -206,11 +208,104 @@ fn storage_device(volume: &ResourceVolume) -> PlatformResult<Object> {
             }
         }
     }
+    if devices.is_empty() {
+        return Err(unsupported("physical_device"));
+    }
+    Ok(devices)
+}
+
+fn storage_device(volume: &ResourceVolume) -> PlatformResult<Object> {
+    let mut devices = storage_devices(volume)?;
     // Fusion, RAID and other multi-device volumes have no single disk temperature.
     if devices.len() != 1 {
         return Err(unsupported("ambiguous_physical_device"));
     }
     Ok(devices.pop().unwrap())
+}
+
+fn property(service: u32, name: &str) -> Option<CFType> {
+    let key = CFString::new(name);
+    let raw = unsafe {
+        IORegistryEntryCreateCFProperty(service, key.as_concrete_TypeRef(), ptr::null(), 0)
+    };
+    (!raw.is_null()).then(|| unsafe { CFType::wrap_under_create_rule(raw) })
+}
+
+pub(super) fn physical_devices(
+    volume: &ResourceVolume,
+) -> PlatformResult<Vec<super::super::disk::ResourceDisk>> {
+    use super::super::disk::{device_identity, ResourceDisk};
+    let mut devices = Vec::new();
+    for device in storage_devices(volume)? {
+        let characteristics = property(device.0, "Device Characteristics")
+            .and_then(|value| value.downcast_into::<CFDictionary>());
+        let text = |name: &str| -> Option<String> {
+            let raw = characteristics
+                .as_ref()?
+                .find(CFString::new(name).as_CFTypeRef())?;
+            let value = unsafe { CFType::wrap_under_get_rule(*raw) }
+                .downcast_into::<CFString>()?
+                .to_string();
+            let value = value.trim();
+            (!value.is_empty() && value.len() <= 128 && !value.chars().any(char::is_control))
+                .then(|| value.to_owned())
+        };
+        let model = text("Product Name");
+        let serial = text("Serial Number");
+
+        let number = physical_disk_number(device.0);
+        let id = device_identity(
+            "macos-disk",
+            model.as_deref(),
+            serial.as_deref(),
+            &format!("{}:{number:?}", volume.id),
+        );
+        devices.push(ResourceDisk { id, number, model });
+    }
+    devices.sort_by_key(|device| device.number);
+    Ok(devices)
+}
+
+fn physical_disk_number(service: u32) -> Option<u32> {
+    // IOBlockStorageDriver sits between the device and its whole IOMedia.
+    // Stop at the first whole media; do not descend into partitions or APFS volumes.
+    let mut parents = vec![service];
+    let mut owned = Vec::new();
+    for _ in 0..128 {
+        let parent = parents.pop()?;
+        let mut iterator = 0;
+        if unsafe { IORegistryEntryGetChildIterator(parent, c"IOService".as_ptr(), &mut iterator) }
+            != 0
+        {
+            continue;
+        }
+        let iterator = Object(iterator);
+        loop {
+            let child = unsafe { IOIteratorNext(iterator.0) };
+            if child == 0 {
+                break;
+            }
+            let child = Object(child);
+            if property(child.0, "Whole")
+                .and_then(|value| value.downcast_into::<CFBoolean>())
+                .is_some_and(bool::from)
+            {
+                return property(child.0, "BSD Name")
+                    .and_then(|value| value.downcast_into::<CFString>())
+                    .and_then(|name| {
+                        name.to_string()
+                            .strip_prefix("disk")
+                            .and_then(|number| number.parse().ok())
+                    });
+            }
+            if owned.len() >= 128 {
+                return None;
+            }
+            parents.push(child.0);
+            owned.push(child);
+        }
+    }
+    None
 }
 
 fn read_smart(
@@ -299,10 +394,7 @@ fn read_smart(
     if code != 0 {
         return Err(native_error("smart_read", code));
     }
-    if !super::super::disk::list()?
-        .iter()
-        .any(|current| current.id == volume.id && current.mount_point == volume.mount_point)
-    {
+    if !super::super::disk::matches_mounted_identity(volume) {
         return Err(PlatformError::item_changed(
             "disk_temperature stage=volume_verify outcome=changed",
         ));

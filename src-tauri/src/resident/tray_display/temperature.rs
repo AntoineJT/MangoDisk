@@ -124,16 +124,13 @@ pub(super) fn disk_temperature_entry(
     values: &ResourceReadings,
     labels: &labels::Labels,
     manual: Option<&str>,
+    device: Option<&str>,
 ) -> DisplayEntry {
     use mangodisk_platform::system_resources::disk_temperature::DISK_TEMPERATURE_FRESHNESS_MS;
     let reading = &values.disk_temperature;
-    let selected = manual.or_else(|| {
-        values
-            .volumes
-            .iter()
-            .find(|volume| volume.system)
-            .map(|volume| volume.id.as_str())
-    });
+    let selected =
+        mangodisk_core::system_resources::disk::temperature_volume(&values.volumes, manual, device)
+            .map(|volume| volume.id.as_str());
     let value = reading.value.as_ref().filter(|value| {
         reading.status == MetricStatus::Ready
             && selected == Some(value.volume_id.as_str())

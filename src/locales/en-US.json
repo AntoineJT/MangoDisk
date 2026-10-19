@@ -4148,7 +4148,18 @@
     "batteryCharging": "Charging",
     "batteryDischarging": "Discharging",
     "batteryIdle": "Idle",
-    "batteryUnsupportedHint": "Battery telemetry is unavailable on this Mac"
+    "batteryUnsupportedHint": "Battery telemetry is unavailable on this Mac",
+    "diskUsage": "Disk usage",
+    "physicalDisk": "Physical disk",
+    "diskNumber": "Disk {number}",
+    "diskModelUnknown": "Unknown model",
+    "localDisk": "Local disk",
+    "systemDiskAutomatic": "System disk (automatic)",
+    "diskTemperatureFollow": "Follow disk usage",
+    "spanningVolume": "Volume spans multiple disks",
+    "diskTopologyUnknown": "Disk mapping unavailable",
+    "systemDiskSelected": "System disk ({name})",
+    "currentDiskSource": "Current: {name}"
   },
   "webviewRuntime": {
     "updateRequired": "The component used to display MangoDisk is out of date. Update Microsoft Edge WebView2 Runtime, then reopen MangoDisk",

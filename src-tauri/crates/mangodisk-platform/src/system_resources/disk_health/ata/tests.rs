@@ -2,6 +2,8 @@ use super::*;
 
 fn volume() -> ResourceVolume {
     ResourceVolume {
+        devices: Vec::new(),
+        mount_points: Vec::new(),
         id: "disk".into(),
         name: "Disk".into(),
         file_system: None,

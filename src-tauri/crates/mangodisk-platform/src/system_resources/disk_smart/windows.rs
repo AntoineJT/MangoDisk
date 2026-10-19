@@ -90,7 +90,7 @@ fn ioctl(handle: &Handle, code: u32, input: &[u8], stage: &str) -> PlatformResul
             .to_vec(),
     )
 }
-fn device_number(volume: &ResourceVolume) -> PlatformResult<u32> {
+fn device_numbers(volume: &ResourceVolume) -> PlatformResult<Vec<u32>> {
     let volume = open(volume.id.trim_end_matches('\\'), 0, "volume_open")?;
     let bytes = ioctl(
         &volume,
@@ -98,6 +98,10 @@ fn device_number(volume: &ResourceVolume) -> PlatformResult<u32> {
         &[],
         "volume_extents",
     )?;
+    parse_device_numbers(&bytes)
+}
+
+fn parse_device_numbers(bytes: &[u8]) -> PlatformResult<Vec<u32>> {
     let header = offset_of!(VOLUME_DISK_EXTENTS, Extents);
     let count = bytes
         .get(..4)
@@ -106,17 +110,118 @@ fn device_number(volume: &ResourceVolume) -> PlatformResult<u32> {
     if count == 0 || count > (bytes.len().saturating_sub(header)) / size_of::<DISK_EXTENT>() {
         return Err(unsupported("volume_extents_length"));
     }
-    let mut disk = None;
+    let mut disks = Vec::new();
     for index in 0..count {
         let start = header + index * size_of::<DISK_EXTENT>();
         let number = u32::from_le_bytes(bytes[start..start + 4].try_into().unwrap());
-        if disk.is_some_and(|previous| previous != number) {
-            return Err(unsupported("ambiguous_physical_device"));
+        if !disks.contains(&number) {
+            disks.push(number);
         }
-        disk = Some(number);
     }
-    Ok(disk.unwrap())
+    disks.sort_unstable();
+    Ok(disks)
 }
+
+fn device_number(volume: &ResourceVolume) -> PlatformResult<u32> {
+    let devices = device_numbers(volume)?;
+    if devices.len() != 1 {
+        return Err(unsupported("ambiguous_physical_device"));
+    }
+    Ok(devices[0])
+}
+
+pub(super) fn physical_devices(
+    volume: &ResourceVolume,
+) -> PlatformResult<Vec<super::super::disk::ResourceDisk>> {
+    use super::super::disk::{device_identity, ResourceDisk};
+    let numbers = device_numbers(volume)?;
+    let mut devices = Vec::new();
+    for number in &numbers {
+        let handle = open(
+            &format!("\\\\.\\PhysicalDrive{number}"),
+            0,
+            "catalogue_device_open",
+        )?;
+        let mut query = [0u8; 12];
+        query[..4].copy_from_slice(&StorageDeviceProperty.to_le_bytes());
+        // A missing descriptor must not erase a known volume-to-device relationship.
+        let descriptor = ioctl(
+            &handle,
+            IOCTL_STORAGE_QUERY_PROPERTY,
+            &query,
+            "catalogue_identity",
+        )
+        .unwrap_or_default();
+        let model = descriptor_text(
+            &descriptor,
+            offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset),
+        );
+        let serial = descriptor_text(
+            &descriptor,
+            offset_of!(STORAGE_DEVICE_DESCRIPTOR, SerialNumberOffset),
+        );
+        let id = if serial.is_some() {
+            device_identity(
+                "windows-disk",
+                model.as_deref(),
+                serial.as_deref(),
+                &volume.id,
+            )
+        } else {
+            // GPT disk GUID / MBR signature remain stable when drive letters or disk numbers change.
+            let layout = ioctl(
+                &handle,
+                IOCTL_DISK_GET_DRIVE_LAYOUT_EX,
+                &[],
+                "catalogue_layout",
+            )
+            .ok();
+            let disk_id = layout.as_deref().and_then(layout_identity);
+            device_identity(
+                "windows-disk",
+                None,
+                disk_id.as_deref(),
+                &format!("{}:{number}", volume.id),
+            )
+        };
+        devices.push(ResourceDisk {
+            id,
+            number: Some(*number),
+            model,
+        });
+    }
+    if device_numbers(volume)? != numbers {
+        return Err(PlatformError::item_changed(
+            "disk_topology stage=volume_verify physical_device_changed",
+        ));
+    }
+    Ok(devices)
+}
+
+fn layout_identity(bytes: &[u8]) -> Option<String> {
+    let header = offset_of!(DRIVE_LAYOUT_INFORMATION_EX, PartitionEntry);
+    if bytes.len() < header {
+        return None;
+    }
+    let style = u32::from_le_bytes(bytes[..4].try_into().ok()?);
+    let start = offset_of!(DRIVE_LAYOUT_INFORMATION_EX, Anonymous);
+    let length = match style {
+        0 => 4,
+        1 => 16,
+        _ => return None,
+    };
+    let id = bytes.get(start..start + length)?;
+    if id.iter().all(|byte| *byte == 0) {
+        return None;
+    }
+    Some(format!(
+        "{style}:{}",
+        id.iter()
+            .map(|byte| format!("{byte:02x}"))
+            .collect::<String>()
+    ))
+}
+
 fn storage_temperature(bytes: &[u8]) -> PlatformResult<f64> {
     let header = offset_of!(STORAGE_TEMPERATURE_DATA_DESCRIPTOR, TemperatureInfo);
     if bytes.len() < header {
@@ -153,38 +258,43 @@ fn storage_temperature(bytes: &[u8]) -> PlatformResult<f64> {
     maximum.ok_or_else(|| unsupported("temperature_sensor"))
 }
 
-fn ata_identity(bytes: &[u8]) -> super::super::disk_health::ata::AtaIdentity {
-    use super::super::disk_health::ata::AtaIdentity;
-    // Descriptor strings may start at the flexible array, before C tail padding.
+fn descriptor_text(bytes: &[u8], field: usize) -> Option<String> {
     let minimum = offset_of!(STORAGE_DEVICE_DESCRIPTOR, RawDeviceProperties);
     if bytes.len() < minimum {
-        return AtaIdentity::default();
+        return None;
     }
-    let size = u32::from_le_bytes(bytes[4..8].try_into().unwrap()) as usize;
-    let version = u32::from_le_bytes(bytes[..4].try_into().unwrap()) as usize;
+    let size = u32::from_le_bytes(bytes[4..8].try_into().ok()?) as usize;
+    let version = u32::from_le_bytes(bytes[..4].try_into().ok()?) as usize;
     if version < minimum || size < minimum || size > bytes.len() {
-        return AtaIdentity::default();
+        return None;
     }
-    let text = |field| {
-        let offset = u32::from_le_bytes(bytes[field..field + 4].try_into().unwrap()) as usize;
-        if offset < minimum || offset >= size {
-            return None;
-        }
-        let value = &bytes[offset..size];
-        let end = value.iter().position(|byte| *byte == 0)?;
-        if end > 128
-            || value[..end]
-                .iter()
-                .any(|byte| !byte.is_ascii() || byte.is_ascii_control())
-        {
-            return None;
-        }
-        let value = std::str::from_utf8(&value[..end]).ok()?.trim();
-        (!value.is_empty()).then(|| value.to_owned())
-    };
-    AtaIdentity {
-        model: text(offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset)),
-        firmware: text(offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductRevisionOffset)),
+    let offset = u32::from_le_bytes(bytes.get(field..field + 4)?.try_into().ok()?) as usize;
+    if offset < minimum || offset >= size {
+        return None;
+    }
+    let value = &bytes[offset..size];
+    let end = value.iter().position(|byte| *byte == 0)?;
+    if end > 128
+        || value[..end]
+            .iter()
+            .any(|byte| !byte.is_ascii() || byte.is_ascii_control())
+    {
+        return None;
+    }
+    let value = std::str::from_utf8(&value[..end]).ok()?.trim();
+    (!value.is_empty()).then(|| value.to_owned())
+}
+
+fn ata_identity(bytes: &[u8]) -> super::super::disk_health::ata::AtaIdentity {
+    super::super::disk_health::ata::AtaIdentity {
+        model: descriptor_text(
+            bytes,
+            offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductIdOffset),
+        ),
+        firmware: descriptor_text(
+            bytes,
+            offset_of!(STORAGE_DEVICE_DESCRIPTOR, ProductRevisionOffset),
+        ),
         logical_sector_bytes: None,
     }
 }
@@ -555,6 +665,8 @@ mod tests {
     fn management_only_health_validates_bounds_and_keeps_unknown_distinct_from_healthy() {
         use super::super::super::disk_health::DiskHealthStatus;
         let volume = ResourceVolume {
+            devices: Vec::new(),
+            mount_points: Vec::new(),
             file_system: None,
             id: "volume".into(),
             name: "Disk".into(),
@@ -675,5 +787,34 @@ mod tests {
             PlatformErrorCode::InvalidData
         );
         assert_eq!(size_of::<STORAGE_TEMPERATURE_INFO>(), 16);
+    }
+    #[test]
+    fn device_extents_deduplicate_partitions_and_reject_truncation() {
+        let header = offset_of!(VOLUME_DISK_EXTENTS, Extents);
+        let mut bytes = vec![0u8; header + size_of::<DISK_EXTENT>() * 3];
+        bytes[..4].copy_from_slice(&3u32.to_le_bytes());
+        for (index, number) in [2u32, 1, 2].into_iter().enumerate() {
+            let offset = header + index * size_of::<DISK_EXTENT>();
+            bytes[offset..offset + 4].copy_from_slice(&number.to_le_bytes());
+        }
+        assert_eq!(parse_device_numbers(&bytes).unwrap(), vec![1, 2]);
+        assert!(parse_device_numbers(&bytes[..bytes.len() - 1]).is_err());
+        assert!(parse_device_numbers(&[]).is_err());
+        bytes[..4].fill(0);
+        assert!(parse_device_numbers(&bytes).is_err());
+    }
+
+    #[test]
+    fn missing_or_uninitialized_disk_layout_cannot_become_a_shared_identity() {
+        assert!(layout_identity(&[]).is_none());
+        let mut bytes = vec![0u8; size_of::<DRIVE_LAYOUT_INFORMATION_EX>()];
+        assert!(layout_identity(&bytes).is_none());
+        let start = offset_of!(DRIVE_LAYOUT_INFORMATION_EX, Anonymous);
+        bytes[start] = 7;
+        assert!(layout_identity(&bytes).is_some());
+        bytes[..4].copy_from_slice(&1u32.to_le_bytes());
+        assert!(layout_identity(&bytes).is_some());
+        bytes[..4].copy_from_slice(&2u32.to_le_bytes());
+        assert!(layout_identity(&bytes).is_none());
     }
 }
