@@ -87,6 +87,12 @@ to 34/55 DIP (percentage/network), with abbreviated network units
 rounding at the monitor DPI; paint and hit testing share those bounds.
 Writes accept only the current validated structure. Memory snapshots use version 4; release results retain their separate version 1 contract.
 
+Preference writes retain native revision checks across WebViews. A stale writer
+receives the typed `preferencesConflict` reason and rereads committed preferences.
+The frontend rebases only disjoint fields and retries once; arrays remain atomic
+fields. Competing edits to the same field, repeated conflicts and storage failures
+retain explicit failure and rollback. Ordinary writes add no extra IPC reads.
+
 CPU overview samples every 2 seconds on both platforms, whether visible or hidden. Memory samples every
 3 seconds, network every 1 and disk every 30.
 Their freshness limits are respectively 5, 10, 5 and 90 seconds. CPU, memory, network and disk remain active while resident display is enabled,

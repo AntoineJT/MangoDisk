@@ -24,6 +24,7 @@ export type CommandErrorReason =
   | 'folderSelectionLimitExceeded'
   | 'analysisRootExcluded'
   | 'scanExclusionsChanged'
+  | 'preferencesConflict'
   | 'directoryNotEmpty'
   | 'deleteIncomplete'
   | 'deleteRecoveryFailed';
@@ -49,6 +50,7 @@ const COMMAND_ERROR_REASONS: ReadonlySet<string> = new Set<CommandErrorReason>([
   'quickScanUnavailable',
   'analysisRootExcluded',
   'scanExclusionsChanged',
+  'preferencesConflict',
   'directoryNotEmpty',
   'deleteIncomplete',
   'deleteRecoveryFailed',
