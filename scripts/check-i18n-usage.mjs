@@ -5,6 +5,7 @@
  */
 import { readFileSync, readdirSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
+import { duplicateJsonKeys } from './duplicate-json-keys.mjs';
 
 const projectRoot = resolve(import.meta.dirname, '..');
 const sourceRoot = join(projectRoot, 'src');
@@ -368,7 +369,13 @@ const cleanupRuleIds = new Set(
 
 const violations = [];
 for (const localePath of localePaths) {
-  const resource = JSON.parse(readFileSync(join(projectRoot, localePath), 'utf8'));
+  const text = readFileSync(join(projectRoot, localePath), 'utf8');
+  for (const duplicate of duplicateJsonKeys(text)) {
+    violations.push(
+      `${localePath}:${duplicate.line}: duplicate locale key ${duplicate.path} (first defined at line ${duplicate.firstLine})`
+    );
+  }
+  const resource = JSON.parse(text);
   // A missing catalog entry falls back to an English rule ID and hides its
   // description and impact, so every shipped rule needs complete UI text.
   for (const ruleId of cleanupRuleIds) {

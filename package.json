@@ -34,7 +34,7 @@
     "check:source-architecture": "node ./scripts/check-source-architecture.mjs",
     "check:style-system": "node ./scripts/check-style-system.mjs",
     "check:identity": "node ./scripts/check-product-identity.mjs",
-    "check:i18n": "node ./scripts/check-i18n-usage.mjs",
+    "check:i18n": "node --test scripts/duplicate-json-keys.test.mjs && node ./scripts/check-i18n-usage.mjs",
     "check:frontend": "pnpm check:source-architecture && pnpm check:i18n && pnpm check:style-system && pnpm lint && pnpm format:check && pnpm test:coverage && pnpm build:frontend",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
