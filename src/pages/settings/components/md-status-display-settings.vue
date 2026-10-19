@@ -19,6 +19,9 @@ const { t } = useI18n({ useScope: 'global' });
 const settings = useResidentSettingsStore();
 const editor = ref<InstanceType<typeof MdResidentDisplayEditor> | null>(null);
 const displayEnabled = computed(() => settings.preferences?.enabled ?? false);
+const enabledChangePending = computed(
+  () => settings.saving && settings.draft?.enabled !== settings.preferences?.enabled
+);
 const panelOpening = ref(false);
 const panelError = ref(false);
 async function openPanel() {
@@ -84,7 +87,7 @@ onMounted(() => {
         variant="ghost"
         size="sm"
         class="text-muted-foreground"
-        :disabled="settings.loading || settings.saving || panelOpening"
+        :disabled="settings.loading || enabledChangePending || panelOpening"
         @click="openPanel"
         >{{ t('systemStatus.details') }}</Button
       >
@@ -94,7 +97,7 @@ onMounted(() => {
         variant="ghost"
         size="sm"
         class="text-muted-foreground"
-        :disabled="settings.loading || settings.saving"
+        :disabled="settings.loading || enabledChangePending"
         aria-haspopup="dialog"
         @click="settingsOpen = true"
         >{{ t('systemStatus.configureAction') }}</Button
@@ -102,7 +105,7 @@ onMounted(() => {
       <MdSwitch
         id="resident-enabled"
         :model-value="displayEnabled"
-        :disabled="settings.loading || settings.saving || !settings.preferences"
+        :disabled="settings.loading || enabledChangePending || !settings.preferences"
         aria-labelledby="resident-enabled-label"
         aria-describedby="resident-enabled-hint"
         @update:model-value="setDisplayEnabled"

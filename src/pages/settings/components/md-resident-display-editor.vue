@@ -322,7 +322,7 @@ defineExpose({
           id="resident-display-options"
           class="display-options"
           :inert="settings.loading"
-          :aria-busy="settings.loading"
+          :aria-busy="settings.loading || settings.saving"
         >
           <MdTaskbarPosition
             v-if="!isMacOs && !isLinux && settings.draft"
@@ -473,7 +473,7 @@ defineExpose({
                       :mode="settings.draft.fanDisplay"
                       :ids="settings.draft.fanIds"
                       :reading="fanReading"
-                      :disabled="!row.enabled || settings.saving"
+                      :disabled="!row.enabled"
                       :open="expandedSelection === row.id"
                       @update:open="setSelectionOpen(row.id, $event)"
                       @change="settings.change($event)"
@@ -487,7 +487,7 @@ defineExpose({
                       :adapters="gpuAdapters"
                       :devices="gpuDevices"
                       :observed-at-ms="gpuTemperatureObservedAtMs"
-                      :disabled="row.id === 'gpuTemperature' ? settings.saving : !row.enabled"
+                      :disabled="row.id === 'gpu' && !row.enabled"
                       :open="expandedSelection === row.id"
                       @update:open="setSelectionOpen(row.id, $event)"
                       @change="settings.change($event)"
@@ -546,7 +546,6 @@ defineExpose({
                       aria-haspopup="dialog"
                       :aria-controls="`color-editor-${row.id}`"
                       :aria-label="t('systemStatus.colorConfigure', { name: t(displayLabelKeys[row.id]) })"
-                      :disabled="settings.saving"
                       @click="openColor(row.id)"
                     >
                       {{ t('systemStatus.colorAction') }}
@@ -568,7 +567,7 @@ defineExpose({
         </p>
       </div>
       <MdDialogFooter>
-        <Button :disabled="settings.saving" @click="settingsOpen = false">{{ t('systemStatus.done') }}</Button>
+        <Button @click="settingsOpen = false">{{ t('systemStatus.done') }}</Button>
       </MdDialogFooter>
     </MdDialogContent>
   </Dialog>

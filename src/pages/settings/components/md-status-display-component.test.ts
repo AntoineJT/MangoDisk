@@ -12,6 +12,7 @@ import { ResidentService } from '@/lib/services/resident/resident-service';
 import { WindowsMonitoringService } from '@/lib/services/system-resources/windows-monitoring-service';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
 import { preferencesFixture, readingFixture } from '@/tests/fixtures/resident';
+import type { ResidentPreferences } from '@/lib/models/resident/resident';
 
 vi.mock('@/lib/services/resident/resident-service', () => ({
   ResidentService: {
@@ -90,6 +91,89 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('status display interactions', () => {
+  it.each(['resolve', 'reject'] as const)(
+    'keeps unrelated controls stable during a disk preference save that will %s',
+    async outcome => {
+      const saved = preferencesFixture();
+      saved.metrics = saved.metrics.map(metric => ({
+        ...metric,
+        enabled: ['memory', 'network', 'disk', 'diskTemperature', 'fanSpeed'].includes(metric.id),
+      }));
+      vi.mocked(ResidentService.preferences).mockResolvedValue(saved);
+      const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+      wrappers.push(wrapper);
+      await flushPromises();
+      await openConfiguration(wrapper);
+      let complete!: (value: ResidentPreferences) => void;
+      let reject!: (error: Error) => void;
+      vi.mocked(ResidentService.savePreferences).mockReturnValueOnce(
+        new Promise((resolve, failure) => {
+          complete = resolve;
+          reject = failure;
+        })
+      );
+      const temperature = wrapper.get('[data-metric="diskTemperature"]').getComponent(Select);
+      temperature.vm.$emit('update:modelValue', 'physical-b');
+      await flushPromises();
+      const store = useResidentSettingsStore();
+      expect(store.saving).toBe(true);
+      expect(wrapper.get('#resident-enabled').attributes('disabled')).toBeUndefined();
+      for (const id of ['disk', 'diskTemperature', 'network', 'fanSpeed']) {
+        expect(wrapper.get(`[data-metric="${id}"]`).getComponent(Select).props('disabled')).toBe(false);
+      }
+      expect(wrapper.get('#color-configure-disk').attributes('disabled')).toBeUndefined();
+      wrapper.get('[data-metric="disk"]').getComponent(Select).vm.$emit('update:modelValue', 'volume-b');
+      await flushPromises();
+      expect(ResidentService.savePreferences).toHaveBeenCalledTimes(1);
+      const done = wrapper.findAll('button').find(button => button.text() === 'systemStatus.done')!;
+      expect(done.attributes('disabled')).toBeUndefined();
+      await done.trigger('click');
+      await flushPromises();
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+      expect(store.saving).toBe(true);
+      if (outcome === 'resolve') {
+        complete({ ...vi.mocked(ResidentService.savePreferences).mock.calls[0]![0], revision: 1 });
+      } else {
+        reject(new Error('injected disk preference failure'));
+      }
+      await flushPromises();
+      expect(store.saving).toBe(false);
+      expect(store.preferences?.enabled).toBe(true);
+      if (outcome === 'resolve') {
+        expect(ResidentService.savePreferences).toHaveBeenCalledTimes(2);
+        expect(store.preferences).toMatchObject({
+          revision: 2,
+          diskTemperatureDevice: 'physical-b',
+          diskVolume: 'volume-b',
+        });
+      } else {
+        expect(store.draft).toEqual(saved);
+        expect(wrapper.text()).toContain('systemStatus.saveFailed');
+      }
+    }
+  );
+
+  it('locks only the enable switch while its own change is pending and restores it on failure', async () => {
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    let reject!: (error: Error) => void;
+    vi.mocked(ResidentService.savePreferences).mockReturnValueOnce(
+      new Promise((_, failure) => {
+        reject = failure;
+      })
+    );
+    await wrapper.get('#resident-enabled').trigger('click');
+    await flushPromises();
+    expect(wrapper.get('#resident-enabled').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('#resident-enabled').attributes('aria-checked')).toBe('true');
+    reject(new Error('injected enable preference failure'));
+    await flushPromises();
+    expect(wrapper.get('#resident-enabled').attributes('disabled')).toBeUndefined();
+    expect(wrapper.get('#resident-enabled').attributes('aria-checked')).toBe('true');
+    expect(wrapper.text()).toContain('systemStatus.saveFailed');
+  });
+
   it('limits selected fans to two, preserves missing identities and saves each display mode', async () => {
     const reading = {
       ...readingFixture(),
