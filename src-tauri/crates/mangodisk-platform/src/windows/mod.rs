@@ -28,6 +28,7 @@ mod system_maintenance;
 mod system_settings;
 pub mod volume_filesystem;
 mod volumes;
+mod winget_retry;
 
 use std::{
     ffi::OsStr,

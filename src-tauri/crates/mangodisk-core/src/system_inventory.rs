@@ -4,7 +4,7 @@ use mangodisk_platform::InstalledApplication;
 use mangodisk_platform::{current_platform, Platform, PlatformCancellation, SystemInventory};
 use std::{
     sync::{Mutex, OnceLock},
-    time::Instant,
+    time::{Duration, Instant},
 };
 static SYSTEM_INVENTORY: OnceLock<Mutex<Option<CachedSystemInventory>>> = OnceLock::new();
 
@@ -12,6 +12,20 @@ static SYSTEM_INVENTORY: OnceLock<Mutex<Option<CachedSystemInventory>>> = OnceLo
 struct CachedSystemInventory {
     revision: String,
     inventory: SystemInventory,
+    captured_at: Instant,
+}
+
+impl CachedSystemInventory {
+    fn reusable(&self, revision: &str, now: Instant) -> bool {
+        self.revision == revision
+            && self
+                .inventory
+                .refresh_at
+                .is_none_or(|deadline| now < deadline)
+            && (self.inventory.capabilities_complete
+                // Optional package sources must get another chance after their timeout backoff.
+                || now.saturating_duration_since(self.captured_at) < Duration::from_secs(15 * 60))
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -115,7 +129,10 @@ fn cached_system_inventory(
     let cache = SYSTEM_INVENTORY.get_or_init(|| Mutex::new(None));
     let revision = current_platform().system_inventory_revision_with_cancellation(cancellation);
     if let (Ok(revision), Ok(guard)) = (&revision, cache.lock()) {
-        if let Some(cached) = guard.as_ref().filter(|cached| cached.revision == *revision) {
+        if let Some(cached) = guard
+            .as_ref()
+            .filter(|cached| cached.reusable(revision, Instant::now()))
+        {
             return (cached.inventory.clone(), true, Some(revision.clone()));
         }
     }
@@ -128,6 +145,7 @@ fn cached_system_inventory(
                     *guard = Some(CachedSystemInventory {
                         revision: revision.clone(),
                         inventory: inventory.clone(),
+                        captured_at: Instant::now(),
                     });
                 }
             }
@@ -156,6 +174,37 @@ fn cached_system_inventory(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn incomplete_capability_cache_retries_without_an_application_revision_change() {
+        let now = Instant::now();
+        let mut cached = CachedSystemInventory {
+            revision: "first".into(),
+            inventory: SystemInventory::default(),
+            captured_at: now,
+        };
+        assert!(cached.reusable("first", now + Duration::from_secs(899)));
+        assert!(!cached.reusable("first", now + Duration::from_secs(900)));
+        assert!(!cached.reusable("second", now));
+        cached.inventory.capabilities_complete = true;
+        assert!(cached.reusable("first", now + Duration::from_secs(1800)));
+    }
+
+    #[test]
+    fn resumed_inventory_preserves_the_optional_source_retry_deadline() {
+        let captured_at = Instant::now();
+        let cached = CachedSystemInventory {
+            revision: "unchanged".into(),
+            inventory: SystemInventory {
+                refresh_at: Some(captured_at + Duration::from_secs(10)),
+                ..SystemInventory::default()
+            },
+            captured_at,
+        };
+        assert!(cached.reusable("unchanged", captured_at + Duration::from_secs(9)));
+        assert!(!cached.reusable("unchanged", captured_at + Duration::from_secs(10)));
+        assert!(!cached.reusable("unchanged", captured_at + Duration::from_secs(60)));
+    }
+
     #[test]
     fn completeness_stays_independent_for_each_native_fact_set() {
         for flags in 0..32 {

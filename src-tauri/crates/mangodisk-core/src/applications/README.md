@@ -183,6 +183,20 @@ Its five-second budget bounds source-matching waits without installing packages.
 and invalid or unreadable export data. The registry/AppX catalog remains usable,
 while `complete=false` preserves the missing metadata evidence. Chocolatey's
 existing budget is unchanged; no failed query proves that an application is absent.
+Timeouts defer this optional query for 15 minutes, including across app restarts,
+using versioned per-user timeout evidence in `HKCU\Software\MangoDisk\Inventory`.
+The evidence is ignored after an executable change, expiry, clock rollback, or an
+incompatible schema. It never supplies package facts or marks coverage complete.
+Incomplete capability snapshots expire after 15 minutes even when the application
+revision is unchanged, allowing a later scan to retry. A deferred query also
+supplies its original monotonic retry deadline to the inventory cache, so opening
+the application near the end of backoff does not start another 15-minute delay.
+This deadline is process-local metadata and is never persisted or serialized.
+Unavailable retry storage
+falls back to the bounded query rather than preventing registry/AppX discovery.
+On Windows, `cargo test -p mangodisk-platform controlled_timeout_backoff_benchmark
+-- --ignored --nocapture` compares a real five-second controlled child timeout
+with a deferred retry using isolated per-user registry evidence.
 
 Native process tracking validates creation times before following a parent PID,
 which may have belonged to an older launcher. Retained process handles prevent
