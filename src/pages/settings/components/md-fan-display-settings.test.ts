@@ -25,6 +25,22 @@ function render(overrides: Partial<InstanceType<typeof MdFanDisplaySettings>['$p
 afterEach(() => wrappers.splice(0).forEach(wrapper => wrapper.unmount()));
 
 describe('fan display choice visibility', () => {
+  it('hides inactive Windows aggregation without changing the saved mode', async () => {
+    const wrapper = render({ aggregateOnly: true, disabled: true, mode: 'average', reading: reading([0, 1]) });
+    expect(wrapper.find('.selection-toggle').exists()).toBe(false);
+    await wrapper.setProps({ disabled: false });
+    expect(wrapper.getComponent(Select).props('modelValue')).toBe('average');
+    expect(wrapper.emitted('change')).toBeUndefined();
+  });
+  it('limits Windows GPU fans to aggregation without persisting enumeration positions', async () => {
+    const wrapper = render({ aggregateOnly: true, mode: 'selected', reading: reading([0, 1]), open: true });
+    expect(wrapper.find('.fan-options').exists()).toBe(false);
+    expect(wrapper.get('.selection-toggle').text()).toBe('systemStatus.fanAutomatic');
+    wrapper.getComponent(Select).vm.$emit('update:modelValue', 'selected');
+    expect(wrapper.emitted('change')).toBeUndefined();
+    wrapper.getComponent(Select).vm.$emit('update:modelValue', 'average');
+    expect(wrapper.emitted('change')?.at(-1)).toEqual([{ fanDisplay: 'average', fanIds: [0] }]);
+  });
   it('does not reopen a removed selector when a second fan returns', async () => {
     const wrapper = render({ reading: reading([0, 1]) });
     await wrapper.setProps({ 'onUpdate:open': open => void wrapper.setProps({ open }), open: true });

@@ -1,6 +1,7 @@
 use super::*;
 use usage_color::UsageTone;
 
+#[cfg(not(windows))]
 #[test]
 fn fan_colors_keep_rows_independent_and_clear_history_for_missing_hidden_or_changed_sources() {
     use crate::resident::preference_schema::{DisplayMetricId, FanDisplayMode};
@@ -346,4 +347,63 @@ fn multiple_gpu_colors_follow_device_identity_across_reordering_and_removal() {
     let mut returned = vec![entry("a", 89), entry("b", 10)];
     state.apply(&mut returned, &preferences, None, None, None, None);
     assert_eq!(returned[0].tone, UsageTone::Warning);
+}
+
+#[cfg(windows)]
+#[test]
+fn windows_fans_use_aggregate_values_and_clear_missing_colors() {
+    use crate::resident::preference_schema::FanDisplayMode;
+    use mangodisk_core::system_resources::{metrics::MetricReading, readings::ResourceReadings};
+    use mangodisk_platform::system_resources::fans::{FanSample, FanSpeed};
+    let labels = labels::Labels::for_locale("en-US");
+    let mut preferences = ResidentPreferences {
+        fan_display: FanDisplayMode::Selected,
+        fan_ids: vec![0, 1],
+        ..Default::default()
+    };
+    let mut readings = ResourceReadings {
+        observed_at_ms: 1000,
+        fan_speed: MetricReading::ready(
+            FanSample {
+                fans: vec![
+                    FanSpeed {
+                        id: 0,
+                        rpm: Some(4000.0),
+                    },
+                    FanSpeed {
+                        id: 1,
+                        rpm: Some(0.0),
+                    },
+                ],
+            },
+            1000,
+        ),
+        ..Default::default()
+    };
+    let mut state = DisplayState::default();
+    for (mode, digits, tone) in [
+        (FanDisplayMode::Selected, "4000", UsageTone::Critical),
+        (FanDisplayMode::Average, "2000", UsageTone::Warning),
+    ] {
+        preferences.fan_display = mode;
+        let mut entries = vec![fan::entry(&readings, &labels, &preferences)];
+        state
+            .colors
+            .apply(&mut entries, &preferences, None, None, None, None);
+        assert_eq!(entries[0].digits, digits);
+        assert_eq!(entries[0].tone, tone);
+        assert!(entries[0].fan_rows.is_none());
+        assert!(entries[0].tooltip.contains(labels.text("gpuFanSpeed")));
+        assert_eq!(entries[0].marker, "GFAN");
+    }
+    readings.fan_speed = MetricReading {
+        status: mangodisk_core::system_resources::metrics::MetricStatus::Unsupported,
+        ..Default::default()
+    };
+    let mut entries = vec![fan::entry(&readings, &labels, &preferences)];
+    state
+        .colors
+        .apply(&mut entries, &preferences, None, None, None, None);
+    assert_eq!(entries[0].digits, "—");
+    assert_eq!(entries[0].tone, UsageTone::Normal);
 }

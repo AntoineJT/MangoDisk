@@ -42,6 +42,7 @@ fn baseline_retries_remain_bounded_and_return_to_the_regular_cadence() {
                     sample: Ok(CpuSample::Baseline),
                 },
                 MetricId::Gpu => Observation::Gpu {
+                    fan_speed: None,
                     sample: Ok(GpuSample::Baseline),
                     adapters: vec![],
                     temperature: None,

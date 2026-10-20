@@ -132,6 +132,8 @@ const DISPLAY_ORDER: [DisplayMetricId; 13] = [
     DisplayMetricId::CpuTemperature,
     DisplayMetricId::Gpu,
     DisplayMetricId::GpuTemperature,
+    #[cfg(windows)]
+    DisplayMetricId::FanSpeed,
     DisplayMetricId::Memory,
     DisplayMetricId::Disk,
     DisplayMetricId::DiskTemperature,
@@ -139,6 +141,7 @@ const DISPLAY_ORDER: [DisplayMetricId; 13] = [
     DisplayMetricId::ChargingPower,
     DisplayMetricId::BatteryPower,
     DisplayMetricId::SystemPower,
+    #[cfg(not(windows))]
     DisplayMetricId::FanSpeed,
     DisplayMetricId::Network,
 ];
@@ -195,7 +198,8 @@ impl ResidentPreferences {
                         DisplayMetricId::BatteryTemperature
                         | DisplayMetricId::ChargingPower
                         | DisplayMetricId::BatteryPower => cfg!(any(target_os = "macos", windows)),
-                        DisplayMetricId::FanSpeed | DisplayMetricId::SystemPower => {
+                        DisplayMetricId::FanSpeed => cfg!(any(target_os = "macos", windows)),
+                        DisplayMetricId::SystemPower => {
                             cfg!(target_os = "macos")
                         }
                         _ => true,
@@ -238,7 +242,7 @@ impl ResidentPreferences {
                 .any(|metric| metric.id == id && metric.enabled)
     }
     pub fn shows_fan_speed(&self) -> bool {
-        cfg!(target_os = "macos")
+        cfg!(any(target_os = "macos", windows))
             && self
                 .metrics
                 .iter()

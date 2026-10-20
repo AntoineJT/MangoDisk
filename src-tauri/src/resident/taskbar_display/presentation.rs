@@ -93,6 +93,7 @@ pub fn columns(
                             }
                         }
                         DisplayId::ChargingPower => "CHG",
+                        DisplayId::FanSpeed => entry.marker.as_str(),
                         _ => "DISK",
                     }
                     .into()
@@ -120,6 +121,7 @@ pub fn columns(
                                 | DisplayId::Gpu
                                 | DisplayId::Memory
                                 | DisplayId::Disk => "%",
+                                DisplayId::FanSpeed => "",
                                 _ => "%",
                             }
                         }
@@ -142,8 +144,11 @@ pub fn columns(
                     }
                 } else {
                     match entry.id {
-                        DisplayId::ChargingPower | DisplayId::BatteryPower => {
-                            // Power values and units keep one width for unavailable samples too.
+                        DisplayId::ChargingPower
+                        | DisplayId::BatteryPower
+                        | DisplayId::FanSpeed => {
+                            // Five RPM digits or a power value and unit keep one width,
+                            // including unavailable samples and changes of aggregation mode.
                             if compact {
                                 42
                             } else {
@@ -357,6 +362,9 @@ mod tests {
                     (DisplayId::BatteryTemperature, "°C", "BAT", "100", "°C"),
                     (DisplayId::ChargingPower, "W", "CHG", "300", "W"),
                     (DisplayId::BatteryPower, "W", "BAT", "0.1", "W"),
+                    (DisplayId::FanSpeed, "FMAX", "FMAX", "30000", ""),
+                    (DisplayId::FanSpeed, "FAVG", "FAVG", "0", ""),
+                    (DisplayId::FanSpeed, "GFAN", "GFAN", "30000", ""),
                 ] {
                     let mut ready = entry(id, "", digits);
                     ready.marker = marker.into();

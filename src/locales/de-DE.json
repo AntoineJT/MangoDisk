@@ -4036,6 +4036,8 @@
   },
   "systemStatus": {
     "fanSpeed": "Lüftergeschwindigkeit",
+    "gpuFanSpeed": "GPU-Lüfterdrehzahl",
+    "gpuFanHint": "Tatsächliche Drehzahl der GPU-Lüfter vom Grafiktreiber. Mainboard- und Gehäuselüfter sind nicht enthalten",
     "fanAutomatic": "Höchste Geschwindigkeit",
     "fanAverage": "Durchschnittsgeschwindigkeit",
     "fanSelected": "Ventilatoren auswählen",

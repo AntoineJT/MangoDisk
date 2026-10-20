@@ -27,6 +27,11 @@ pub enum Observation {
     CpuAuxiliary(super::cpu_auxiliary_sampling::Observation),
     GpuCatalogue(Vec<GpuAdapter>),
     Gpu {
+        fan_speed: Option<
+            mangodisk_platform::PlatformResult<
+                mangodisk_platform::system_resources::fans::FanSample,
+            >,
+        >,
         temperature: Option<
             mangodisk_platform::PlatformResult<
                 Vec<mangodisk_platform::system_resources::gpu::temperature::GpuTemperatureSample>,
@@ -268,7 +273,17 @@ impl Sensor {
                     .temperature
                     .then(|| reader.read_temperatures())
                     .flatten();
+                #[cfg(windows)]
+                let fan_speed = if demand.fan_speed {
+                    Some(reader.read_fans())
+                } else {
+                    reader.pause_fans();
+                    None
+                };
+                #[cfg(not(windows))]
+                let fan_speed = None;
                 Observation::Gpu {
+                    fan_speed,
                     temperature,
                     sample,
                     adapters: reader.adapters(),

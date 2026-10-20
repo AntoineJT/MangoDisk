@@ -126,10 +126,14 @@ impl ObservationState {
                 catalogue.fetch_and(!4, Ordering::Relaxed);
             }
             Ok(Observation::Gpu {
+                fan_speed,
                 sample,
                 adapters,
                 temperature,
             }) => {
+                if let Some(sample) = fan_speed {
+                    cache.fan_speed(sample, completion.timestamp_ms);
+                }
                 let missing_selection = slot
                     .demand
                     .selection

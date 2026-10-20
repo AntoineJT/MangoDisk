@@ -621,9 +621,9 @@ fn native_ids_are_stable_and_network_contributes_two_entries() {
                             DisplayId::BatteryTemperature
                                 | DisplayId::ChargingPower
                                 | DisplayId::BatteryPower
+                                | DisplayId::FanSpeed
                         ))
-                    && (cfg!(target_os = "macos")
-                        || !matches!(id, DisplayId::SystemPower | DisplayId::FanSpeed))
+                    && (cfg!(target_os = "macos") || !matches!(id, DisplayId::SystemPower))
             })
             .collect::<Vec<_>>()
     );

@@ -4036,6 +4036,8 @@
   },
   "systemStatus": {
     "fanSpeed": "风扇转速",
+    "gpuFanSpeed": "GPU 风扇转速",
+    "gpuFanHint": "显示驱动提供的 GPU 风扇实际转速，不包含主板和机箱风扇",
     "fanAutomatic": "最高转速",
     "fanAverage": "平均转速",
     "fanSelected": "指定风扇",

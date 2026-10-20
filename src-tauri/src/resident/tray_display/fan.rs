@@ -36,10 +36,19 @@ pub(super) fn entry(
             labels.status(status).to_string()
         }
     };
-    let name = labels.text("fanSpeed");
-    let (marker, rpm, rows, details) = match preferences.fan_display {
+    let name = labels.text(if cfg!(windows) {
+        "gpuFanSpeed"
+    } else {
+        "fanSpeed"
+    });
+    let mode = if cfg!(windows) && preferences.fan_display == FanDisplayMode::Selected {
+        FanDisplayMode::Highest
+    } else {
+        preferences.fan_display
+    };
+    let (marker, rpm, rows, details) = match mode {
         FanDisplayMode::Highest | FanDisplayMode::Average => {
-            let average = preferences.fan_display == FanDisplayMode::Average;
+            let average = mode == FanDisplayMode::Average;
             let value = if average {
                 fans::average_rpm(reading, now)
             } else {
@@ -78,7 +87,14 @@ pub(super) fn entry(
                     .unwrap_or_default()
             );
             (
-                if average { "FAVG" } else { "FMAX" }.into(),
+                if cfg!(windows) {
+                    "GFAN"
+                } else if average {
+                    "FAVG"
+                } else {
+                    "FMAX"
+                }
+                .into(),
                 value,
                 None,
                 details,
@@ -155,6 +171,7 @@ mod tests {
     use mangodisk_core::system_resources::metrics::MetricReading;
     use mangodisk_platform::system_resources::fans::{FanSample, FanSpeed};
 
+    #[cfg(not(windows))]
     #[test]
     fn paired_rows_keep_identity_order_and_independent_missing_values() {
         let labels = Labels::for_locale("en-US");
@@ -246,7 +263,7 @@ mod tests {
         preferences.fan_display = FanDisplayMode::Average;
         let average = entry(&values, &labels, &preferences);
         assert_eq!(average.digits, "1250");
-        assert_eq!(average.marker, "FAVG");
+        assert_eq!(average.marker, if cfg!(windows) { "GFAN" } else { "FAVG" });
         assert!(average.tooltip.contains("2/3"));
         values.fan_speed.value.as_mut().unwrap().fans[1].rpm = None;
         assert_eq!(entry(&values, &labels, &preferences).digits, "0");

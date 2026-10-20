@@ -79,6 +79,7 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                     (DisplayId::BatteryTemperature, "BAT 100°C", "100"),
                     (DisplayId::ChargingPower, "CHG 300W", "300"),
                     (DisplayId::BatteryPower, "BAT 0.1W", "0.1"),
+                    (DisplayId::FanSpeed, "GFAN 30000", "30000"),
                     (DisplayId::Upload, "↑999.9 TB/s", "999.9"),
                     (DisplayId::Download, "↓ 99.9 MB/s", "99.9"),
                     (DisplayId::Disk, "DISK 0%", "0"),
@@ -107,7 +108,11 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                     id,
                     text: text.into(),
                     digits: digits.into(),
-                    marker: String::new(),
+                    marker: if id == DisplayId::FanSpeed {
+                        "GFAN".into()
+                    } else {
+                        String::new()
+                    },
                     tooltip: String::new(),
                 })
                 .collect();

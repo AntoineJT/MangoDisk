@@ -53,12 +53,14 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // GPU display selection labels measure 400,087 Russian raw / 70,819 gzip bytes.
 // Extend only that locale by 128 raw / 64 gzip bytes.
 // Physical disk selection adds ten labels; extend only the measured French, Japanese and Russian margins.
+// Windows GPU fan copy measures fr-FR 63,534 gzip / ja-JP 332,358 raw / ru-RU 401,301 raw bytes.
+// Add only 64 gzip / 128 raw / 256 raw bytes to those locale margins.
 const localeChunkLimitOverrides = new Map([
-  ['fr-fr', { bytes: 312 * 1024, gzipBytes: 62 * 1024 }],
+  ['fr-fr', { bytes: 312 * 1024, gzipBytes: 62 * 1024 + 64 }],
   ['de-de', { bytes: maximumLocaleChunkBytes, gzipBytes: 63 * 1024 }],
   ['es-es', { bytes: maximumLocaleChunkBytes, gzipBytes: 61 * 1024 }],
-  ['ja-jp', { bytes: 324 * 1024 + 512, gzipBytes: 61 * 1024 + 576 }],
-  ['ru-ru', { bytes: 391 * 1024 + 768, gzipBytes: 69 * 1024 + 448 }],
+  ['ja-jp', { bytes: 324 * 1024 + 640, gzipBytes: 61 * 1024 + 576 }],
+  ['ru-ru', { bytes: 392 * 1024, gzipBytes: 69 * 1024 + 448 }],
 ]);
 
 function fail(message) {

@@ -1240,7 +1240,7 @@ Intervals overlapping a reset are excluded. The adapter refreshes totals before
 publishing a snapshot so an in-flight sample cannot restore pre-reset values.
 
 
-### Windows battery source
+### Windows battery and GPU fan sources
 
 Resource readings use schema 31, including the `windowsBattery` source. Windows
 queries native battery tags, information, temperature and status through read-only
@@ -1256,3 +1256,28 @@ worker at the existing two-second interval and stops when all battery items are 
 
 Taskbar battery-power headings retain red discharge and blue charge arrows,
 show IDLE when idle, and clear direction when no current value is available.
+
+Windows GPU fan sampling runs on the existing GPU worker when enabled. WDDM
+`FanRPM` is the main GPU fan tachometer; it is independent of fan duty percentages
+and requested fan speeds. Reuse adapter observations within 100 ms to avoid duplicate
+queries in the same sampling cycle. Disabling the item releases NVAPI library and
+initialization ownership while GPU usage and temperature continue normally.
+Fan retries are independent of missing temperature and clock capabilities; sharing
+a native observation never extends its original cache age. A positive valid reading or `MaxFanRPM` capability
+must establish support before zero can represent a stopped fan. NVIDIA devices may
+fall back to the installed driver's read-only NVAPI queries, loaded exclusively
+from System32. If both sources fail, diagnostics retain the original WDDM reason
+and the NVAPI fallback reason while preserving the fallback's error code.
+The optional client fan-status V1 ABI follows LibreHardwareMonitor
+0.9.6 and reports each actual tachometer; the public legacy tachometer is retained
+for drivers without that query. Validate the ABI version, bounded count, unique
+cooler IDs and RPM range before accepting any result. Invalid samples remain errors,
+not partial or zero readings. Accept only unique NVIDIA PCI bus matches and single-physical-adapter
+mappings; ambiguous matches remain unavailable. Successful vendor tachometer reads
+establish support for a real zero. Initialization, enumeration and unsupported
+per-device reads have 30-second recovery bounds. Highest and average
+modes aggregate available GPU tachometers; fixed numeric fan choices remain macOS-only
+because Windows GPU enumeration positions are not stable fan identities. Motherboard
+and case fans require a separate, reviewed hardware capability and are not inferred
+from `Win32_Fan.DesiredSpeed`. No driver, service, register writes or fan controls are
+introduced.

@@ -4036,6 +4036,8 @@
   },
   "systemStatus": {
     "fanSpeed": "Velocidade da ventoinha",
+    "gpuFanSpeed": "Velocidade da ventoinha da GPU",
+    "gpuFanHint": "RPM real das ventoinhas da GPU, fornecida pelo driver de vídeo. Não inclui ventoinhas da placa-mãe ou do gabinete",
     "fanAutomatic": "Maior rotação",
     "fanAverage": "Rotação média",
     "fanSelected": "Selecionar ventoinhas",

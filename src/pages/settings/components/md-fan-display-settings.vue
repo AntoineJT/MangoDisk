@@ -15,6 +15,7 @@ const props = defineProps<{
   ids: number[];
   reading: ResidentReading['fanSpeed'];
   disabled: boolean;
+  aggregateOnly?: boolean;
   open: boolean;
 }>();
 const emit = defineEmits<{
@@ -27,6 +28,7 @@ const modeKeys = {
   average: 'systemStatus.fanAverage',
   selected: 'systemStatus.fanSelected',
 } as const;
+const modes = computed(() => Object.entries(modeKeys).filter(([mode]) => !props.aggregateOnly || mode !== 'selected'));
 const knownFanIds = ref<number[] | null>(null);
 watch(
   () => props.reading,
@@ -39,6 +41,8 @@ watch(
   { immediate: true }
 );
 const canSelect = computed(() => {
+  // Disabled Windows sampling has no useful aggregation control to expose.
+  if (props.aggregateOnly && props.disabled) return false;
   const known = knownFanIds.value;
   return known === null || known.length > 1 || (props.mode === 'selected' && props.ids.some(id => !known.includes(id)));
 });
@@ -64,6 +68,7 @@ const choices = computed(() => {
     });
 });
 function selectMode(value: unknown) {
+  if (props.aggregateOnly && value === 'selected') return;
   if (value !== 'highest' && value !== 'average' && value !== 'selected') return;
   emit('update:open', false);
   emit('change', { fanDisplay: value, fanIds: [...props.ids] });
@@ -93,17 +98,17 @@ function toggle(id: number, checked: boolean) {
         <button
           type="button"
           class="selection-toggle inline-flex h-8 min-w-0 cursor-pointer items-center justify-self-end gap-1.5 rounded px-2 text-content-body text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring disabled:cursor-default disabled:opacity-40"
-          :aria-label="`${t('systemStatus.fanSpeed')}: ${t(modeKeys[mode])}`"
+          :aria-label="`${t('systemStatus.fanSpeed')}: ${t(modeKeys[mode === 'selected' && aggregateOnly ? 'highest' : mode])}`"
         >
-          <span class="truncate">{{ t(modeKeys[mode]) }}</span>
+          <span class="truncate">{{ t(modeKeys[mode === 'selected' && aggregateOnly ? 'highest' : mode]) }}</span>
           <MdIcon :name="ICON_NAMES.chevronDown" :size="14" class="shrink-0" />
         </button>
       </SelectTrigger>
       <SelectContent align="end" class="z-60 max-w-[min(20rem,calc(100vw-2rem))]">
-        <SelectItem v-for="(key, value) in modeKeys" :key="value" :value="value">{{ t(key) }}</SelectItem>
+        <SelectItem v-for="[value, key] in modes" :key="value" :value="value">{{ t(key) }}</SelectItem>
       </SelectContent>
     </Select>
-    <div v-if="canSelect && mode === 'selected'" class="fan-options">
+    <div v-if="canSelect && mode === 'selected' && !aggregateOnly" class="fan-options">
       <div
         class="fan-options-list"
         :class="{ 'fan-options-paired': choices.length > 1 }"

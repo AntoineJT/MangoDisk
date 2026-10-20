@@ -42,7 +42,8 @@ impl ResidentState {
         let temperature_sampling = (cfg!(windows) && preferences.windows_cpu_temperature_enabled)
             || (cfg!(target_os = "macos") && preferences.enabled);
         MetricId::ALL.map(|metric| Demand {
-            fan_speed: metric == MetricId::Cpu
+            fan_speed: ((cfg!(target_os = "macos") && metric == MetricId::Cpu)
+                || (cfg!(windows) && metric == MetricId::Gpu))
                 && preferences.enabled
                 && preferences.shows_fan_speed(),
             system_power: metric == MetricId::Cpu

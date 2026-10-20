@@ -125,7 +125,7 @@ const displayLabelKeys = {
   chargingPower: 'systemStatus.chargingPower',
   batteryPower: 'systemStatus.batteryPower',
   systemPower: 'systemStatus.systemPower',
-  fanSpeed: 'systemStatus.fanSpeed',
+  fanSpeed: !props.isLinux && !props.isMacOs ? 'systemStatus.gpuFanSpeed' : 'systemStatus.fanSpeed',
 };
 const visibleRows = computed(() =>
   rows.value
@@ -137,7 +137,9 @@ const visibleRows = computed(() =>
         (!props.isLinux || row.id !== 'diskTemperature') &&
         (!props.isLinux || row.id !== 'gpu') &&
         (props.isMacOs ||
-          ((!props.isLinux || !isBatteryMetric(row.id)) && row.id !== 'systemPower' && row.id !== 'fanSpeed'))
+          ((!props.isLinux || !isBatteryMetric(row.id)) &&
+            row.id !== 'systemPower' &&
+            (!props.isLinux || row.id !== 'fanSpeed')))
     )
     .map(row =>
       row.id === 'cpuTemperature' && !props.isMacOs && !settings.draft?.windowsCpuTemperatureEnabled
@@ -436,10 +438,18 @@ defineExpose({
                           <MdIcon :name="ICON_NAMES.info" :size="14" />
                         </button>
                       </MdTooltip>
+                      <MdTooltip
+                        v-if="row.id === 'fanSpeed' && !isMacOs && !isLinux"
+                        :text="t('systemStatus.gpuFanHint')"
+                      >
+                        <button type="button" class="md-help-action" :aria-label="t('systemStatus.gpuFanHint')">
+                          <MdIcon :name="ICON_NAMES.info" :size="14" />
+                        </button>
+                      </MdTooltip>
                       <span
                         v-if="row.id === 'fanSpeed' && row.enabled && fanStatusKey"
                         role="status"
-                        class="text-content-meta text-muted-foreground"
+                        class="metric-status text-content-meta text-muted-foreground"
                       >
                         {{ t(fanStatusKey) }}
                       </span>
@@ -474,6 +484,7 @@ defineExpose({
                       :mode="settings.draft.fanDisplay"
                       :ids="settings.draft.fanIds"
                       :reading="fanReading"
+                      :aggregate-only="!isMacOs"
                       :disabled="!row.enabled"
                       :open="expandedSelection === row.id"
                       @update:open="setSelectionOpen(row.id, $event)"
@@ -701,6 +712,19 @@ defineExpose({
 }
 .status-item .metric-label-group label {
   flex: 0 1 auto;
+}
+.status-item[data-metric='fanSpeed'] .metric-label-group {
+  flex-wrap: nowrap;
+}
+.status-item[data-metric='fanSpeed'] label {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.status-item[data-metric='fanSpeed'] .metric-status {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .status-item[data-metric='gpuTemperature'] .metric-label-group {
   flex: none;

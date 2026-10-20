@@ -4036,6 +4036,8 @@
   },
   "systemStatus": {
     "fanSpeed": "Fan hızı",
+    "gpuFanSpeed": "GPU fan hızı",
+    "gpuFanHint": "Ekran sürücüsünün bildirdiği GPU fanlarının gerçek devir sayısıdır. Anakart ve kasa fanları dahil değildir",
     "fanAutomatic": "En yüksek hız",
     "fanAverage": "Ortalama hız",
     "fanSelected": "Fan seç",

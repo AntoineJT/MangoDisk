@@ -4036,6 +4036,8 @@
   },
   "systemStatus": {
     "fanSpeed": "Vitesse du ventilateur",
+    "gpuFanSpeed": "Ventilateur GPU",
+    "gpuFanHint": "Vitesse réelle des ventilateurs du GPU fournie par le pilote graphique. Les ventilateurs de la carte mère et du boîtier sont exclus",
     "fanAutomatic": "Vitesse la plus élevée",
     "fanAverage": "Vitesse moyenne",
     "fanSelected": "Choisir les ventilateurs",

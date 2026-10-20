@@ -113,6 +113,7 @@ fn every_display_combination_retains_an_entry() {
                                     DisplayMetricId::BatteryTemperature
                                         | DisplayMetricId::ChargingPower
                                         | DisplayMetricId::BatteryPower
+                                        | DisplayMetricId::FanSpeed
                                 ))
                             && (cfg!(target_os = "macos")
                                 || !matches!(m.id, DisplayMetricId::CpuTemperature))
@@ -123,10 +124,7 @@ fn every_display_combination_retains_an_entry() {
                                         | DisplayMetricId::DiskTemperature
                                 ))
                             && (cfg!(target_os = "macos")
-                                || !matches!(
-                                    m.id,
-                                    DisplayMetricId::SystemPower | DisplayMetricId::FanSpeed
-                                ))
+                                || !matches!(m.id, DisplayMetricId::SystemPower))
                     })
             );
             assert!(
