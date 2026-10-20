@@ -116,10 +116,7 @@ fn gpu_temperature_demand_survives_hidden_items_and_tab_changes() {
             *state.panel_metric.lock().unwrap() = selected;
             let gpu = state.demands(false)[1].clone();
             assert_eq!(gpu.temperature, cfg!(any(target_os = "macos", windows)));
-            assert_eq!(
-                gpu.active,
-                cfg!(any(target_os = "macos", windows)) || panel_open
-            );
+            assert_eq!(gpu.active, cfg!(any(target_os = "macos", windows)));
         }
     }
     state.preferences.lock().unwrap().enabled = false;
@@ -180,7 +177,12 @@ fn stalled_preference_update_does_not_block_sampling_demand() {
     committed.send(()).unwrap();
     let (after, disk_after) = thread.join().unwrap();
     let (before, disk_before) = before.expect("sampling waited for the preference transaction");
-    assert!(before.iter().all(|demand| demand.active));
+    for (metric, demand) in MetricId::ALL.into_iter().zip(before) {
+        assert_eq!(
+            demand.active,
+            metric != MetricId::Gpu || cfg!(any(target_os = "macos", windows))
+        );
+    }
     assert!(disk_before.active);
     assert!(after.iter().all(|demand| !demand.active));
     assert!(!disk_after.active);
@@ -197,7 +199,10 @@ fn process_detail_visibility_never_changes_overview_cadence() {
     for selected in MetricId::ALL {
         *state.panel_metric.lock().unwrap() = selected;
         for (metric, demand) in MetricId::ALL.into_iter().zip(state.demands(false)) {
-            assert!(demand.active);
+            assert_eq!(
+                demand.active,
+                metric != MetricId::Gpu || cfg!(any(target_os = "macos", windows))
+            );
             assert_eq!(
                 demand.temperature,
                 (metric == MetricId::Cpu && cfg!(any(windows, target_os = "macos")))
@@ -342,7 +347,10 @@ fn gpu_background_demand_retains_history_until_global_disable() {
         .iter()
         .position(|metric| *metric == MetricId::Gpu)
         .unwrap();
-    assert!(state.demands(false)[gpu].active);
+    assert_eq!(
+        state.demands(false)[gpu].active,
+        cfg!(any(target_os = "macos", windows))
+    );
     state.panel_open.store(false, Ordering::Relaxed);
     assert_eq!(
         state.demands(false)[gpu].active,
@@ -357,7 +365,10 @@ fn gpu_background_demand_retains_history_until_global_disable() {
         .find(|metric| metric.id.metric() == Some(MetricId::Gpu))
         .unwrap()
         .enabled = true;
-    assert!(state.demands(false)[gpu].active);
+    assert_eq!(
+        state.demands(false)[gpu].active,
+        cfg!(any(target_os = "macos", windows))
+    );
     assert_eq!(MetricId::Gpu.interval_ms(), 2000);
     state.preferences.lock().unwrap().enabled = false;
     assert!(!state.demands(false)[gpu].active);
