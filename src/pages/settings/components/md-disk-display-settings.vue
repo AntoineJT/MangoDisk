@@ -178,11 +178,12 @@ function canReadDevice(device: ResourceDisk) {
 .disk-group-first {
   @apply mt-1 border-t border-border pt-1;
 }
-.disk-choice[data-highlighted] {
-  @apply bg-muted text-foreground;
-}
 .disk-choice[data-state='checked'] {
   @apply bg-accent text-accent-foreground;
+}
+.disk-choice[data-highlighted] {
+  background-color: var(--popover-hover);
+  @apply text-foreground;
 }
 .selection-toggle {
   @apply text-muted-foreground rounded;
