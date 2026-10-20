@@ -4148,7 +4148,7 @@
     "batteryCharging": "充電中",
     "batteryDischarging": "放電中",
     "batteryIdle": "充放電停止",
-    "batteryUnsupportedHint": "この Mac ではバッテリーデータを取得できません",
+    "batteryUnsupportedHint": "このデバイスではバッテリーデータを取得できません",
     "diskUsage": "ディスク使用量",
     "physicalDisk": "物理ディスク",
     "diskNumber": "ディスク {number}",

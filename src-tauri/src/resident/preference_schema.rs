@@ -194,9 +194,8 @@ impl ResidentPreferences {
                         }
                         DisplayMetricId::BatteryTemperature
                         | DisplayMetricId::ChargingPower
-                        | DisplayMetricId::BatteryPower
-                        | DisplayMetricId::FanSpeed
-                        | DisplayMetricId::SystemPower => {
+                        | DisplayMetricId::BatteryPower => cfg!(any(target_os = "macos", windows)),
+                        DisplayMetricId::FanSpeed | DisplayMetricId::SystemPower => {
                             cfg!(target_os = "macos")
                         }
                         _ => true,
@@ -232,7 +231,7 @@ impl ResidentPreferences {
     }
 
     pub fn shows_battery_item(&self, id: DisplayMetricId) -> bool {
-        cfg!(target_os = "macos")
+        cfg!(any(target_os = "macos", windows))
             && self
                 .metrics
                 .iter()

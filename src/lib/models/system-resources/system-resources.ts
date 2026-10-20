@@ -171,7 +171,7 @@ export interface DiskIoRate {
   totalReadBytes: string;
   totalWrittenBytes: string;
 }
-export type BatterySource = 'appleSmc' | 'appleSmartBattery';
+export type BatterySource = 'appleSmc' | 'appleSmartBattery' | 'windowsBattery';
 export interface BatteryTemperature {
   celsius: number;
   source: BatterySource;
@@ -295,7 +295,7 @@ export interface GpuDeviceReading {
 }
 
 export interface ResourceReadings {
-  schemaVersion: 30;
+  schemaVersion: 31;
   observedAtMs: number;
   cpu: MetricReading<CpuUsage>;
   cpuIdentity: CpuIdentity | null;

@@ -429,8 +429,12 @@ mod tests {
         auxiliary.send(request()).unwrap();
         starts.recv_timeout(Duration::from_secs(3)).unwrap();
         cpu.send(request()).unwrap();
+        // Verify independence while the auxiliary worker remains blocked, without
+        // imposing a sampling deadline on Windows' cold native-provider setup.
         assert!(matches!(
-            completions.recv_timeout(Duration::from_secs(3)).unwrap(),
+            completions
+                .recv_timeout(Duration::from_secs(30))
+                .expect("CPU worker must complete before the auxiliary worker is released"),
             SamplingEvent::Completed(_)
         ));
         proceed.send(()).unwrap();

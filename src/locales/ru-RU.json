@@ -4148,7 +4148,7 @@
     "batteryCharging": "Заряжается",
     "batteryDischarging": "Разряжается",
     "batteryIdle": "Без заряда и разряда",
-    "batteryUnsupportedHint": "На этом Mac данные батареи недоступны",
+    "batteryUnsupportedHint": "Данные батареи недоступны на этом устройстве",
     "diskUsage": "Заполнение диска",
     "physicalDisk": "Физический диск",
     "diskNumber": "Диск {number}",

@@ -1,10 +1,12 @@
 //! Shared taskbar text and stable column widths for native rendering.
 use crate::resident::tray_display::display_entry::DisplayId;
+use mangodisk_platform::system_resources::battery::BatteryPowerState;
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct Column {
     pub id: DisplayId,
     pub compact: bool,
     pub tone: crate::resident::tray_display::usage_color::UsageTone,
+    pub power_state: Option<BatteryPowerState>,
     pub first: String,
     pub second: String,
     pub width: i32,
@@ -63,10 +65,14 @@ pub fn columns(
                 let padding = if compact { 2 } else { 6 };
                 ((device.label.chars().count() as u32 * 8 + padding) * dpi / 96) as i32
             });
+            let power_state = entry
+                .power_state
+                .filter(|_| entry.id == DisplayId::BatteryPower && entry.digits != "—");
             Column {
                 id: entry.id,
                 compact,
                 tone: entry.tone,
+                power_state,
                 first: if let Some(device) = &entry.gpu_device {
                     device.label.clone()
                 } else if network {
@@ -77,6 +83,16 @@ pub fn columns(
                         DisplayId::CpuTemperature => "CPU",
                         DisplayId::Gpu | DisplayId::GpuTemperature => "GPU",
                         DisplayId::Memory => "MEM",
+                        DisplayId::Disk | DisplayId::DiskTemperature => "DISK",
+                        DisplayId::BatteryTemperature => "BAT",
+                        DisplayId::BatteryPower => {
+                            if power_state == Some(BatteryPowerState::Idle) {
+                                "IDLE"
+                            } else {
+                                "BAT"
+                            }
+                        }
+                        DisplayId::ChargingPower => "CHG",
                         _ => "DISK",
                     }
                     .into()
@@ -93,15 +109,19 @@ pub fn columns(
                         entry.digits,
                         if entry.digits == "—" {
                             ""
-                        } else if matches!(
-                            entry.id,
-                            DisplayId::CpuTemperature
+                        } else {
+                            match entry.id {
+                                DisplayId::CpuTemperature
                                 | DisplayId::GpuTemperature
                                 | DisplayId::DiskTemperature
-                        ) {
-                            "°C"
-                        } else {
-                            "%"
+                                | DisplayId::BatteryTemperature => "°C",
+                                DisplayId::ChargingPower | DisplayId::BatteryPower => "W",
+                                DisplayId::Cpu
+                                | DisplayId::Gpu
+                                | DisplayId::Memory
+                                | DisplayId::Disk => "%",
+                                _ => "%",
+                            }
                         }
                     )
                 },
@@ -112,6 +132,7 @@ pub fn columns(
                     DisplayId::CpuTemperature
                         | DisplayId::GpuTemperature
                         | DisplayId::DiskTemperature
+                        | DisplayId::BatteryTemperature
                 ) {
                     // Three digits plus Celsius fit at every supported DPI.
                     if compact {
@@ -120,11 +141,21 @@ pub fn columns(
                         44
                     }
                 } else {
-                    match (compact, network) {
-                        (true, true) => 53,
-                        (true, false) => 34,
-                        (false, true) => 81,
-                        (false, false) => 38,
+                    match entry.id {
+                        DisplayId::ChargingPower | DisplayId::BatteryPower => {
+                            // Power values and units keep one width for unavailable samples too.
+                            if compact {
+                                42
+                            } else {
+                                48
+                            }
+                        }
+                        _ => match (compact, network) {
+                            (true, true) => 53,
+                            (true, false) => 34,
+                            (false, true) => 81,
+                            (false, false) => 38,
+                        },
                     }
                 }) * dpi
                     / 96) as i32)
@@ -313,6 +344,31 @@ mod tests {
                                 .unwrap_or_default()
                         );
                     }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn auxiliary_columns_keep_their_labels_units_and_missing_values() {
+        for compact in [false, true] {
+            for dpi in [96, 120, 144, 192, 240] {
+                for (id, marker, label, digits, unit) in [
+                    (DisplayId::BatteryTemperature, "°C", "BAT", "100", "°C"),
+                    (DisplayId::ChargingPower, "W", "CHG", "300", "W"),
+                    (DisplayId::BatteryPower, "W", "BAT", "0.1", "W"),
+                ] {
+                    let mut ready = entry(id, "", digits);
+                    ready.marker = marker.into();
+                    let mut missing = ready.clone();
+                    missing.digits = "—".into();
+                    let ready = columns(&[ready], dpi, compact);
+                    let missing = columns(&[missing], dpi, compact);
+                    assert_eq!(ready[0].first, label, "id={id:?}");
+                    assert_eq!(ready[0].second, format!("{digits}{unit}"));
+                    assert_eq!(missing[0].first, label);
+                    assert_eq!(missing[0].second, "—");
+                    assert_eq!(ready[0].width, missing[0].width);
                 }
             }
         }

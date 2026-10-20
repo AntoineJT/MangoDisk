@@ -68,6 +68,7 @@ mod tests {
     #[test]
     fn small_horizontal_taskbars_keep_the_existing_two_line_layout() {
         let column = Column {
+            power_state: None,
             compact: false,
             tone: Default::default(),
             id: DisplayId::Cpu,
@@ -103,6 +104,7 @@ mod tests {
             };
             let columns = vec![
                 Column {
+                    power_state: None,
                     compact: false,
                     tone: Default::default(),
                     id: DisplayId::Cpu,
@@ -112,6 +114,7 @@ mod tests {
                     network: None,
                 },
                 Column {
+                    power_state: None,
                     compact: false,
                     tone: Default::default(),
                     id: DisplayId::Upload,

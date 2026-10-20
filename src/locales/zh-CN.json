@@ -4148,7 +4148,7 @@
     "batteryCharging": "充电中",
     "batteryDischarging": "放电中",
     "batteryIdle": "未充放电",
-    "batteryUnsupportedHint": "此 Mac 无法读取电池数据",
+    "batteryUnsupportedHint": "此设备无法读取电池数据",
     "diskUsage": "磁盘占用",
     "physicalDisk": "物理硬盘",
     "diskNumber": "磁盘 {number}",

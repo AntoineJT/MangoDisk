@@ -4148,7 +4148,7 @@
     "batteryCharging": "Laden",
     "batteryDischarging": "Entladen",
     "batteryIdle": "Leerlauf",
-    "batteryUnsupportedHint": "Batterietelemetrie ist auf diesem Mac nicht verfügbar",
+    "batteryUnsupportedHint": "Batteriedaten sind auf diesem Gerät nicht verfügbar",
     "diskUsage": "Datenträgerbelegung",
     "physicalDisk": "Physischer Datenträger",
     "diskNumber": "Datenträger {number}",

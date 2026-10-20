@@ -4148,7 +4148,7 @@
     "batteryCharging": "Carregando",
     "batteryDischarging": "Descarregando",
     "batteryIdle": "Em repouso",
-    "batteryUnsupportedHint": "A telemetria da bateria não está disponível neste Mac",
+    "batteryUnsupportedHint": "Os dados da bateria não estão disponíveis neste dispositivo",
     "diskUsage": "Uso do disco",
     "physicalDisk": "Disco físico",
     "diskNumber": "Disco {number}",

@@ -175,7 +175,7 @@ mod tests {
     use crate::resident::taskbar_display::{layout::Bounds, text_layout::Ink};
 
     #[test]
-    fn compact_text_fits_native_font_at_metric_and_rate_boundaries() {
+    fn taskbar_text_fits_native_font_at_metric_and_rate_boundaries() {
         use crate::resident::{
             taskbar_display::{presentation, surface::Surface},
             tray_display::display_entry::{DisplayEntry, DisplayId},
@@ -190,12 +190,16 @@ mod tests {
                 ];
                 assert!(fonts.iter().all(|font| !font.is_null()));
                 let previous = SelectObject(dc, fonts[0]);
-                for (id, text, digits) in [
+                for compact in [false, true] {
+                    for (id, text, digits, power_state) in [
                     (DisplayId::Cpu, "CPU 100%", "100"),
                     (DisplayId::CpuTemperature, "CPU 150°C", "150"),
                     (DisplayId::GpuTemperature, "GPU 150°C", "150"),
                     (DisplayId::DiskTemperature, "DISK 150°C", "150"),
                     (DisplayId::DiskTemperature, "DISK —", "—"),
+                    (DisplayId::BatteryTemperature, "BAT 100°C", "100"),
+                    (DisplayId::ChargingPower, "CHG 300W", "300"),
+                    (DisplayId::BatteryPower, "BAT 0.1W", "0.1"),
                     (DisplayId::CpuTemperature, "CPU —", "—"),
                     (DisplayId::Memory, "MEM 0%", "0"),
                     (DisplayId::Disk, "DISK —", "—"),
@@ -205,12 +209,16 @@ mod tests {
                     (DisplayId::Upload, "↑ 0.1 KB/s", "0.1"),
                     (DisplayId::Upload, "↑ 0.0 B/s", "0.0"),
                     (DisplayId::Upload, "↑ —", "—"),
-                ] {
+                ].into_iter().map(|(id, text, digits)| (id, text, digits, None)).chain([
+                    (DisplayId::BatteryPower, "BAT charging 300W", "300", Some(mangodisk_platform::system_resources::battery::BatteryPowerState::Charging)),
+                    (DisplayId::BatteryPower, "BAT discharging 300W", "300", Some(mangodisk_platform::system_resources::battery::BatteryPowerState::Discharging)),
+                    (DisplayId::BatteryPower, "IDLE 0W", "0", Some(mangodisk_platform::system_resources::battery::BatteryPowerState::Idle)),
+                ]) {
                     let columns = presentation::columns(
                         &[DisplayEntry {
                             gpu_device: None,
                             tone: Default::default(),
-                            power_state: None,
+                            power_state,
                             fan_rows: None,
                             color_value: None,
                             id,
@@ -220,7 +228,7 @@ mod tests {
                             tooltip: String::new(),
                         }],
                         dpi,
-                        true,
+                        compact,
                     );
                     let surface = Surface::arrange(
                         &columns,
@@ -252,6 +260,7 @@ mod tests {
                             run.bounds.width()
                         );
                     }
+                }
                 }
                 SelectObject(dc, previous);
                 for font in fonts {

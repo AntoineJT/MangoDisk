@@ -107,6 +107,13 @@ fn every_display_combination_retains_an_entry() {
                 show_icon
                     || !preferences.metrics.iter().any(|m| {
                         m.enabled
+                            && (cfg!(any(target_os = "macos", windows))
+                                || !matches!(
+                                    m.id,
+                                    DisplayMetricId::BatteryTemperature
+                                        | DisplayMetricId::ChargingPower
+                                        | DisplayMetricId::BatteryPower
+                                ))
                             && (cfg!(target_os = "macos")
                                 || !matches!(m.id, DisplayMetricId::CpuTemperature))
                             && (cfg!(any(target_os = "macos", windows))
@@ -118,11 +125,7 @@ fn every_display_combination_retains_an_entry() {
                             && (cfg!(target_os = "macos")
                                 || !matches!(
                                     m.id,
-                                    DisplayMetricId::BatteryTemperature
-                                        | DisplayMetricId::ChargingPower
-                                        | DisplayMetricId::BatteryPower
-                                        | DisplayMetricId::SystemPower
-                                        | DisplayMetricId::FanSpeed
+                                    DisplayMetricId::SystemPower | DisplayMetricId::FanSpeed
                                 ))
                     })
             );

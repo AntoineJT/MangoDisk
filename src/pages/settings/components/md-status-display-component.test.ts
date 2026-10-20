@@ -473,9 +473,9 @@ describe('status display interactions', () => {
       wrappers.push(wrapper);
       await flushPromises();
       await openConfiguration(wrapper);
-      expect(wrapper.find('[data-metric="batteryTemperature"]').exists()).toBe(isMacOs);
-      expect(wrapper.find('[data-metric="chargingPower"]').exists()).toBe(isMacOs);
-      expect(wrapper.find('[data-metric="batteryPower"]').exists()).toBe(isMacOs);
+      expect(wrapper.find('[data-metric="batteryTemperature"]').exists()).toBe(true);
+      expect(wrapper.find('[data-metric="chargingPower"]').exists()).toBe(true);
+      expect(wrapper.find('[data-metric="batteryPower"]').exists()).toBe(true);
       expect(wrapper.find('[data-metric="systemPower"]').exists()).toBe(isMacOs);
       expect(wrapper.find('[data-metric="fanSpeed"]').exists()).toBe(isMacOs);
       if (isMacOs) {
@@ -959,7 +959,7 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     expect(wrapper.find('input[name="windows-display-mode"]').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(8);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(11);
     await wrapper.get('input[name="taskbar-position"][value="left"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
@@ -1033,7 +1033,7 @@ describe('status display interactions', () => {
     wrappers.push(wrapper);
     await flushPromises();
     await openConfiguration(wrapper);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(8);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(11);
     await wrapper.get('#status-network').trigger('click');
     await flushPromises();
     const preferences = vi.mocked(ResidentService.savePreferences).mock.calls[0]![0];

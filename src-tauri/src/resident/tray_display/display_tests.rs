@@ -615,15 +615,15 @@ fn native_ids_are_stable_and_network_contributes_two_entries() {
                 (cfg!(target_os = "macos") || !matches!(id, DisplayId::CpuTemperature))
                     && (cfg!(any(target_os = "macos", windows))
                         || !matches!(id, DisplayId::GpuTemperature | DisplayId::DiskTemperature))
-                    && (cfg!(target_os = "macos")
+                    && (cfg!(any(target_os = "macos", windows))
                         || !matches!(
                             id,
                             DisplayId::BatteryTemperature
                                 | DisplayId::ChargingPower
                                 | DisplayId::BatteryPower
-                                | DisplayId::SystemPower
-                                | DisplayId::FanSpeed
                         ))
+                    && (cfg!(target_os = "macos")
+                        || !matches!(id, DisplayId::SystemPower | DisplayId::FanSpeed))
             })
             .collect::<Vec<_>>()
     );

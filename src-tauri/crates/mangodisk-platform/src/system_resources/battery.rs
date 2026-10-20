@@ -4,38 +4,45 @@ use serde::Serialize;
 
 #[cfg(target_os = "macos")]
 mod macos;
+#[cfg(windows)]
+mod windows;
+#[cfg(any(windows, test))]
+mod windows_values;
 pub const BATTERY_FRESHNESS_MS: u64 = 5_000;
 
 #[derive(Default)]
 pub struct BatteryPresenceReader {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", windows))]
     checked_at: Option<std::time::Instant>,
-    #[cfg(any(target_os = "macos", test))]
+    #[cfg(any(target_os = "macos", windows, test))]
     present: Option<bool>,
-    #[cfg(any(target_os = "macos", test))]
+    #[cfg(any(target_os = "macos", windows, test))]
     last_outcome: Option<String>,
 }
 
 impl BatteryPresenceReader {
     pub fn read(&mut self) -> Option<bool> {
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", windows))]
         {
             if self
                 .checked_at
                 .is_none_or(|at| at.elapsed().as_secs() >= 30)
             {
                 self.checked_at = Some(std::time::Instant::now());
+                #[cfg(target_os = "macos")]
                 self.observe(macos::battery_present());
+                #[cfg(windows)]
+                self.observe(windows::battery_present());
             }
             self.present
         }
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", windows)))]
         {
             None
         }
     }
 
-    #[cfg(any(target_os = "macos", test))]
+    #[cfg(any(target_os = "macos", windows, test))]
     fn observe(&mut self, result: PlatformResult<bool>) {
         let (outcome, failed) = match result {
             Ok(present) => {
@@ -68,6 +75,7 @@ impl BatteryPresenceReader {
 pub enum BatterySource {
     AppleSmc,
     AppleSmartBattery,
+    WindowsBattery,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,14 +114,16 @@ pub struct BatterySample {
 pub struct BatteryReader {
     #[cfg(target_os = "macos")]
     reader: macos::Reader,
+    #[cfg(windows)]
+    reader: windows::Reader,
     last_outcome: Option<String>,
     samples: u64,
 }
 impl BatteryReader {
     pub fn read(&mut self) -> PlatformResult<BatterySample> {
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", windows))]
         let result = self.reader.read();
-        #[cfg(not(target_os = "macos"))]
+        #[cfg(not(any(target_os = "macos", windows)))]
         let result: PlatformResult<BatterySample> = Err(crate::PlatformError::new(
             crate::PlatformErrorCode::Unsupported,
             "battery telemetry unavailable",
@@ -154,7 +164,7 @@ impl BatteryReader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", windows)))]
     #[test]
     fn non_macos_battery_readers_report_unavailable_without_a_presence_claim() {
         assert_eq!(BatteryPresenceReader::default().read(), None);

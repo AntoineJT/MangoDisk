@@ -136,7 +136,8 @@ const visibleRows = computed(() =>
         (!props.isLinux || row.id !== 'cpuTemperature') &&
         (!props.isLinux || row.id !== 'diskTemperature') &&
         (!props.isLinux || row.id !== 'gpu') &&
-        (props.isMacOs || (!isBatteryMetric(row.id) && row.id !== 'systemPower' && row.id !== 'fanSpeed'))
+        (props.isMacOs ||
+          ((!props.isLinux || !isBatteryMetric(row.id)) && row.id !== 'systemPower' && row.id !== 'fanSpeed'))
     )
     .map(row =>
       row.id === 'cpuTemperature' && !props.isMacOs && !settings.draft?.windowsCpuTemperatureEnabled

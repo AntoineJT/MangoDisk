@@ -4148,7 +4148,7 @@
     "batteryCharging": "充電中",
     "batteryDischarging": "放電中",
     "batteryIdle": "未充放電",
-    "batteryUnsupportedHint": "此 Mac 無法讀取電池資料",
+    "batteryUnsupportedHint": "此裝置無法讀取電池資料",
     "diskUsage": "磁碟用量",
     "physicalDisk": "實體硬碟",
     "diskNumber": "磁碟 {number}",

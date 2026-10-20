@@ -70,12 +70,15 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
         let mut renderer = Renderer::new().unwrap();
         for dpi in [96, 120, 144, 168, 192, 240, 288] {
             for compact in [false, true] {
-                let entries: Vec<_> = [
+                let mut entries: Vec<_> = [
                     (DisplayId::Memory, "MEM 18%", "18"),
                     (DisplayId::Cpu, "CPU 100%", "100"),
                     (DisplayId::CpuTemperature, "CPU 150°C", "150"),
                     (DisplayId::Gpu, "GPU31 100%", "100"),
                     (DisplayId::DiskTemperature, "DISK 150°C", "150"),
+                    (DisplayId::BatteryTemperature, "BAT 100°C", "100"),
+                    (DisplayId::ChargingPower, "CHG 300W", "300"),
+                    (DisplayId::BatteryPower, "BAT 0.1W", "0.1"),
                     (DisplayId::Upload, "↑999.9 TB/s", "999.9"),
                     (DisplayId::Download, "↓ 99.9 MB/s", "99.9"),
                     (DisplayId::Disk, "DISK 0%", "0"),
@@ -108,6 +111,19 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                     tooltip: String::new(),
                 })
                 .collect();
+                for state in [
+                    mangodisk_platform::system_resources::battery::BatteryPowerState::Charging,
+                    mangodisk_platform::system_resources::battery::BatteryPowerState::Discharging,
+                    mangodisk_platform::system_resources::battery::BatteryPowerState::Idle,
+                ] {
+                    let mut entry = entries
+                        .iter()
+                        .find(|entry| entry.id == DisplayId::BatteryPower)
+                        .unwrap()
+                        .clone();
+                    entry.power_state = Some(state);
+                    entries.push(entry);
+                }
                 let columns = presentation::columns(&entries, dpi, compact);
                 let surface = Surface::arrange(
                     &columns,

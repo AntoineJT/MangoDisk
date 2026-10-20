@@ -4148,7 +4148,7 @@
     "batteryCharging": "Şarj oluyor",
     "batteryDischarging": "Deşarj oluyor",
     "batteryIdle": "Boşta",
-    "batteryUnsupportedHint": "Bu Mac üzerinde pil verileri okunamıyor",
+    "batteryUnsupportedHint": "Bu cihazda pil verileri okunamıyor",
     "diskUsage": "Disk kullanımı",
     "physicalDisk": "Fiziksel disk",
     "diskNumber": "Disk {number}",
