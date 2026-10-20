@@ -419,7 +419,24 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         )
     });
     #[cfg(windows)]
-    let anchor = super::taskbar_display::anchor(app, &source).or(anchor);
+    let (anchor, anchor_source) =
+        if let Some(point) = super::taskbar_display::anchor(app, Some(&source)) {
+            (Some(point), "taskbar_entry")
+        } else if let Some(point) = anchor {
+            (Some(point), "tray_entry")
+        } else if let Some(point) = super::taskbar_display::anchor(app, None) {
+            // Settings can open the panel after its previous entry was hidden or removed.
+            // Keep that popup near the remaining taskbar display rather than the screen top.
+            (Some(point), "taskbar_fallback")
+        } else {
+            (None, "monitor_fallback")
+        };
+    #[cfg(not(windows))]
+    let anchor_source = if anchor.is_some() {
+        "tray_entry"
+    } else {
+        "monitor_fallback"
+    };
     // Tray rectangles are physical pixels. On macOS monitor_from_point uses
     // logical screen points, so match against physical monitor bounds ourselves.
     let monitor = match anchor {
@@ -468,7 +485,8 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
             ))?;
         }
         log::info!(
-            "resident_panel_positioned scale={scale} x={x} y={y} width={width} height={height}"
+            "resident_panel_positioned source={} anchor_source={anchor_source} anchor={anchor:?} scale={scale} x={x} y={y} width={width} height={height}",
+            mangodisk_platform::diagnostics::text(&source)
         );
     }
     window.show()?;

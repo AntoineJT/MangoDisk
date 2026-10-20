@@ -188,20 +188,62 @@ pub fn contains_point(app: &tauri::AppHandle, x: f64, y: f64) -> bool {
 }
 
 #[cfg(windows)]
-pub fn anchor(app: &tauri::AppHandle, source: &str) -> Option<(f64, f64)> {
+pub fn anchor(app: &tauri::AppHandle, source: Option<&str>) -> Option<(f64, f64)> {
     use tauri::Manager;
     let service = app.state::<Arc<Service>>();
-    let result = service
-        .bounds
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
+    let bounds = service.bounds.lock().unwrap_or_else(|e| e.into_inner());
+    anchor_in_bounds(&bounds, source)
+}
+
+#[cfg(any(windows, test))]
+fn anchor_in_bounds(
+    bounds: &[(
+        super::tray_display::display_entry::DisplayId,
+        layout::Bounds,
+    )],
+    source: Option<&str>,
+) -> Option<(f64, f64)> {
+    bounds
         .iter()
-        .find(|(id, _)| source == format!("taskbar-{}", id.tray_id()))
+        .filter(|(_, r)| r.right > r.left && r.bottom > r.top)
+        .find(|(id, _)| source.is_none_or(|source| source == format!("taskbar-{}", id.tray_id())))
         .map(|(_, r)| {
             (
                 (r.left + r.right) as f64 / 2.0,
                 (r.top + r.bottom) as f64 / 2.0,
             )
-        });
-    result
+        })
+}
+
+#[cfg(test)]
+mod anchor_tests {
+    use super::{anchor_in_bounds, layout::Bounds};
+    use crate::resident::tray_display::display_entry::DisplayId;
+
+    #[test]
+    fn removed_or_hidden_entries_can_fall_back_to_an_existing_taskbar_item() {
+        let bounds = [
+            (DisplayId::App, Bounds::default()),
+            (
+                DisplayId::Memory,
+                Bounds {
+                    left: 1500,
+                    top: 1040,
+                    right: 1600,
+                    bottom: 1080,
+                },
+            ),
+        ];
+        assert_eq!(
+            anchor_in_bounds(&bounds, Some("taskbar-resident-memory")),
+            Some((1550.0, 1060.0))
+        );
+        assert_eq!(
+            anchor_in_bounds(&bounds, Some("taskbar-resident-gpu")),
+            None
+        );
+        assert_eq!(anchor_in_bounds(&bounds, None), Some((1550.0, 1060.0)));
+        assert_eq!(anchor_in_bounds(&[], None), None);
+        assert_eq!(anchor_in_bounds(&bounds[..1], None), None);
+    }
 }

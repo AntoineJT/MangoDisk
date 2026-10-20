@@ -471,7 +471,11 @@ titles are collected.
 Shell menus naturally cover overlapping pixels without hiding the entire strip
 or raising the taskbar. Ordinary clicks use the existing focused detail panel,
 anchored to the clicked column; a second click toggles it closed. The product
-main window is not revealed. Right click exposes Open, Settings and Quit. Window callbacks guard
+main window is not revealed. Right click exposes Open, Settings and Quit.
+Panels opened from settings whose previous entry is hidden or removed first use a
+remaining taskbar entry, then the monitor fallback. Position diagnostics include
+the requested entry, resolved anchor source, and physical coordinates.
+Window callbacks guard
 against synchronous Win32 message reentry. Display settings share pointer and
 keyboard reordering across platforms.
 
