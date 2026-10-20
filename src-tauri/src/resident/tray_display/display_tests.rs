@@ -66,8 +66,8 @@ fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
 }
 
 #[test]
-#[cfg(target_os = "macos")]
-fn physical_absence_hides_selected_battery_items_without_changing_preferences() {
+#[cfg(any(target_os = "macos", windows))]
+fn physical_absence_keeps_selected_battery_placeholders_without_changing_preferences() {
     let mut preferences = ResidentPreferences::default();
     for metric in &mut preferences.metrics {
         metric.enabled = matches!(
@@ -85,8 +85,14 @@ fn physical_absence_hides_selected_battery_items_without_changing_preferences() 
     };
     let labels = super::super::labels::Labels::for_locale("en-US");
     let visible = entries(&preferences, &readings, &labels, 1000.0);
-    assert_eq!(visible.len(), 1);
-    assert_eq!(visible[0].id, DisplayId::SystemPower);
+    assert_eq!(visible.len(), 4);
+    for entry in visible
+        .iter()
+        .filter(|entry| entry.id != DisplayId::SystemPower)
+    {
+        assert_eq!(entry.digits, "—");
+        assert!(entry.tooltip.contains("This device has no battery"));
+    }
     for present in [None, Some(true)] {
         readings.battery_present = present;
         readings.battery_temperature.status = MetricStatus::Unsupported;
@@ -287,10 +293,7 @@ fn gpu_temperature_preserves_celsius_and_rounded_color_value() {
     assert_eq!(entry.text, "GPU 49°C");
     assert_eq!(entry.color_value, Some(49));
     assert!(entry.tooltip.contains("Apple M3 Max"));
-    assert_eq!(
-        entries(&prefs, &readings, &labels, 1000.0).len(),
-        usize::from(cfg!(any(target_os = "macos", windows)))
-    );
+    assert_eq!(entries(&prefs, &readings, &labels, 1000.0).len(), 1);
     readings.observed_at_ms = 11001;
     assert_eq!(gpu_temperature_entry(&readings, &labels, None).digits, "—");
     readings.observed_at_ms = 999;
@@ -382,7 +385,7 @@ fn temperature_formatting_rejects_expired_invalid_and_future_samples() {
 }
 
 #[test]
-fn temperature_selection_is_platform_gated_and_independent_of_cpu() {
+fn temperature_selection_preserves_windows_consent_and_independence_from_cpu() {
     let mut prefs = ResidentPreferences {
         show_icon: false,
         ..Default::default()
@@ -392,7 +395,7 @@ fn temperature_selection_is_platform_gated_and_independent_of_cpu() {
     }
     prefs.metrics.reverse();
     let ids = desired(&prefs);
-    if cfg!(target_os = "macos") {
+    if !cfg!(windows) {
         assert_eq!(ids, [DisplayId::CpuTemperature]);
         let display = entries(
             &prefs,
@@ -611,20 +614,7 @@ fn native_ids_are_stable_and_network_contributes_two_entries() {
         desired(&prefs),
         DisplayId::ALL
             .into_iter()
-            .filter(|id| {
-                (cfg!(target_os = "macos") || !matches!(id, DisplayId::CpuTemperature))
-                    && (cfg!(any(target_os = "macos", windows))
-                        || !matches!(id, DisplayId::GpuTemperature | DisplayId::DiskTemperature))
-                    && (cfg!(any(target_os = "macos", windows))
-                        || !matches!(
-                            id,
-                            DisplayId::BatteryTemperature
-                                | DisplayId::ChargingPower
-                                | DisplayId::BatteryPower
-                                | DisplayId::FanSpeed
-                        ))
-                    && (cfg!(target_os = "macos") || !matches!(id, DisplayId::SystemPower))
-            })
+            .filter(|id| !cfg!(windows) || *id != DisplayId::CpuTemperature)
             .collect::<Vec<_>>()
     );
     assert_eq!(DisplayId::Upload.metric(), DisplayId::Download.metric());
@@ -815,6 +805,13 @@ fn all_gpu_displays_keep_device_identity_values_and_unavailable_temperatures_sep
         )
         .collect();
     let entries = entries(&preferences, &values, &labels, 1000.0);
+    if !DisplayMetricId::Gpu.supported_on_platform() {
+        assert_eq!(entries.len(), 2);
+        assert!(entries
+            .iter()
+            .all(|entry| entry.digits == "—" && entry.gpu_device.is_none()));
+        return;
+    }
     assert_eq!(
         entries.len(),
         if cfg!(any(target_os = "macos", windows)) {
@@ -891,6 +888,11 @@ fn automatic_gpu_display_is_independent_of_detail_selection_and_missing_fixed_id
     let labels = super::super::labels::Labels::for_locale("en-US");
     let automatic = entries(&preferences, &values, &labels, 1000.0);
     assert_eq!(automatic.len(), 1);
+    if !DisplayMetricId::Gpu.supported_on_platform() {
+        assert_eq!(automatic[0].digits, "—");
+        assert!(automatic[0].gpu_device.is_none());
+        return;
+    }
     assert_eq!(automatic[0].gpu_device.as_ref().unwrap().id, "a");
     preferences.gpu_display = GpuDisplaySelection::Selected {
         adapter_ids: vec!["gone".into()],
@@ -900,4 +902,61 @@ fn automatic_gpu_display_is_independent_of_detail_selection_and_missing_fixed_id
     assert_eq!(missing[0].digits, "—");
     assert_eq!(missing[0].gpu_device.as_ref().unwrap().id, "gone");
     assert!(missing[0].color_value.is_none());
+}
+
+#[test]
+fn unsupported_platform_choices_remain_visible_without_an_icon_fallback() {
+    let labels = super::super::labels::Labels::for_locale("en-US");
+    for id in ResidentPreferences::default()
+        .metrics
+        .into_iter()
+        .map(|metric| metric.id)
+        .filter(|id| !id.supported_on_platform())
+    {
+        let mut preferences = ResidentPreferences {
+            show_icon: false,
+            ..Default::default()
+        };
+        for metric in &mut preferences.metrics {
+            metric.enabled = metric.id == id;
+        }
+        assert!(!preferences.effective_icon());
+        let visible = entries(&preferences, &ResourceReadings::default(), &labels, 1000.0);
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].digits, "—");
+        assert!(visible[0]
+            .tooltip
+            .ends_with("Not supported on this platform"));
+        assert!(desired(&preferences).contains(&visible[0].id));
+    }
+}
+
+#[test]
+fn confirmed_battery_removal_never_reuses_a_fresh_power_value() {
+    use mangodisk_core::system_resources::metrics::MetricReading;
+    use mangodisk_platform::system_resources::battery::{
+        BatteryPower, BatteryPowerState, BatterySource,
+    };
+    let values = ResourceReadings {
+        observed_at_ms: 1000,
+        battery_present: Some(false),
+        battery_power: MetricReading::ready(
+            BatteryPower {
+                watts: 12.0,
+                state: BatteryPowerState::Discharging,
+                source: BatterySource::AppleSmartBattery,
+            },
+            1000,
+        ),
+        ..Default::default()
+    };
+    let entry = battery_entry(
+        &values,
+        &super::super::labels::Labels::for_locale("en-US"),
+        DisplayMetricId::BatteryPower,
+    );
+    assert_eq!(entry.digits, "—");
+    assert_eq!(entry.power_state, None);
+    assert_eq!(entry.color_value, None);
+    assert!(entry.tooltip.ends_with("This device has no battery"));
 }

@@ -39,7 +39,7 @@ pub fn indicator_title(entries: &[DisplayEntry], compact: bool) -> Option<String
                     | DisplayId::ChargingPower
                     | DisplayId::BatteryPower
                     | DisplayId::SystemPower
-                    | DisplayId::FanSpeed => return None,
+                    | DisplayId::FanSpeed => entry.text.clone(),
                 }
             } else {
                 entry.text.trim().to_string()
@@ -105,6 +105,10 @@ pub fn entries(
     let mut entries = Vec::new();
     for metric in &preferences.metrics {
         if !metric.enabled {
+            continue;
+        }
+        if !metric.id.supported_on_platform() {
+            entries.push(platform_placeholder(metric.id, labels));
             continue;
         }
         if matches!(
@@ -173,7 +177,7 @@ pub fn entries(
                 | DisplayMetricId::ChargingPower
                 | DisplayMetricId::BatteryPower
         ) {
-            if values.battery_present != Some(false) && preferences.shows_battery_item(metric.id) {
+            if preferences.shows_battery_item(metric.id) {
                 entries.push(battery_entry(values, labels, metric.id));
             }
             continue;
@@ -398,4 +402,53 @@ pub fn notification_entries(entries: &[DisplayEntry]) -> Vec<DisplayEntry> {
         }
     }
     result
+}
+
+/// Unsupported platforms retain selected columns without starting native providers.
+fn platform_placeholder(id: DisplayMetricId, labels: &super::labels::Labels) -> DisplayEntry {
+    let (id, marker, name) = match id {
+        DisplayMetricId::CpuTemperature => {
+            (DisplayId::CpuTemperature, "°C", labels.temperature("label"))
+        }
+        DisplayMetricId::Gpu => (DisplayId::Gpu, "G", labels.text("gpu")),
+        DisplayMetricId::GpuTemperature => (
+            DisplayId::GpuTemperature,
+            "°C",
+            labels.gpu_temperature("label"),
+        ),
+        DisplayMetricId::DiskTemperature => (
+            DisplayId::DiskTemperature,
+            "°C",
+            labels.text("diskTemperature"),
+        ),
+        DisplayMetricId::BatteryTemperature => (
+            DisplayId::BatteryTemperature,
+            "°C",
+            labels.text("batteryTemperature"),
+        ),
+        DisplayMetricId::ChargingPower => {
+            (DisplayId::ChargingPower, "W", labels.text("chargingPower"))
+        }
+        DisplayMetricId::BatteryPower => {
+            (DisplayId::BatteryPower, "W", labels.text("batteryPower"))
+        }
+        DisplayMetricId::SystemPower => (DisplayId::SystemPower, "W", labels.text("systemPower")),
+        DisplayMetricId::FanSpeed => (DisplayId::FanSpeed, "FMAX", labels.text("fanSpeed")),
+        DisplayMetricId::Cpu
+        | DisplayMetricId::Memory
+        | DisplayMetricId::Network
+        | DisplayMetricId::Disk => unreachable!(),
+    };
+    DisplayEntry {
+        gpu_device: None,
+        id,
+        tone: Default::default(),
+        power_state: None,
+        fan_rows: None,
+        color_value: None,
+        marker: marker.into(),
+        digits: "—".into(),
+        text: format!("{name} —"),
+        tooltip: format!("{name} · {}", labels.text("platformUnsupported")),
+    }
 }

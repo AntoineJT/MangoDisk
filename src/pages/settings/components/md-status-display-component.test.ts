@@ -270,14 +270,14 @@ describe('status display interactions', () => {
     for (const status of ['unsupported', 'failed', 'stale', 'disconnected', 'loading'] as const) {
       accept({ ...reading, revision: ++revision, fanSpeed: { status, sampledAtMs: null, value: null } });
       await flushPromises();
-      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status === 'failed' ? 'readFailed' : status}`);
       accept({ ...reading, revision: ++revision, fanSpeed: { status, sampledAtMs: 1, value: { fans: [] } } });
       await flushPromises();
-      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status === 'failed' ? 'readFailed' : status}`);
     }
     accept({ ...reading, revision: ++revision, fanSpeed: { status: 'ready', sampledAtMs: 1, value: null } });
     await flushPromises();
-    expect(row.get('[role="status"]').text()).toBe('systemStatus.failed');
+    expect(row.get('[role="status"]').text()).toBe('systemStatus.readFailed');
     accept({
       ...reading,
       revision: revision + 1,
@@ -397,7 +397,7 @@ describe('status display interactions', () => {
     expect(saved.windowsCpuTemperatureEnabled).toBe(false);
     expect(wrapper.find('[data-metric="diskTemperature"] .selection-toggle').exists()).toBe(true);
   });
-  it('hides selected battery rows only on confirmed absence and preserves saved choices', async () => {
+  it('keeps absent battery items visible with their reason and preserves saved choices', async () => {
     const saved = preferencesFixture();
     for (const row of saved.metrics) {
       if (['batteryTemperature', 'chargingPower', 'batteryPower'].includes(row.id)) row.enabled = true;
@@ -411,7 +411,8 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     for (const id of ['batteryTemperature', 'chargingPower', 'batteryPower']) {
-      expect(wrapper.find(`[data-metric="${id}"]`).exists()).toBe(false);
+      expect(wrapper.get(`[data-metric="${id}"] [role="status"]`).text()).toBe('systemStatus.noBattery');
+      expect(wrapper.get(`#status-${id}`).attributes('disabled')).toBeUndefined();
     }
     expect(wrapper.find('[data-metric="systemPower"]').exists()).toBe(true);
     expect(ResidentService.savePreferences).not.toHaveBeenCalled();
@@ -467,7 +468,7 @@ describe('status display interactions', () => {
       expect.objectContaining({ gpuAdapter: null, gpuDisplay: { mode: 'automatic' } })
     );
   });
-  it('shows independent disabled battery and system power items only on macOS', async () => {
+  it('offers the complete catalogue on macOS and Windows with platform-specific status', async () => {
     for (const isMacOs of [true, false]) {
       const wrapper = mount(Settings, { props: { isMacOs }, global: global() });
       wrappers.push(wrapper);
@@ -476,7 +477,11 @@ describe('status display interactions', () => {
       expect(wrapper.find('[data-metric="batteryTemperature"]').exists()).toBe(true);
       expect(wrapper.find('[data-metric="chargingPower"]').exists()).toBe(true);
       expect(wrapper.find('[data-metric="batteryPower"]').exists()).toBe(true);
-      expect(wrapper.find('[data-metric="systemPower"]').exists()).toBe(isMacOs);
+      expect(wrapper.find('[data-metric="systemPower"]').exists()).toBe(true);
+      if (!isMacOs)
+        expect(wrapper.get('[data-metric="systemPower"] [role="status"]').text()).toBe(
+          'systemStatus.platformUnsupported'
+        );
       expect(wrapper.find('[data-metric="fanSpeed"]').exists()).toBe(true);
       if (isMacOs) {
         for (const id of ['batteryTemperature', 'chargingPower', 'batteryPower', 'systemPower', 'fanSpeed']) {
@@ -771,11 +776,13 @@ describe('status display interactions', () => {
     expect(wrapper.findComponent(TaskbarPosition).exists()).toBe(false);
     expect(wrapper.findComponent(WindowsFeedback).exists()).toBe(false);
     expect(wrapper.find('#linux-tray-compact').exists()).toBe(true);
-    expect(wrapper.find('#status-cpuTemperature').exists()).toBe(false);
+    expect(wrapper.get('[data-metric="cpuTemperature"] [role="status"]').text()).toBe(
+      'systemStatus.platformUnsupported'
+    );
     expect(wrapper.get('#resident-enabled-hint').text()).toBe('systemStatus.linuxDisplayHint');
     expect(wrapper.find('#taskbar-background').exists()).toBe(false);
-    expect(wrapper.find('[data-metric="gpu"]').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(4);
+    expect(wrapper.get('[data-metric="gpu"] [role="status"]').text()).toBe('systemStatus.platformUnsupported');
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(saved.metrics.length);
 
     await wrapper.get('#linux-tray-compact').trigger('click');
     await flushPromises();
@@ -788,14 +795,12 @@ describe('status display interactions', () => {
     await memoryHandle.trigger('keydown', { key: 'ArrowUp' });
     await memoryHandle.trigger('keydown', { key: 'Enter' });
     await flushPromises();
-    expect(wrapper.findAll('.metric-row').map(row => row.attributes('data-metric'))).toEqual([
-      'memory',
-      'cpu',
-      'network',
-      'disk',
-    ]);
+    const ids = saved.metrics.map(row => row.id);
+    const memoryIndex = ids.indexOf('memory');
+    [ids[memoryIndex - 1], ids[memoryIndex]] = [ids[memoryIndex]!, ids[memoryIndex - 1]!];
+    expect(wrapper.findAll('.metric-row').map(row => row.attributes('data-metric'))).toEqual(ids);
     const preferences = vi.mocked(ResidentService.savePreferences).mock.calls.at(-1)![0];
-    expect(preferences.metrics[0]?.id).toBe('memory');
+    expect(preferences.metrics.map(row => row.id)).toEqual(ids);
     expect(preferences.metrics.find(row => row.id === 'gpu')?.enabled).toBe(false);
   });
 
@@ -959,7 +964,7 @@ describe('status display interactions', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     expect(wrapper.find('input[name="windows-display-mode"]').exists()).toBe(false);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(12);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(preferencesFixture().metrics.length);
     await wrapper.get('input[name="taskbar-position"][value="left"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
@@ -1033,7 +1038,7 @@ describe('status display interactions', () => {
     wrappers.push(wrapper);
     await flushPromises();
     await openConfiguration(wrapper);
-    expect(wrapper.findAll('.drag-handle')).toHaveLength(12);
+    expect(wrapper.findAll('.drag-handle')).toHaveLength(preferencesFixture().metrics.length);
     await wrapper.get('#status-network').trigger('click');
     await flushPromises();
     const preferences = vi.mocked(ResidentService.savePreferences).mock.calls[0]![0];
@@ -1371,7 +1376,7 @@ describe('GPU temperature display settings', () => {
           row.get('[role="status"]').text()
         );
       }
-      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
       expect(row.get('.selection-toggle').attributes('disabled')).toBeUndefined();
       row.getComponent(Select).vm.$emit('update:modelValue', 'selected');
       await flushPromises();
@@ -1399,10 +1404,10 @@ describe('GPU temperature display settings', () => {
       onReading(pending);
       await flushPromises();
       expect(row.get('[role="status"]').text()).toBe('systemStatus.loading');
-      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
       row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
       await flushPromises();
-      expect(ResidentService.savePreferences).toHaveBeenCalledTimes(savedChoices);
+      expect(ResidentService.savePreferences).toHaveBeenCalledTimes(savedChoices + 1);
       const unsupported = readingFixture(3);
       unsupported.gpuAdapters = initial.gpuAdapters;
       unsupported.gpuDevices = pending.gpuDevices.map(device => ({
@@ -1413,7 +1418,7 @@ describe('GPU temperature display settings', () => {
       onReading(unsupported);
       await flushPromises();
       expect(row.get('[role="status"]').text()).toBe('systemStatus.unsupported');
-      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
       const supported = gpuReading(4, 'b');
       supported.gpuAdapters = initial.gpuAdapters;
       onReading(supported);
@@ -1423,7 +1428,7 @@ describe('GPU temperature display settings', () => {
     }
   );
   it.each(['stale', 'failed', 'disconnected'] as const)(
-    'blocks enabling temperature with a %s reading',
+    'allows enabling temperature while preserving a %s reading',
     async status => {
       const reading = gpuReading();
       reading.gpuTemperature.status = status;
@@ -1434,11 +1439,15 @@ describe('GPU temperature display settings', () => {
       await flushPromises();
       await openConfiguration(wrapper);
       const row = wrapper.get('[data-metric="gpuTemperature"]');
-      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status}`);
-      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+      expect(row.get('[role="status"]').text()).toBe(`systemStatus.${status === 'failed' ? 'readFailed' : status}`);
+      expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
       row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
       await flushPromises();
-      expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+      expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          metrics: expect.arrayContaining([{ id: 'gpuTemperature', enabled: true }]),
+        })
+      );
     }
   );
   it('rejects temperature readings belonging to the previously selected adapter', async () => {
@@ -1449,11 +1458,15 @@ describe('GPU temperature display settings', () => {
     await flushPromises();
     await openConfiguration(wrapper);
     const row = wrapper.get('[data-metric="gpuTemperature"]');
-    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
     expect(row.get('[role="status"]').text()).toBe('systemStatus.loading');
     row.getComponent({ name: 'MdCheckbox' }).vm.$emit('update:modelValue', true);
     await flushPromises();
-    expect(ResidentService.savePreferences).not.toHaveBeenCalled();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        metrics: expect.arrayContaining([{ id: 'gpuTemperature', enabled: true }]),
+      })
+    );
   });
   it('selects temperature independently and restores following without changing usage', async () => {
     const catalog = gpuReading();
@@ -1478,7 +1491,7 @@ describe('GPU temperature display settings', () => {
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
       expect.objectContaining({ gpuAdapter: 'a', gpuTemperatureDisplay: { mode: 'selected', adapterIds: ['b'] } })
     );
-    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
     const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
     accept(gpuReading(2, 'b'));
     await flushPromises();
@@ -1513,7 +1526,7 @@ describe('GPU temperature display settings', () => {
     const accept = vi.mocked(ResidentService.onReading).mock.calls.at(-1)![0];
     accept(gpuReading(2, 'a'));
     await flushPromises();
-    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeDefined();
+    expect(row.get('#status-gpuTemperature').attributes('disabled')).toBeUndefined();
   });
 
   it('allows an unavailable saved temperature item to be turned off', async () => {

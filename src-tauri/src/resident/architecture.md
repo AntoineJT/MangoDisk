@@ -99,7 +99,8 @@ Their freshness limits are respectively 5, 10, 5 and 90 seconds. CPU, memory, ne
 regardless of native selections or panel visibility. On macOS and Windows, GPU
 usage and temperature sampling also remain active while resident mode is enabled,
 so hiding the panel or changing display selections does not interrupt histories.
-On other platforms, GPU demand follows native display selection and panel visibility.
+Platforms without a GPU provider retain catalogue-only discovery rather than starting
+a periodic provider for a selected placeholder.
 Disabling resident mode stops its overview demand. On Windows, explicit CPU
 temperature consent can independently keep CPU sampling active. Explicit
 device-catalogue requests may still read network and disk metadata.
@@ -986,10 +987,10 @@ timestamps and gaps; removal discards only that device's cache.
 
 The resident GPU worker reads temperature at four-second intervals while
 macOS or Windows monitoring is enabled, including when its display item or detail panel is hidden.
-The display checkbox controls presentation only. Enabling GPU temperature requires
-a fresh, valid reading from the selected adapter; a loading or failed observation
-does not establish support. Settings show the unavailable status beside the label
-and keep device selection and disabling a saved item available.
+The display checkbox controls presentation only and remains selectable without a
+reading. Only a fresh, valid observation establishes sensor support. Settings show
+the actual unavailable status beside the label and retain device selection; native
+columns show a dash until a valid observation arrives.
 GPU and CPU cards share their
 numeric, tooltip and chart presentation; GPU temperature cards retain selection and explicit unavailable states when adapters are present.
 Transient failures preserve original timestamps and real history without adding
@@ -1064,8 +1065,8 @@ clear the state along with the value.
 
 Preference version 19 appends whole-system power disabled and preserves saved
 selections, relative order, and color rules. Its color rules start disabled and
-empty, use watts, and accept thresholds up to 3000 W. The new metric is visible
-only on macOS and uses SYS in the native menu bar; localized tooltips name the
+empty, use watts, and accept thresholds up to 3000 W. Readings are available
+on macOS; other platforms retain a selected SYS placeholder. Localized tooltips name the
 metric explicitly.
 
 Whole-system power uses the same identified SMC PSTR sensor as Stats System
@@ -1084,9 +1085,14 @@ Battery presence is a separate nullable boolean in resource version 21. The
 existing CPU worker checks AppleSmartBattery and BatteryInstalled every 30
 seconds independently of battery display selection. A successful empty match
 means absent; a registry error retains the last known state instead of hiding
-controls because a sensor failed. Confirmed absence hides all three battery rows
-and native columns while preserving saved selections and color rules. If no
-visible metric remains, the native brand icon preserves access to settings.
+controls because a sensor failed. The settings catalogue always includes every display
+item. Confirmed absence labels battery items as having no battery; selected native
+columns remain visible as dashes and never reuse a previous battery value. Unsupported
+platforms expose the same choices with a platform-specific status and placeholder,
+without enabling native providers. Unselected auxiliary sensors are described as
+collected when enabled until an observation establishes their actual status.
+Windows CPU-temperature selection still requires its existing explicit capability
+consent. Single-device selectors remain hidden.
 
 
 Battery-temperature color defaults are green below 40°C, orange from 40°C to below
@@ -1253,6 +1259,8 @@ units, unknown rates and contradictory direction flags never become watts. Multi
 batteries expose their hottest valid temperature and complete net power; missing
 rates cannot silently undercount total power. Sampling stays on the CPU auxiliary
 worker at the existing two-second interval and stops when all battery items are deselected.
+Expired optional-sensor observations are described as collected when enabled after
+their display items are disabled; actual read failures retain their failure status.
 
 Taskbar battery-power headings retain red discharge and blue charge arrows,
 show IDLE when idle, and clear direction when no current value is available.
@@ -1280,4 +1288,5 @@ modes aggregate available GPU tachometers; fixed numeric fan choices remain macO
 because Windows GPU enumeration positions are not stable fan identities. Motherboard
 and case fans require a separate, reviewed hardware capability and are not inferred
 from `Win32_Fan.DesiredSpeed`. No driver, service, register writes or fan controls are
-introduced.
+introduced. Windows whole-system power remains unsupported without a verified whole
+system meter; CPU/GPU power percentages and battery flow are not substituted.

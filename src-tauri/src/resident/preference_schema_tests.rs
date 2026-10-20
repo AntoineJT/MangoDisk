@@ -36,7 +36,7 @@ fn current_rules_reject_unknown_colors_missing_metrics_and_legacy_fields() {
 }
 
 #[test]
-fn temperature_only_suppresses_logo_fallback_only_on_macos() {
+fn unconsented_windows_temperature_retains_logo_recovery() {
     let mut prefs = ResidentPreferences {
         show_icon: false,
         ..Default::default()
@@ -44,7 +44,7 @@ fn temperature_only_suppresses_logo_fallback_only_on_macos() {
     for metric in &mut prefs.metrics {
         metric.enabled = metric.id == DisplayMetricId::CpuTemperature;
     }
-    assert_eq!(prefs.effective_icon(), !cfg!(target_os = "macos"));
+    assert_eq!(prefs.effective_icon(), cfg!(windows));
     prefs
         .metrics
         .iter_mut()
@@ -106,25 +106,7 @@ fn every_display_combination_retains_an_entry() {
                 preferences.effective_icon(),
                 show_icon
                     || !preferences.metrics.iter().any(|m| {
-                        m.enabled
-                            && (cfg!(any(target_os = "macos", windows))
-                                || !matches!(
-                                    m.id,
-                                    DisplayMetricId::BatteryTemperature
-                                        | DisplayMetricId::ChargingPower
-                                        | DisplayMetricId::BatteryPower
-                                        | DisplayMetricId::FanSpeed
-                                ))
-                            && (cfg!(target_os = "macos")
-                                || !matches!(m.id, DisplayMetricId::CpuTemperature))
-                            && (cfg!(any(target_os = "macos", windows))
-                                || !matches!(
-                                    m.id,
-                                    DisplayMetricId::GpuTemperature
-                                        | DisplayMetricId::DiskTemperature
-                                ))
-                            && (cfg!(target_os = "macos")
-                                || !matches!(m.id, DisplayMetricId::SystemPower))
+                        m.enabled && (!cfg!(windows) || m.id != DisplayMetricId::CpuTemperature)
                     })
             );
             assert!(

@@ -93,8 +93,11 @@ pub fn columns(
                             }
                         }
                         DisplayId::ChargingPower => "CHG",
-                        DisplayId::FanSpeed => entry.marker.as_str(),
-                        _ => "DISK",
+                        DisplayId::SystemPower => "SYS",
+                        DisplayId::FanSpeed
+                        | DisplayId::App
+                        | DisplayId::Upload
+                        | DisplayId::Download => entry.marker.as_str(),
                     }
                     .into()
                 },
@@ -116,13 +119,17 @@ pub fn columns(
                                 | DisplayId::GpuTemperature
                                 | DisplayId::DiskTemperature
                                 | DisplayId::BatteryTemperature => "°C",
-                                DisplayId::ChargingPower | DisplayId::BatteryPower => "W",
+                                DisplayId::ChargingPower
+                                | DisplayId::BatteryPower
+                                | DisplayId::SystemPower => "W",
                                 DisplayId::Cpu
                                 | DisplayId::Gpu
                                 | DisplayId::Memory
                                 | DisplayId::Disk => "%",
-                                DisplayId::FanSpeed => "",
-                                _ => "%",
+                                DisplayId::FanSpeed
+                                | DisplayId::App
+                                | DisplayId::Upload
+                                | DisplayId::Download => "",
                             }
                         }
                     )
@@ -144,6 +151,13 @@ pub fn columns(
                     }
                 } else {
                     match entry.id {
+                        DisplayId::SystemPower => {
+                            if compact {
+                                44
+                            } else {
+                                50
+                            }
+                        }
                         DisplayId::ChargingPower
                         | DisplayId::BatteryPower
                         | DisplayId::FanSpeed => {
@@ -362,6 +376,7 @@ mod tests {
                     (DisplayId::BatteryTemperature, "°C", "BAT", "100", "°C"),
                     (DisplayId::ChargingPower, "W", "CHG", "300", "W"),
                     (DisplayId::BatteryPower, "W", "BAT", "0.1", "W"),
+                    (DisplayId::SystemPower, "W", "SYS", "3000", "W"),
                     (DisplayId::FanSpeed, "FMAX", "FMAX", "30000", ""),
                     (DisplayId::FanSpeed, "FAVG", "FAVG", "0", ""),
                     (DisplayId::FanSpeed, "GFAN", "GFAN", "30000", ""),

@@ -79,6 +79,7 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                     (DisplayId::BatteryTemperature, "BAT 100°C", "100"),
                     (DisplayId::ChargingPower, "CHG 300W", "300"),
                     (DisplayId::BatteryPower, "BAT 0.1W", "0.1"),
+                    (DisplayId::SystemPower, "SYS 3000W", "3000"),
                     (DisplayId::FanSpeed, "GFAN 30000", "30000"),
                     (DisplayId::Upload, "↑999.9 TB/s", "999.9"),
                     (DisplayId::Download, "↓ 99.9 MB/s", "99.9"),

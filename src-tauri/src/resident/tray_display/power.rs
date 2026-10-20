@@ -99,7 +99,8 @@ pub(super) fn battery_entry(
         )
     };
     let value = value.filter(|value| {
-        status == MetricStatus::Ready
+        values.battery_present != Some(false)
+            && status == MetricStatus::Ready
             && value.is_finite()
             && (0.0..=if temperature { 100.0 } else { 300.0 }).contains(value)
             && sampled_at
@@ -164,11 +165,15 @@ pub(super) fn battery_entry(
     } else {
         format!(
             "{name} · {}",
-            labels.status(if status == MetricStatus::Ready {
-                MetricStatus::Stale
+            if values.battery_present == Some(false) {
+                labels.text("noBattery")
             } else {
-                status
-            })
+                labels.status(if status == MetricStatus::Ready {
+                    MetricStatus::Stale
+                } else {
+                    status
+                })
+            }
         )
     };
     DisplayEntry {

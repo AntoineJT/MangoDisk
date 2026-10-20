@@ -200,6 +200,7 @@ mod tests {
                     (DisplayId::BatteryTemperature, "BAT 100°C", "100"),
                     (DisplayId::ChargingPower, "CHG 300W", "300"),
                     (DisplayId::BatteryPower, "BAT 0.1W", "0.1"),
+                    (DisplayId::SystemPower, "SYS 3000W", "3000"),
                     (DisplayId::FanSpeed, "GFAN 30000", "30000"),
                     (DisplayId::CpuTemperature, "CPU —", "—"),
                     (DisplayId::Memory, "MEM 0%", "0"),

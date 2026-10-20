@@ -1,6 +1,6 @@
 //! Desktop demand policy derived from committed preferences and panel visibility.
 use super::ResidentState;
-use crate::resident::sampling_schedule::Demand;
+use crate::resident::{preference_schema::DisplayMetricId, sampling_schedule::Demand};
 use mangodisk_core::system_resources::metrics::MetricId;
 use std::sync::atomic::Ordering;
 
@@ -35,8 +35,8 @@ impl ResidentState {
         // is enabled. Display choices and panel visibility only affect presentation.
         let gpu_sampling = preferences.enabled
             && (cfg!(any(target_os = "macos", windows))
-                || preferences.shows(MetricId::Gpu)
-                || panel_open);
+                || (DisplayMetricId::Gpu.supported_on_platform()
+                    && (preferences.shows(MetricId::Gpu) || panel_open)));
         // Display selection must not interrupt real temperature history. Windows
         // requires explicit capability consent even when resident display is hidden.
         let temperature_sampling = (cfg!(windows) && preferences.windows_cpu_temperature_enabled)
@@ -46,12 +46,17 @@ impl ResidentState {
                 || (cfg!(windows) && metric == MetricId::Gpu))
                 && preferences.enabled
                 && preferences.shows_fan_speed(),
-            system_power: metric == MetricId::Cpu
+            system_power: DisplayMetricId::SystemPower.supported_on_platform()
+                && metric == MetricId::Cpu
                 && preferences.enabled
                 && preferences.shows_system_power(),
-            battery: metric == MetricId::Cpu && preferences.enabled && preferences.shows_battery(),
+            battery: DisplayMetricId::BatteryPower.supported_on_platform()
+                && metric == MetricId::Cpu
+                && preferences.enabled
+                && preferences.shows_battery(),
             temperature: (preferences.enabled
                 && metric == MetricId::Disk
+                && DisplayMetricId::DiskTemperature.supported_on_platform()
                 && (preferences.shows_disk_temperature()
                     || (cfg!(any(target_os = "macos", windows))
                         && panel_open

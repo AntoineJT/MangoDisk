@@ -2,7 +2,7 @@
 import { automaticGpuDevice, gpuDeviceMetrics } from '@/lib/utils/system-resources/gpu-device-metrics';
 import MdResidentMetricOrder from './md-resident-metric-order.vue';
 import MdTooltip from '@/components/custom/md-tooltip.vue';
-import { METRIC_LABEL_KEYS, METRIC_STATUS_KEYS } from '@/lib/models/system-resources/system-resources';
+import { METRIC_LABEL_KEYS } from '@/lib/models/system-resources/system-resources';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdCheckbox from '@/components/custom/md-checkbox.vue';
@@ -29,6 +29,7 @@ import type { ResidentPreferences, ResidentReading, ResidentDisplayMetricId } fr
 import { ResidentDisplayCatalogService } from '@/lib/services/resident/resident-display-catalog-service';
 import { useResidentSettingsStore } from '@/stores/resident-settings-store';
 import { useWindowsMonitoringStore } from '@/stores/windows-monitoring-store';
+import { displayMetricStatusKey, supportsDisplayMetric } from '@/lib/utils/system-resources/display-metric-status';
 import { currentGpuTemperature } from '@/lib/utils/system-resources/gpu-temperature';
 
 const props = withDefaults(defineProps<{ isMacOs: boolean; isLinux?: boolean }>(), {
@@ -78,17 +79,22 @@ const gpuTemperatureAvailable = computed(() => temperatureStatuses.value.include
 const gpuTemperatureStatus = computed(() =>
   gpuTemperatureAvailable.value ? 'ready' : (temperatureStatuses.value[0] ?? 'loading')
 );
-const batteryPresent = ref<boolean | null>(null);
+const catalogueReading = ref<ResidentReading | null>(null);
+const platform = computed(() => (props.isMacOs ? 'macos' : props.isLinux ? 'linux' : 'windows'));
+function statusKey(row: ResidentPreferences['metrics'][number]) {
+  if (row.id === 'cpuTemperature' && platform.value === 'windows') return cpuTemperatureStatusLabel.value;
+  return displayMetricStatusKey(
+    row.id,
+    row.enabled,
+    platform.value,
+    catalogueReading.value,
+    gpuTemperatureStatus.value
+  );
+}
 const batteryTemperatureStatus = ref<ResidentReading['batteryTemperature']['status']>('loading');
 const chargingPowerStatus = ref<ResidentReading['chargingPower']['status']>('loading');
 const systemPowerStatus = ref<ResidentReading['systemPower']['status']>('loading');
 const fanReading = ref<ResidentReading['fanSpeed']>({ status: 'loading', sampledAtMs: null, value: null });
-const fanStatusKey = computed(() => {
-  const reading = fanReading.value;
-  if (reading.status !== 'ready') return METRIC_STATUS_KEYS[reading.status];
-  if (reading.value === null) return METRIC_STATUS_KEYS.failed;
-  return reading.value.fans.length === 0 ? 'systemStatus.noFans' : null;
-});
 const batteryPowerStatus = ref<ResidentReading['batteryPower']['status']>('loading');
 function batteryHint(id: ResidentDisplayMetricId) {
   const unavailable =
@@ -112,9 +118,6 @@ function cancelDrag() {
   metricOrder.value?.cancelDrag();
 }
 const rows = computed(() => dragRows.value ?? settings.draft?.metrics ?? []);
-function isBatteryMetric(id: ResidentDisplayMetricId | null): boolean {
-  return id === 'batteryTemperature' || id === 'chargingPower' || id === 'batteryPower';
-}
 const displayLabelKeys = {
   ...METRIC_LABEL_KEYS,
   cpuTemperature: 'cpuTemperature.label',
@@ -128,24 +131,11 @@ const displayLabelKeys = {
   fanSpeed: !props.isLinux && !props.isMacOs ? 'systemStatus.gpuFanSpeed' : 'systemStatus.fanSpeed',
 };
 const visibleRows = computed(() =>
-  rows.value
-    .filter(
-      row =>
-        (batteryPresent.value !== false || !isBatteryMetric(row.id)) &&
-        (!props.isLinux || row.id !== 'gpuTemperature') &&
-        (!props.isLinux || row.id !== 'cpuTemperature') &&
-        (!props.isLinux || row.id !== 'diskTemperature') &&
-        (!props.isLinux || row.id !== 'gpu') &&
-        (props.isMacOs ||
-          ((!props.isLinux || !isBatteryMetric(row.id)) &&
-            row.id !== 'systemPower' &&
-            (!props.isLinux || row.id !== 'fanSpeed')))
-    )
-    .map(row =>
-      row.id === 'cpuTemperature' && !props.isMacOs && !settings.draft?.windowsCpuTemperatureEnabled
-        ? { ...row, enabled: false }
-        : row
-    )
+  rows.value.map(row =>
+    row.id === 'cpuTemperature' && !props.isMacOs && !props.isLinux && !settings.draft?.windowsCpuTemperatureEnabled
+      ? { ...row, enabled: false }
+      : row
+  )
 );
 // Older preferences may have every item cleared. Mirror the native Logo
 // fallback without writing on load, and retain it when the next metric is added.
@@ -162,11 +152,6 @@ const settingsOpen = defineModel<boolean>('open', { required: true });
 const temperatureSetupOpen = ref(false);
 const selectTemperatureAfterSetup = ref(false);
 const activeColor = ref<ColorMetricId | null>(null);
-watch(batteryPresent, present => {
-  if (present !== false) return;
-  if (isBatteryMetric(activeColor.value)) activeColor.value = null;
-  if (isBatteryMetric(dragging.value)) cancelDrag();
-});
 function openColor(id: ColorMetricId) {
   cancelDrag();
   expandedSelection.value = null;
@@ -255,7 +240,7 @@ function accept(value: ResidentReading) {
   gpuDevices.value = value.gpuDevices;
   gpuTemperatureReading.value = value.gpuTemperature;
   gpuTemperatureObservedAtMs.value = value.observedAtMs;
-  batteryPresent.value = value.batteryPresent;
+  catalogueReading.value = value;
   batteryTemperatureStatus.value = value.batteryTemperature.status;
   chargingPowerStatus.value = value.chargingPower.status;
   batteryPowerStatus.value = value.batteryPower.status;
@@ -263,7 +248,6 @@ function accept(value: ResidentReading) {
   fanReading.value = value.fanSpeed;
 }
 async function enable(id: ResidentDisplayMetricId, enabled: boolean) {
-  if (id === 'gpuTemperature' && enabled && !gpuTemperatureAvailable.value) return;
   if (id === 'cpuTemperature' && !props.isMacOs && !props.isLinux && enabled) {
     if (temperatureSelectionPending.value || monitoring.loading || monitoring.busy) return;
     temperatureSelectionPending.value = true;
@@ -398,7 +382,6 @@ defineExpose({
                           :model-value="row.enabled"
                           :disabled="
                             selectionLocked(row.enabled) ||
-                            (row.id === 'gpuTemperature' && !row.enabled && !gpuTemperatureAvailable) ||
                             (row.id === 'cpuTemperature' &&
                               !isMacOs &&
                               !isLinux &&
@@ -446,25 +429,24 @@ defineExpose({
                           <MdIcon :name="ICON_NAMES.info" :size="14" />
                         </button>
                       </MdTooltip>
-                      <span
-                        v-if="row.id === 'fanSpeed' && row.enabled && fanStatusKey"
-                        role="status"
-                        class="metric-status text-content-meta text-muted-foreground"
+                      <MdTooltip
+                        v-if="row.id === 'fanSpeed' && statusKey(row)"
+                        :text="t(statusKey(row)!)"
+                        class="metric-status"
                       >
-                        {{ t(fanStatusKey) }}
-                      </span>
+                        <span role="status" class="metric-status text-content-meta text-muted-foreground">{{
+                          t(statusKey(row)!)
+                        }}</span>
+                      </MdTooltip>
                       <span
-                        v-if="row.id === 'gpuTemperature' && !gpuTemperatureAvailable"
+                        v-else-if="statusKey(row)"
                         role="status"
-                        class="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 text-content-meta font-medium leading-4 text-muted-foreground"
-                        >{{ t(METRIC_STATUS_KEYS[gpuTemperatureStatus]) }}</span
-                      >
-                      <span
-                        v-if="row.id === 'cpuTemperature' && !isMacOs && !isLinux && cpuTemperatureStatusLabel"
-                        role="status"
-                        class="inline-flex shrink-0 items-center rounded bg-muted px-1.5 py-0.5 text-content-meta font-medium leading-4"
-                        :class="monitoring.needsAttention ? 'text-destructive-text' : 'text-muted-foreground'"
-                        >{{ t(cpuTemperatureStatusLabel ?? 'windowsMonitoring.states.notEnabled') }}</span
+                        class="text-content-meta text-muted-foreground"
+                        :class="{
+                          'text-destructive-text':
+                            row.id === 'cpuTemperature' && !isMacOs && !isLinux && monitoring.needsAttention,
+                        }"
+                        >{{ t(statusKey(row)!) }}</span
                       >
                     </div>
 
@@ -480,7 +462,7 @@ defineExpose({
                       >{{ t('windowsMonitoring.manage') }}</Button
                     >
                     <MdFanDisplaySettings
-                      v-if="row.id === 'fanSpeed' && settings.draft"
+                      v-if="row.id === 'fanSpeed' && settings.draft && supportsDisplayMetric(row.id, platform)"
                       :mode="settings.draft.fanDisplay"
                       :ids="settings.draft.fanIds"
                       :reading="fanReading"
@@ -491,7 +473,11 @@ defineExpose({
                       @change="settings.change($event)"
                     />
                     <MdGpuDisplaySettings
-                      v-if="(row.id === 'gpu' || row.id === 'gpuTemperature') && settings.draft"
+                      v-if="
+                        (row.id === 'gpu' || row.id === 'gpuTemperature') &&
+                        settings.draft &&
+                        supportsDisplayMetric(row.id, platform)
+                      "
                       :temperature="row.id === 'gpuTemperature'"
                       :selection="
                         row.id === 'gpuTemperature' ? settings.draft.gpuTemperatureDisplay : settings.draft.gpuDisplay
@@ -505,7 +491,11 @@ defineExpose({
                       @change="settings.change($event)"
                     />
                     <MdDiskDisplaySettings
-                      v-if="(row.id === 'disk' || row.id === 'diskTemperature') && settings.draft"
+                      v-if="
+                        (row.id === 'disk' || row.id === 'diskTemperature') &&
+                        settings.draft &&
+                        supportsDisplayMetric(row.id, platform)
+                      "
                       :temperature="row.id === 'diskTemperature'"
                       :volume-id="settings.draft.diskVolume"
                       :device-id="settings.draft.diskTemperatureDevice"

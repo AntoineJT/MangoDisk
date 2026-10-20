@@ -179,6 +179,23 @@ impl Default for ResidentPreferences {
     }
 }
 
+impl DisplayMetricId {
+    pub fn supported_on_platform(self) -> bool {
+        match self {
+            Self::SystemPower => cfg!(target_os = "macos"),
+            Self::Gpu
+            | Self::CpuTemperature
+            | Self::GpuTemperature
+            | Self::DiskTemperature
+            | Self::BatteryTemperature
+            | Self::ChargingPower
+            | Self::BatteryPower
+            | Self::FanSpeed => cfg!(any(target_os = "macos", windows)),
+            Self::Cpu | Self::Memory | Self::Network | Self::Disk => true,
+        }
+    }
+}
+
 impl ResidentPreferences {
     pub fn shows(&self, id: MetricId) -> bool {
         self.metrics
@@ -190,71 +207,43 @@ impl ResidentPreferences {
         self.show_icon
             || !self.metrics.iter().any(|metric| {
                 metric.enabled
-                    && match metric.id {
-                        DisplayMetricId::CpuTemperature => self.temperature_display_supported(),
-                        DisplayMetricId::DiskTemperature | DisplayMetricId::GpuTemperature => {
-                            cfg!(any(target_os = "macos", windows))
-                        }
-                        DisplayMetricId::BatteryTemperature
-                        | DisplayMetricId::ChargingPower
-                        | DisplayMetricId::BatteryPower => cfg!(any(target_os = "macos", windows)),
-                        DisplayMetricId::FanSpeed => cfg!(any(target_os = "macos", windows)),
-                        DisplayMetricId::SystemPower => {
-                            cfg!(target_os = "macos")
-                        }
-                        _ => true,
-                    }
+                    && (metric.id != DisplayMetricId::CpuTemperature
+                        || self.temperature_display_authorized())
             })
     }
 
-    fn temperature_display_supported(&self) -> bool {
-        cfg!(target_os = "macos") || (cfg!(windows) && self.windows_cpu_temperature_enabled)
+    fn temperature_display_authorized(&self) -> bool {
+        !cfg!(windows) || self.windows_cpu_temperature_enabled
     }
+
     pub fn shows_cpu_temperature(&self) -> bool {
-        self.temperature_display_supported()
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == DisplayMetricId::CpuTemperature && metric.enabled)
+        self.temperature_display_authorized() && self.shows_display(DisplayMetricId::CpuTemperature)
     }
 
     pub fn shows_disk_temperature(&self) -> bool {
-        cfg!(any(target_os = "macos", windows))
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == DisplayMetricId::DiskTemperature && metric.enabled)
+        self.shows_display(DisplayMetricId::DiskTemperature)
     }
 
     pub fn shows_gpu_temperature(&self) -> bool {
-        cfg!(any(target_os = "macos", windows))
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == DisplayMetricId::GpuTemperature && metric.enabled)
+        self.shows_display(DisplayMetricId::GpuTemperature)
     }
 
     pub fn shows_battery_item(&self, id: DisplayMetricId) -> bool {
-        cfg!(any(target_os = "macos", windows))
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == id && metric.enabled)
+        self.shows_display(id)
     }
+
     pub fn shows_fan_speed(&self) -> bool {
-        cfg!(any(target_os = "macos", windows))
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == DisplayMetricId::FanSpeed && metric.enabled)
+        self.shows_display(DisplayMetricId::FanSpeed)
     }
 
     pub fn shows_system_power(&self) -> bool {
-        cfg!(target_os = "macos")
-            && self
-                .metrics
-                .iter()
-                .any(|metric| metric.id == DisplayMetricId::SystemPower && metric.enabled)
+        self.shows_display(DisplayMetricId::SystemPower)
+    }
+
+    fn shows_display(&self, id: DisplayMetricId) -> bool {
+        self.metrics
+            .iter()
+            .any(|metric| metric.id == id && metric.enabled)
     }
 
     pub fn shows_battery(&self) -> bool {

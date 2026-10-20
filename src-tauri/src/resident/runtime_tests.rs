@@ -379,3 +379,44 @@ fn fixed_disk_temperature_source_does_not_change_capacity_or_other_demands() {
     assert_eq!(after[4].temperature, before[4].temperature);
     assert_eq!(MetricId::Disk.interval_ms(), 30_000);
 }
+
+#[test]
+fn complete_display_catalogue_does_not_enable_unselected_or_unsupported_providers() {
+    use crate::resident::preference_schema::DisplayMetricId;
+    let state = test_state();
+    state.panel_open.store(false, Ordering::Relaxed);
+    let before = state.demands(false);
+    assert!(!before[0].battery);
+    assert!(!before[0].system_power);
+    assert!(before.iter().all(|demand| !demand.fan_speed));
+    {
+        let mut preferences = state.preferences.lock().unwrap();
+        for metric in &mut preferences.metrics {
+            if matches!(
+                metric.id,
+                DisplayMetricId::BatteryTemperature
+                    | DisplayMetricId::ChargingPower
+                    | DisplayMetricId::BatteryPower
+                    | DisplayMetricId::SystemPower
+                    | DisplayMetricId::FanSpeed
+            ) {
+                metric.enabled = true;
+            }
+        }
+    }
+    let after = state.demands(false);
+    assert_eq!(after[0].battery, cfg!(any(target_os = "macos", windows)));
+    assert_eq!(after[0].system_power, cfg!(target_os = "macos"));
+    assert_eq!(after[0].fan_speed, cfg!(target_os = "macos"));
+    assert_eq!(after[1].fan_speed, cfg!(windows));
+    for (previous, current) in before.iter().zip(&after) {
+        assert_eq!(previous.active, current.active);
+        assert_eq!(previous.temperature, current.temperature);
+        assert_eq!(previous.detailed, current.detailed);
+    }
+    state.preferences.lock().unwrap().enabled = false;
+    assert!(state
+        .demands(false)
+        .iter()
+        .all(|demand| !demand.battery && !demand.system_power && !demand.fan_speed));
+}
