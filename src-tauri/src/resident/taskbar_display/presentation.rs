@@ -61,9 +61,10 @@ pub fn columns(
         .map(|entry| {
             let network = entry.id == DisplayId::Upload;
             let gpu_label_width = entry.gpu_device.as_ref().map_or(0, |device| {
-                // Multi-digit catalogue positions, such as GPU31, need extra label space.
+                // Reserve for rounded native glyph advances, including GPU0 at 150% DPI.
+                // Both GDI and DirectWrite use this fixed budget without measuring each frame.
                 let padding = if compact { 2 } else { 6 };
-                ((device.label.chars().count() as u32 * 8 + padding) * dpi / 96) as i32
+                ((device.label.chars().count() as u32 * 9 + padding) * dpi).div_ceil(96) as i32
             });
             let power_state = entry
                 .power_state

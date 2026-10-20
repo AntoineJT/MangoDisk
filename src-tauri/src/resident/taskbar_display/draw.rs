@@ -193,6 +193,11 @@ mod tests {
                 for compact in [false, true] {
                     for (id, text, digits, power_state) in [
                     (DisplayId::Cpu, "CPU 100%", "100"),
+                    (DisplayId::Gpu, "GPU0 100%", "100"),
+                    (DisplayId::Gpu, "GPU1 100%", "100"),
+                    (DisplayId::Gpu, "GPU9 100%", "100"),
+                    (DisplayId::Gpu, "GPU10 100%", "100"),
+                    (DisplayId::Gpu, "GPU31 100%", "100"),
                     (DisplayId::CpuTemperature, "CPU 150°C", "150"),
                     (DisplayId::GpuTemperature, "GPU 150°C", "150"),
                     (DisplayId::DiskTemperature, "DISK 150°C", "150"),
@@ -218,7 +223,13 @@ mod tests {
                 ]) {
                     let columns = presentation::columns(
                         &[DisplayEntry {
-                            gpu_device: None,
+                            gpu_device: (id == DisplayId::Gpu).then(|| {
+                                crate::resident::tray_display::display_entry::GpuDisplayDevice {
+                                    id: "gpu-test".into(),
+                                    name: "Discrete GPU".into(),
+                                    label: text.split_whitespace().next().unwrap().into(),
+                                }
+                            }),
                             tone: Default::default(),
                             power_state,
                             fan_rows: None,

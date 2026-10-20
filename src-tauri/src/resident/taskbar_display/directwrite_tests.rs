@@ -117,6 +117,15 @@ fn native_grayscale_preserves_alpha_colors_and_field_fit_across_dpi() {
                     tooltip: String::new(),
                 })
                 .collect();
+                for label in ["GPU0", "GPU1", "GPU9", "GPU10"] {
+                    let mut entry = entries
+                        .iter()
+                        .find(|entry| entry.id == DisplayId::Gpu)
+                        .unwrap()
+                        .clone();
+                    entry.gpu_device.as_mut().unwrap().label = label.into();
+                    entries.push(entry);
+                }
                 for state in [
                     mangodisk_platform::system_resources::battery::BatteryPowerState::Charging,
                     mangodisk_platform::system_resources::battery::BatteryPowerState::Discharging,

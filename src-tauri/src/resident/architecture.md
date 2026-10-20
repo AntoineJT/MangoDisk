@@ -1264,6 +1264,7 @@ their display items are disabled; actual read failures retain their failure stat
 
 Taskbar battery-power headings retain red discharge and blue charge arrows,
 show IDLE when idle, and clear direction when no current value is available.
+GPU headings reserve a fixed native-font budget across fractional DPI scales.
 
 Windows GPU fan sampling runs on the existing GPU worker when enabled. WDDM
 `FanRPM` is the main GPU fan tachometer; it is independent of fan duty percentages
