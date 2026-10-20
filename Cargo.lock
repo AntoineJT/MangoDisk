@@ -2607,6 +2607,7 @@ dependencies = [
  "blake3",
  "block2",
  "cc",
+ "gtk",
  "icns",
  "log",
  "mangodisk-core",

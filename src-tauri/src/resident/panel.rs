@@ -504,6 +504,33 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         native.makeMainWindow();
         native.makeKeyAndOrderFront(None);
     })?;
+    #[cfg(target_os = "linux")]
+    {
+        use gtk::prelude::GtkWindowExt;
+
+        let app = app.clone();
+        let window = window.clone();
+        // Tao queues GTK visibility changes and ignores focus while still hidden.
+        // Run after those requests, restoring focusability before the first draw
+        // of a prewarmed panel. A cancelled open must never reveal it again.
+        gtk::glib::idle_add_local_once(move || {
+            let state = app.state::<Arc<ResidentState>>();
+            if !state.panel_open.load(Ordering::Relaxed) || !state.enabled() {
+                return;
+            }
+            match window.gtk_window() {
+                Ok(native) => {
+                    native.set_accept_focus(true);
+                    native.present();
+                }
+                Err(error) => {
+                    hide(&app);
+                    super::diagnostics::Failure::record("panel_focus", &error);
+                }
+            }
+        });
+    }
+    #[cfg(not(target_os = "linux"))]
     window.set_focus()?;
     if let Some(started) = state
         .panel_requested_at

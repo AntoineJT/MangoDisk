@@ -154,6 +154,10 @@ Linux panel positioning and showing run on the GTK main thread: monitor work-are
 queries access GDK directly and can corrupt an X11 connection when called by a
 menu or command worker alongside GTK events. Showing failures clear open intent
 and record a diagnostic instead of leaving detailed sampling active.
+GTK focus is requested from an idle callback after queued visibility changes.
+The callback restores the prewarmed window's focusability and checks current
+open intent before presenting it, so outside clicks dismiss the first opening
+without a cancelled opening being shown again.
 CPU and network require two valid observations; unavailable values remain `—`.
 Windows keeps one PDH query on its CPU worker and uses language-neutral
 `Processor Information(_Total)` counters. Windows 10 and older Windows 11
