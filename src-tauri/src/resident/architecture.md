@@ -50,9 +50,9 @@ and native presentation remain explicit desktop adapters.
 
 ## Contracts and cadence
 
-Fresh installations enable resident display with Logo, CPU and memory selected;
-network and disk remain unselected. Windows starts in taskbar mode, preferring
-automatic placement with background enabled. Automatic placement prefers right on
+Fresh installations enable resident display with Logo, CPU, memory, disk usage,
+and network selected. Disk and network use automatic selection. Windows starts in
+taskbar mode, preferring automatic placement with background enabled. Automatic placement prefers right on
 Windows 10, left on centered Windows 11 taskbars, and right on left-aligned ones.
 The existing shell inspection refreshes this decision every second; manual choices
 remain fixed. Windows 10 reserves the selected edge of its task-button container,

@@ -166,7 +166,13 @@ impl Default for ResidentPreferences {
                 .into_iter()
                 .map(|id| DisplayMetric {
                     id,
-                    enabled: matches!(id, DisplayMetricId::Cpu | DisplayMetricId::Memory),
+                    enabled: matches!(
+                        id,
+                        DisplayMetricId::Cpu
+                            | DisplayMetricId::Memory
+                            | DisplayMetricId::Disk
+                            | DisplayMetricId::Network
+                    ),
                 })
                 .collect(),
             network_interface: None,

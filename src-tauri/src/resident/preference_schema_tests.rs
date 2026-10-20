@@ -53,7 +53,7 @@ fn unconsented_windows_temperature_retains_logo_recovery() {
 }
 
 #[test]
-fn fresh_preferences_show_logo_cpu_memory_with_automatic_taskbar_position() {
+fn fresh_preferences_show_cpu_memory_disk_network_with_automatic_selection() {
     let preferences = ResidentPreferences::default();
     assert!(preferences.enabled && preferences.show_icon && preferences.taskbar_background);
     assert_eq!(preferences.taskbar_position, TaskbarPosition::Auto);
@@ -63,12 +63,13 @@ fn fresh_preferences_show_logo_cpu_memory_with_automatic_taskbar_position() {
             .iter()
             .filter(|metric| metric.enabled)
             .map(|metric| metric.id)
-            .filter(|id| !matches!(
-                id,
-                DisplayMetricId::DiskTemperature | DisplayMetricId::FanSpeed
-            ))
             .collect::<Vec<_>>(),
-        vec![DisplayMetricId::Cpu, DisplayMetricId::Memory]
+        vec![
+            DisplayMetricId::Cpu,
+            DisplayMetricId::Memory,
+            DisplayMetricId::Disk,
+            DisplayMetricId::Network,
+        ]
     );
     assert!(preferences.network_interface.is_none() && preferences.disk_volume.is_none());
 }
@@ -83,7 +84,7 @@ fn saved_preferences_are_not_replaced_by_new_install_defaults() {
         ..Default::default()
     };
     for metric in &mut saved.metrics {
-        metric.enabled = matches!(metric.id, DisplayMetricId::Network | DisplayMetricId::Disk);
+        metric.enabled = matches!(metric.id, DisplayMetricId::Cpu | DisplayMetricId::Memory);
     }
     assert_eq!(
         decode(serde_json::to_value(&saved).unwrap()).unwrap(),
