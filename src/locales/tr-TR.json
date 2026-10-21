@@ -3335,9 +3335,29 @@
         "description": "Qoder sürümlerinin oluşturduğu kod, uzantı paketi, web, GPU, gölgelendirici ve tanılama önbelleği",
         "impact": "Projeler, ayarlar, uzantılar, yedekler, çalışma alanı durumu ve oturum bilgileri korunur. Önce her iki Qoder sürümünü de kapatın"
       },
+      "browser.zen-cache": {
+        "name": "Zen önbelleği",
+        "description": "Zen tarafından oluşturulan web sayfası ve başlangıç önbellekleri.",
+        "impact": "Gerektiğinde yeniden oluşturulur; tarama verileri korunur."
+      },
+      "browser.helium-cache": {
+        "name": "Helium önbelleği",
+        "description": "Helium tarafından oluşturulan web sayfası, betik ve grafik önbellekleri.",
+        "impact": "Gerektiğinde yeniden oluşturulur; tarama verileri korunur."
+      },
+      "dev.puppeteer-cache": {
+        "name": "Puppeteer tarayıcı indirmeleri",
+        "description": "Puppeteer tarafından indirilen Chrome ve Firefox çalışma zamanları.",
+        "impact": "Otomasyonu çalıştırmadan önce uyumlu tarayıcılar yeniden indirilmelidir; çevrimdışıyken geri yüklenemez."
+      },
+      "dev.electron-builder-cache": {
+        "name": "electron-builder önbelleği",
+        "description": "electron-builder tarafından indirilen derleme araçları.",
+        "impact": "Sonraki derlemelerde araçların yeniden indirilmesi gerekebilir; çevrimdışı derlemeler başarısız olabilir."
+      },
       "dev.browser-automation-cache": {
         "name": "Tarayıcı otomasyonu önbelleği",
-        "description": "Playwright, Puppeteer, Cypress ve Selenium tarafından indirilen tarayıcı çalışma zamanları.",
+        "description": "Playwright, Cypress ve Selenium tarafından indirilen tarayıcı çalışma zamanları.",
         "impact": "Test araçlarının tarayıcıları yeniden indirmesi gerekir ve çevrimdışıyken kullanılamayabilir."
       },
       "dev.visual-studio-cache": {

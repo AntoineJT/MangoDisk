@@ -156,6 +156,8 @@ const CLEANUP_RULE_ICONS: Readonly<Record<string, IconName>> = {
   'browser.arc-cache': ICON_NAMES.brandArc,
   'browser.vivaldi-cache': ICON_NAMES.brandVivaldi,
   'browser.firefox-cache': ICON_NAMES.brandFirefox,
+  'browser.zen-cache': ICON_NAMES.brandZen,
+  'browser.helium-cache': ICON_NAMES.brandHelium,
   'browser.opera-cache': ICON_NAMES.brandOpera,
   'browser.brave-cache': ICON_NAMES.brandBrave,
   'browser.brave-origin-cache': ICON_NAMES.brandBrave,
@@ -164,6 +166,8 @@ const CLEANUP_RULE_ICONS: Readonly<Record<string, IconName>> = {
   'browser.gecko-family-cache': ICON_NAMES.cleanupBrowserData,
 
   'dev.browser-automation-cache': ICON_NAMES.cleanupAutomationCache,
+  'dev.puppeteer-cache': ICON_NAMES.brandPuppeteer,
+  'dev.electron-builder-cache': ICON_NAMES.brandElectronBuilder,
   'dev.build-accelerator-cache': ICON_NAMES.code,
   'dev.bun-cache': ICON_NAMES.brandBun,
   'dev.ccache-cache': ICON_NAMES.code,

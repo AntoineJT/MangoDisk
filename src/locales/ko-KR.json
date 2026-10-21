@@ -3335,9 +3335,29 @@
         "description": "Qoder 에디션에서 생성된 코드, 확장 프로그램 패키지, 웹, GPU, 셰이더 및 진단 캐시입니다.",
         "impact": "프로젝트, 설정, 확장 프로그램, 백업, 워크스페이스 상태, 로그인 상태는 유지됩니다. 먼저 두 Qoder 에디션을 모두 닫으세요."
       },
+      "browser.zen-cache": {
+        "name": "Zen 캐시",
+        "description": "Zen이 생성한 웹 페이지 및 시작 캐시입니다.",
+        "impact": "필요할 때 다시 생성되며, 탐색 데이터는 보존됩니다."
+      },
+      "browser.helium-cache": {
+        "name": "Helium 캐시",
+        "description": "Helium이 생성한 웹 페이지, 스크립트 및 그래픽 캐시입니다.",
+        "impact": "필요할 때 다시 생성되며, 탐색 데이터는 보존됩니다."
+      },
+      "dev.puppeteer-cache": {
+        "name": "Puppeteer 브라우저 다운로드",
+        "description": "Puppeteer가 다운로드한 Chrome 및 Firefox 런타임입니다.",
+        "impact": "자동화 실행 전에 호환 브라우저를 다시 다운로드해야 하며, 오프라인에서는 복원할 수 없습니다."
+      },
+      "dev.electron-builder-cache": {
+        "name": "electron-builder 캐시",
+        "description": "electron-builder가 다운로드한 빌드 도구입니다.",
+        "impact": "다음 빌드에 도구 재다운로드가 필요할 수 있으며, 오프라인 빌드는 실패할 수 있습니다."
+      },
       "dev.browser-automation-cache": {
         "name": "브라우저 자동화 캐시",
-        "description": "Playwright, Puppeteer, Cypress 및 Selenium이 다운로드한 브라우저 런타임입니다.",
+        "description": "Playwright, Cypress 및 Selenium이 다운로드한 브라우저 런타임입니다.",
         "impact": "테스트 도구가 브라우저를 다시 다운로드해야 하며, 오프라인 상태에서는 사용하지 못할 수 있습니다."
       },
       "dev.visual-studio-cache": {

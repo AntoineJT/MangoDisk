@@ -3335,9 +3335,29 @@
         "description": "Code généré, package d'extension, Web, GPU, shader et cache de diagnostic à partir des éditions Qoder",
         "impact": "Les projets, les paramètres, les extensions, les sauvegardes, l'état de l'espace de travail et l'état de connexion sont conservés. Fermez d'abord les deux éditions Qoder"
       },
+      "browser.zen-cache": {
+        "name": "Cache Zen",
+        "description": "Caches de pages web et de démarrage créés par Zen.",
+        "impact": "Les caches sont recréés au besoin ; les données de navigation sont conservées."
+      },
+      "browser.helium-cache": {
+        "name": "Cache Helium",
+        "description": "Caches de pages web, de scripts et graphiques créés par Helium.",
+        "impact": "Les caches sont recréés au besoin ; les données de navigation sont conservées."
+      },
+      "dev.puppeteer-cache": {
+        "name": "Navigateurs Puppeteer",
+        "description": "Environnements Chrome et Firefox téléchargés par Puppeteer.",
+        "impact": "Il faut retélécharger des navigateurs compatibles avant toute automatisation ; impossible hors ligne."
+      },
+      "dev.electron-builder-cache": {
+        "name": "Cache electron-builder",
+        "description": "Outils de compilation téléchargés par electron-builder.",
+        "impact": "Les prochaines compilations peuvent nécessiter de nouveaux téléchargements et échouer hors ligne."
+      },
       "dev.browser-automation-cache": {
         "name": "Cache d'automatisation du navigateur",
-        "description": "Runtimes de navigateur téléchargés par Playwright, Puppeteer, Cypress et Selenium",
+        "description": "Runtimes de navigateur téléchargés par Playwright, Cypress et Selenium",
         "impact": "Les outils de test doivent télécharger à nouveau les navigateurs et peuvent être indisponibles hors ligne"
       },
       "dev.visual-studio-cache": {

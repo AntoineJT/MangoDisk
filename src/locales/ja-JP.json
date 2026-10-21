@@ -3335,9 +3335,29 @@
         "description": "Qoderエディションから生成されたコード、拡張パッケージ、Web、GPU、シェーダー、および診断キャッシュ。",
         "impact": "プロジェクト、設定、拡張機能、バックアップ、ワークスペースの状態、サインイン状態は保持されます。クリーンアップ前に両方の Qoder エディションを終了してください。"
       },
+      "browser.zen-cache": {
+        "name": "Zen キャッシュ",
+        "description": "Zen が生成したウェブページと起動用のキャッシュ。",
+        "impact": "必要に応じて再生成されます。閲覧データは保持されます。"
+      },
+      "browser.helium-cache": {
+        "name": "Helium キャッシュ",
+        "description": "Helium が生成したウェブページ、スクリプト、グラフィックのキャッシュ。",
+        "impact": "必要に応じて再生成されます。閲覧データは保持されます。"
+      },
+      "dev.puppeteer-cache": {
+        "name": "Puppeteer ブラウザダウンロード",
+        "description": "Puppeteer がダウンロードした Chrome と Firefox の実行環境。",
+        "impact": "自動化の実行前に対応ブラウザの再ダウンロードが必要です。オフラインでは復元できません。"
+      },
+      "dev.electron-builder-cache": {
+        "name": "electron-builder キャッシュ",
+        "description": "electron-builder がダウンロードしたビルドツール。",
+        "impact": "次回のビルド時に再ダウンロードが必要になる場合があり、オフラインでは失敗することがあります。"
+      },
       "dev.browser-automation-cache": {
         "name": "ブラウザ自動化キャッシュ",
-        "description": "Playwright、Puppeteer、Cypress、および Selenium によってダウンロードされたブラウザーランタイム。",
+        "description": "Playwright、Cypress、および Selenium によってダウンロードされたブラウザーランタイム。",
         "impact": "テストツールはブラウザーを再度ダウンロードする必要があり、オフライン時には利用できない場合があります。"
       },
       "dev.visual-studio-cache": {

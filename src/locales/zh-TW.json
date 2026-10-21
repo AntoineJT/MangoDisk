@@ -3335,9 +3335,29 @@
         "description": "Qoder 各版本產生的程式碼、擴充功能套件、網頁、GPU、著色器和診斷快取",
         "impact": "不會刪除專案、設定、擴充功能、備份、工作區或登入狀態；請先關閉兩個 Qoder 版本再清理。"
       },
+      "browser.zen-cache": {
+        "name": "Zen 快取",
+        "description": "Zen 產生的網頁和啟動快取",
+        "impact": "需要時會重新產生；保留瀏覽記錄、登入資料和設定。"
+      },
+      "browser.helium-cache": {
+        "name": "Helium 快取",
+        "description": "Helium 產生的網頁、指令碼和圖形快取",
+        "impact": "需要時會重新產生；保留瀏覽記錄、登入資料和設定。"
+      },
+      "dev.puppeteer-cache": {
+        "name": "Puppeteer 瀏覽器下載快取",
+        "description": "Puppeteer 下載的 Chrome 和 Firefox 執行階段",
+        "impact": "清理後需重新下載相容的瀏覽器才能執行自動化，離線時無法還原。"
+      },
+      "dev.electron-builder-cache": {
+        "name": "electron-builder 快取",
+        "description": "electron-builder 下載的建置工具",
+        "impact": "後續建置可能需要重新下載工具，離線建置可能失敗。"
+      },
       "dev.browser-automation-cache": {
         "name": "瀏覽器自動化執行時快取",
-        "description": "Playwright、Puppeteer、Cypress 與 Selenium 下載的瀏覽器執行時",
+        "description": "Playwright、Cypress 與 Selenium 下載的瀏覽器執行時",
         "impact": "清理後相關測試工具需要重新下載瀏覽器，離線環境下可能暫時不可用。"
       },
       "dev.visual-studio-cache": {

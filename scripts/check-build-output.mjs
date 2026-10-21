@@ -57,12 +57,15 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // Add only 64 gzip / 128 raw / 256 raw bytes to those locale margins.
 // Metric availability adds four labels. Measured fr/ja/ru assets require only
 // 128/384/384 additional raw bytes and 128/64/64 gzip bytes respectively.
+// Four documented cache rules add twelve strings per locale. Measured es/fr/ja/ru
+// assets are 312414/320691/334113/403277 raw bytes; fr/ja/ru gzip is
+// 63806/63255/71334 bytes. Extend only these measured locale margins.
 const localeChunkLimitOverrides = new Map([
-  ['fr-fr', { bytes: 312 * 1024 + 128, gzipBytes: 62 * 1024 + 192 }],
+  ['fr-fr', { bytes: 313 * 1024 + 256, gzipBytes: 62 * 1024 + 384 }],
   ['de-de', { bytes: maximumLocaleChunkBytes, gzipBytes: 63 * 1024 }],
-  ['es-es', { bytes: maximumLocaleChunkBytes, gzipBytes: 61 * 1024 }],
-  ['ja-jp', { bytes: 325 * 1024, gzipBytes: 61 * 1024 + 640 }],
-  ['ru-ru', { bytes: 392 * 1024 + 384, gzipBytes: 69 * 1024 + 512 }],
+  ['es-es', { bytes: 305 * 1024 + 256, gzipBytes: 61 * 1024 }],
+  ['ja-jp', { bytes: 326 * 1024 + 384, gzipBytes: 61 * 1024 + 832 }],
+  ['ru-ru', { bytes: 393 * 1024 + 896, gzipBytes: 69 * 1024 + 704 }],
 ]);
 
 function fail(message) {

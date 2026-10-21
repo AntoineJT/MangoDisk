@@ -170,6 +170,8 @@ Declarative filesystem rules support `deleteMatchingContents` and the opt-in `de
 
 Production resources accept the `verified`, `stable`, and `deprecated` lifecycles. `candidate` and `disabled` rules are rejected from the production catalog. `evidence` must explain why the selected data is disposable and what important data remains outside the boundary. `verified_at` uses `YYYY-MM-DD`, and `verified_platform` must match the rule platform. Add authoritative HTTPS `references` whenever they are available.
 
+For narrowly defined caches, official documentation or upstream implementation that establishes ownership, disposability, and regeneration may be combined with isolated scan, dry-run, deletion, and adjacent-data preservation tests. Installing every application is not required. Shared framework caches still need application-specific path evidence; offline content, databases, shared stores, and active installation or version-retention logic require application-level validation. Record the actual evidence and validation method; `verified` must not imply an installation test that was not performed.
+
 Rule comments and verification evidence are developer-facing text and must use English so the automated source check can validate a consistent public rule catalog. Do not add UI names, descriptions, impact text, localization keys, or locale fields to TOML.
 
 ### Protected personal and high-value data

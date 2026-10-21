@@ -3335,9 +3335,29 @@
         "description": "Código gerado, pacote de extensão, web, GPU, shader e cache de diagnóstico das edições do Qoder.",
         "impact": "Projetos, configurações, extensões, backups, estado do espaço de trabalho e estado de login são mantidos. Feche ambas as edições do Qoder primeiro."
       },
+      "browser.zen-cache": {
+        "name": "Cache do Zen",
+        "description": "Caches de páginas e de inicialização criados pelo Zen.",
+        "impact": "São recriados quando necessário; os dados de navegação são preservados."
+      },
+      "browser.helium-cache": {
+        "name": "Cache do Helium",
+        "description": "Caches de páginas, scripts e gráficos criados pelo Helium.",
+        "impact": "São recriados quando necessário; os dados de navegação são preservados."
+      },
+      "dev.puppeteer-cache": {
+        "name": "Navegadores do Puppeteer",
+        "description": "Runtimes do Chrome e Firefox baixados pelo Puppeteer.",
+        "impact": "Baixe novamente navegadores compatíveis antes de executar a automação; indisponível offline."
+      },
+      "dev.electron-builder-cache": {
+        "name": "Cache do electron-builder",
+        "description": "Ferramentas de compilação baixadas pelo electron-builder.",
+        "impact": "As próximas compilações podem precisar baixar ferramentas novamente e falhar offline."
+      },
       "dev.browser-automation-cache": {
         "name": "Cache de automação do navegador",
-        "description": "Runtimes de navegador baixados pelo Playwright, Puppeteer, Cypress e Selenium.",
+        "description": "Runtimes de navegador baixados pelo Playwright, Cypress e Selenium.",
         "impact": "As ferramentas de teste precisam baixar os navegadores novamente e podem ficar indisponíveis enquanto estiverem offline."
       },
       "dev.visual-studio-cache": {

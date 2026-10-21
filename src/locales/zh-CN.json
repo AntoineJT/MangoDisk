@@ -3335,9 +3335,29 @@
         "description": "Qoder 各版本生成的代码、扩展包、网页、GPU、着色器和诊断缓存",
         "impact": "不会删除项目、设置、扩展、备份、工作区或登录状态；关闭两个 Qoder 版本后清理。"
       },
+      "browser.zen-cache": {
+        "name": "Zen 缓存",
+        "description": "Zen 生成的网页和启动缓存",
+        "impact": "需要时会重新生成；保留浏览记录、登录资料和设置。"
+      },
+      "browser.helium-cache": {
+        "name": "Helium 缓存",
+        "description": "Helium 生成的网页、脚本和图形缓存",
+        "impact": "需要时会重新生成；保留浏览记录、登录资料和设置。"
+      },
+      "dev.puppeteer-cache": {
+        "name": "Puppeteer 浏览器下载缓存",
+        "description": "Puppeteer 下载的 Chrome 和 Firefox 运行时",
+        "impact": "清理后需重新下载兼容的浏览器才能运行自动化，离线时无法恢复。"
+      },
+      "dev.electron-builder-cache": {
+        "name": "electron-builder 缓存",
+        "description": "electron-builder 下载的构建工具",
+        "impact": "后续构建可能需要重新下载工具，离线构建可能失败。"
+      },
       "dev.browser-automation-cache": {
         "name": "浏览器自动化运行时缓存",
-        "description": "Playwright、Puppeteer、Cypress 与 Selenium 下载的浏览器运行时",
+        "description": "Playwright、Cypress 与 Selenium 下载的浏览器运行时",
         "impact": "清理后相关测试工具需要重新下载浏览器，离线环境下可能暂时不可用。"
       },
       "dev.visual-studio-cache": {
