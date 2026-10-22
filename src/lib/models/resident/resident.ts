@@ -18,11 +18,24 @@ export type ResidentDisplayMetricId =
 export type GpuDisplaySelection = { mode: 'automatic' } | { mode: 'selected'; adapterIds: string[] };
 
 export interface ResidentPreferences {
-  schemaVersion: 28;
+  schemaVersion: 34;
   windowsCpuTemperatureEnabled: boolean;
   revision: number;
   enabled: boolean;
   showIcon: boolean;
+  windowsDisplayMode: 'taskbar' | 'floating' | 'both';
+  floating: {
+    layout: 'horizontal' | 'vertical';
+    alwaysOnTop: boolean;
+    locked: boolean;
+    backgroundOpacity: number;
+    snapToEdges: boolean;
+    fontSize: 'standard' | 'larger' | 'large' | 'extraLarge';
+    bold: boolean;
+    dividers: boolean;
+    clickThrough: boolean;
+    background: 'default' | 'darkGray' | 'inkBlue' | 'warmWhite' | 'lightGray' | 'black' | 'white';
+  };
   taskbarPosition: 'auto' | 'left' | 'right';
   taskbarBackground: boolean;
   taskbarCompact: boolean;

@@ -63,9 +63,9 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 28; resource readings use version 31.
+Resident preferences use schema version 34; resource readings use version 31.
 The runtime and IPC accept only the current structure. Persisted configurations from
-release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) upgrade directly to schema 28;
+release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32 and 33 upgrade directly to schema 34;
 development-only schemas, including 26 and 27, have no migration contract. Each
 supported release has a frozen fixture beside the pure decoder. Upgrades retain
 saved order, visibility, colors, source choices and consent; newly introduced
@@ -77,9 +77,9 @@ by the desktop configuration adapter, outside plugin store exit callbacks. Expli
 saves reread and validate the persisted version, write and sync a temporary file
 in the same directory, then atomically replace the target. Failed writes preserve
 the previous record and do not publish new runtime preferences.
-Only shipped structures become migration sources. While a target is still in
-development, update its direct converters rather than accumulating intermediate
-version steps.
+Release structures and the previous monitoring schemas 28, 29, 30 and 31 are migration sources.
+They remain readable to preserve existing monitoring installations.
+Converters upgrade directly rather than accumulating intermediate version steps.
 Display metrics must contain each current metric exactly once; custom order is retained.
 GPU display is disabled by default. Compact mode reduces horizontal cells from 38/81
 to 34/55 DIP (percentage/network), with abbreviated network units

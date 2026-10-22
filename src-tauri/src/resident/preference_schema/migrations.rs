@@ -19,6 +19,57 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
             .map_err(|_| "preferences_invalid")?
             .normalize();
     }
+    if matches!(version, 29..=33) {
+        let object = value.as_object_mut().ok_or("preferences_invalid")?;
+        let floating = object
+            .get_mut("floating")
+            .and_then(Value::as_object_mut)
+            .ok_or("preferences_invalid")?;
+        if version < 31 && floating.contains_key("snapToEdges") {
+            return Err("preferences_invalid");
+        }
+        if version == 29 && floating.contains_key("backgroundOpacity") {
+            return Err("preferences_invalid");
+        }
+        if version == 29 {
+            floating.insert("backgroundOpacity".into(), 100.into());
+        }
+        if version < 31 {
+            floating.insert("snapToEdges".into(), true.into());
+        }
+        if floating
+            .insert("clickThrough".into(), false.into())
+            .is_some()
+        {
+            return Err("preferences_invalid");
+        }
+        if version < 33 && floating.insert("dividers".into(), true.into()).is_some() {
+            return Err("preferences_invalid");
+        }
+        if version < 32 {
+            for (key, value) in [
+                ("fontSize", Value::from("standard")),
+                ("bold", Value::from(false)),
+                ("background", Value::from("default")),
+            ] {
+                if floating.insert(key.into(), value).is_some() {
+                    return Err("preferences_invalid");
+                }
+            }
+        }
+        object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
+        return serde_json::from_value::<ResidentPreferences>(value)
+            .map_err(|_| "preferences_invalid")?
+            .normalize();
+    }
+    if version == 28 {
+        let object = value.as_object_mut().ok_or("preferences_invalid")?;
+        add_floating_defaults(object)?;
+        object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
+        return serde_json::from_value::<ResidentPreferences>(value)
+            .map_err(|_| "preferences_invalid")?
+            .normalize();
+    }
     if !RELEASED_VERSIONS.contains(&version) {
         return Err("preferences_version");
     }
@@ -66,6 +117,7 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
         serde_json::to_value(GpuDisplaySelection::Automatic).map_err(|_| "preferences_invalid")?,
     );
     object.insert("diskTemperatureDevice".into(), Value::Null);
+    add_floating_defaults(object)?;
     object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
     serde_json::from_value::<ResidentPreferences>(value)
         .map_err(|_| "preferences_invalid")?
@@ -270,4 +322,17 @@ fn percentage_colors(warning: u16, critical: u16) -> Vec<MetricColorRule> {
             rule
         })
         .collect()
+}
+
+fn add_floating_defaults(object: &mut Map<String, Value>) -> Result<(), &'static str> {
+    if object.contains_key("windowsDisplayMode") || object.contains_key("floating") {
+        return Err("preferences_invalid");
+    }
+    object.insert("windowsDisplayMode".into(), "taskbar".into());
+    object.insert(
+        "floating".into(),
+        serde_json::to_value(super::FloatingPreferences::default())
+            .map_err(|_| "preferences_invalid")?,
+    );
+    Ok(())
 }

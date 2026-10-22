@@ -5,7 +5,91 @@ use serde::{Deserialize, Serialize};
 mod migrations;
 pub use migrations::decode;
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 28;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 34;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WindowsDisplayMode {
+    #[default]
+    Taskbar,
+    Floating,
+    Both,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FloatingLayout {
+    #[default]
+    Horizontal,
+    Vertical,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FloatingFontSize {
+    #[default]
+    Standard,
+    Larger,
+    Large,
+    ExtraLarge,
+}
+
+impl FloatingFontSize {
+    #[cfg(any(windows, test))]
+    pub(super) fn row_height(self) -> f64 {
+        match self {
+            Self::Standard => 20.0,
+            Self::Larger => 23.0,
+            Self::Large => 26.0,
+            Self::ExtraLarge => 30.0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FloatingBackground {
+    #[default]
+    Default,
+    DarkGray,
+    InkBlue,
+    WarmWhite,
+    LightGray,
+    Black,
+    White,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct FloatingPreferences {
+    pub layout: FloatingLayout,
+    pub always_on_top: bool,
+    pub locked: bool,
+    pub background_opacity: u8,
+    pub snap_to_edges: bool,
+    pub font_size: FloatingFontSize,
+    pub bold: bool,
+    pub dividers: bool,
+    pub click_through: bool,
+    pub background: FloatingBackground,
+}
+
+impl Default for FloatingPreferences {
+    fn default() -> Self {
+        Self {
+            layout: FloatingLayout::Horizontal,
+            always_on_top: true,
+            locked: false,
+            background_opacity: 100,
+            snap_to_edges: true,
+            font_size: FloatingFontSize::Standard,
+            bold: false,
+            dividers: true,
+            click_through: false,
+            background: FloatingBackground::Default,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -110,6 +194,8 @@ pub struct ResidentPreferences {
     pub windows_cpu_temperature_enabled: bool,
     pub enabled: bool,
     pub show_icon: bool,
+    pub windows_display_mode: WindowsDisplayMode,
+    pub floating: FloatingPreferences,
     pub taskbar_position: TaskbarPosition,
     pub taskbar_background: bool,
     pub taskbar_compact: bool,
@@ -156,6 +242,8 @@ impl Default for ResidentPreferences {
             fan_ids: vec![0],
             enabled: true,
             show_icon: true,
+            windows_display_mode: WindowsDisplayMode::default(),
+            floating: FloatingPreferences::default(),
             taskbar_position: TaskbarPosition::default(),
             taskbar_background: true,
             taskbar_compact: false,
@@ -211,6 +299,7 @@ impl ResidentPreferences {
 
     pub fn effective_icon(&self) -> bool {
         self.show_icon
+            || (cfg!(windows) && self.windows_display_mode != WindowsDisplayMode::Taskbar)
             || !self.metrics.iter().any(|metric| {
                 metric.enabled
                     && (metric.id != DisplayMetricId::CpuTemperature
@@ -262,7 +351,8 @@ impl ResidentPreferences {
         if self.schema_version != PREFERENCE_SCHEMA_VERSION {
             return Err("preferences_version");
         }
-        if !super::color_rules::valid(&self.color_rules)
+        if !(50..=100).contains(&self.floating.background_opacity)
+            || !super::color_rules::valid(&self.color_rules)
             || self.metrics.len() != DISPLAY_ORDER.len()
             || self.fan_ids.is_empty()
             || self.fan_ids.len() > 2

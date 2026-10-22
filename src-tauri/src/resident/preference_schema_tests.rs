@@ -18,7 +18,10 @@ fn current_rules_round_trip_empty_single_and_sparse_conditions() {
 #[test]
 fn current_rules_reject_unknown_colors_missing_metrics_and_legacy_fields() {
     let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
-    assert_eq!(decode(current.clone()).unwrap().schema_version, 28);
+    assert_eq!(
+        decode(current.clone()).unwrap().schema_version,
+        PREFERENCE_SCHEMA_VERSION
+    );
     let mut value = current.clone();
     value["colorRules"][0]["rules"][0]["color"] = "purple".into();
     assert!(decode(value).is_err());
@@ -122,7 +125,7 @@ fn every_display_combination_retains_an_entry() {
 fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields() {
     let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
     for version in (0..PREFERENCE_SCHEMA_VERSION)
-        .filter(|v| ![7, 8, 10, 21, 25].contains(v))
+        .filter(|v| ![7, 8, 10, 21, 25, 28, 29, 30, 31, 32, 33].contains(v))
         .chain([PREFERENCE_SCHEMA_VERSION + 1])
     {
         let mut value = current.clone();
@@ -139,7 +142,14 @@ fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields
         value[field] = serde_json::Value::Null;
         assert!(decode(value).is_err(), "field={field}");
     }
-    for field in ["gpuDisplay", "gpuTemperatureDisplay", "fanIds", "metrics"] {
+    for field in [
+        "gpuDisplay",
+        "gpuTemperatureDisplay",
+        "fanIds",
+        "metrics",
+        "windowsDisplayMode",
+        "floating",
+    ] {
         let mut value = current.clone();
         value.as_object_mut().unwrap().remove(field);
         assert!(decode(value).is_err(), "field={field}");
@@ -400,4 +410,359 @@ fn disk_temperature_device_is_independent_and_released_preferences_follow_the_se
         value["diskTemperatureDevice"] = serde_json::json!("development-value");
         assert!(decode(value).is_err());
     }
+}
+
+#[test]
+fn previous_monitor_settings_upgrade_without_changing_user_choices() {
+    let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    previous["schemaVersion"] = 28.into();
+    previous["revision"] = 91.into();
+    previous["enabled"] = false.into();
+    previous["taskbarPosition"] = "left".into();
+    let object = previous.as_object_mut().unwrap();
+    object.remove("windowsDisplayMode");
+    object.remove("floating");
+    let upgraded = decode(previous.clone()).unwrap();
+    assert_eq!(upgraded.schema_version, PREFERENCE_SCHEMA_VERSION);
+    assert_eq!(upgraded.revision, 91);
+    assert!(!upgraded.enabled);
+    assert_eq!(upgraded.taskbar_position, TaskbarPosition::Left);
+    assert_eq!(upgraded.windows_display_mode, WindowsDisplayMode::Taskbar);
+    assert_eq!(upgraded.floating, FloatingPreferences::default());
+    previous["floating"] = serde_json::json!({"layout":"vertical"});
+    assert!(
+        decode(previous).is_err(),
+        "old schemas must reject unrecognized fields"
+    );
+}
+
+#[test]
+fn floating_options_reject_unknown_modes_and_preserve_a_recovery_icon() {
+    let mut preferences = ResidentPreferences {
+        show_icon: false,
+        windows_display_mode: WindowsDisplayMode::Floating,
+        ..Default::default()
+    };
+    assert_eq!(preferences.effective_icon(), cfg!(windows));
+    preferences.floating.layout = FloatingLayout::Vertical;
+    preferences.floating.locked = true;
+    let value = serde_json::to_value(&preferences).unwrap();
+    assert_eq!(decode(value.clone()).unwrap(), preferences);
+    let mut malformed = value.clone();
+    malformed["windowsDisplayMode"] = "desktop".into();
+    assert!(decode(malformed).is_err());
+    let mut malformed = value;
+    malformed["floating"]["layout"] = "grid".into();
+    assert!(decode(malformed).is_err());
+}
+
+#[test]
+fn previous_floating_settings_keep_layout_and_position_options_with_opaque_background() {
+    let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    previous["schemaVersion"] = 29.into();
+    for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
+        previous["floating"].as_object_mut().unwrap().remove(field);
+    }
+    previous["revision"] = 92.into();
+    previous["windowsDisplayMode"] = "both".into();
+    previous["floating"]["layout"] = "vertical".into();
+    previous["floating"]["locked"] = true.into();
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("backgroundOpacity");
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("snapToEdges");
+    let migrated = decode(previous.clone()).unwrap();
+    assert_eq!(migrated.schema_version, PREFERENCE_SCHEMA_VERSION);
+    assert_eq!(migrated.revision, 92);
+    assert_eq!(migrated.windows_display_mode, WindowsDisplayMode::Both);
+    assert_eq!(migrated.floating.layout, FloatingLayout::Vertical);
+    assert!(migrated.floating.locked);
+    assert_eq!(migrated.floating.background_opacity, 100);
+    assert!(migrated.floating.snap_to_edges);
+    previous["floating"]["backgroundOpacity"] = 75.into();
+    assert!(
+        decode(previous).is_err(),
+        "old schemas must reject future fields"
+    );
+}
+
+#[test]
+fn floating_background_opacity_requires_a_bounded_integer_percentage() {
+    let value = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    for percentage in [50, 75, 100] {
+        let mut changed = value.clone();
+        changed["floating"]["backgroundOpacity"] = percentage.into();
+        assert_eq!(
+            decode(changed).unwrap().floating.background_opacity,
+            percentage as u8
+        );
+    }
+    for invalid in [
+        serde_json::json!(0),
+        serde_json::json!(49),
+        serde_json::json!(101),
+        serde_json::json!(-1),
+        serde_json::json!(60.5),
+        serde_json::json!("60"),
+    ] {
+        let mut changed = value.clone();
+        changed["floating"]["backgroundOpacity"] = invalid;
+        assert!(decode(changed).is_err());
+    }
+    let mut missing = value;
+    missing["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("backgroundOpacity");
+    assert!(decode(missing).is_err());
+}
+
+#[test]
+fn previous_opacity_settings_enable_snapping_without_resetting_other_choices() {
+    let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    previous["schemaVersion"] = 30.into();
+    for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
+        previous["floating"].as_object_mut().unwrap().remove(field);
+    }
+    previous["revision"] = 94.into();
+    previous["floating"]["backgroundOpacity"] = 60.into();
+    previous["floating"]["layout"] = "vertical".into();
+    previous["floating"]["locked"] = true.into();
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("snapToEdges");
+    let migrated = decode(previous.clone()).unwrap();
+    assert_eq!(migrated.revision, 94);
+    assert_eq!(migrated.floating.background_opacity, 60);
+    assert_eq!(migrated.floating.layout, FloatingLayout::Vertical);
+    assert!(migrated.floating.locked && migrated.floating.snap_to_edges);
+    previous["floating"]["snapToEdges"] = false.into();
+    assert!(
+        decode(previous).is_err(),
+        "previous schemas reject future fields"
+    );
+}
+
+#[test]
+fn snapping_requires_an_explicit_boolean_in_the_current_schema() {
+    let value = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    for enabled in [true, false] {
+        let mut changed = value.clone();
+        changed["floating"]["snapToEdges"] = enabled.into();
+        assert_eq!(decode(changed).unwrap().floating.snap_to_edges, enabled);
+    }
+    for invalid in [
+        serde_json::json!(0),
+        serde_json::json!("false"),
+        serde_json::Value::Null,
+    ] {
+        let mut changed = value.clone();
+        changed["floating"]["snapToEdges"] = invalid;
+        assert!(decode(changed).is_err());
+    }
+    let mut missing = value;
+    missing["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("snapToEdges");
+    assert!(decode(missing).is_err());
+}
+
+#[test]
+fn previous_floating_appearance_keeps_opacity_and_defaults_new_options() {
+    let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    previous["schemaVersion"] = 31.into();
+    previous["floating"]["backgroundOpacity"] = 60.into();
+    previous["floating"]["snapToEdges"] = false.into();
+    for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
+        previous["floating"].as_object_mut().unwrap().remove(field);
+    }
+    let migrated = decode(previous.clone()).unwrap();
+    assert_eq!(migrated.floating.background_opacity, 60);
+    assert!(!migrated.floating.snap_to_edges);
+    assert_eq!(migrated.floating.font_size, FloatingFontSize::Standard);
+    assert!(!migrated.floating.bold);
+    assert_eq!(migrated.floating.background, FloatingBackground::Default);
+    previous["floating"]["bold"] = false.into();
+    assert!(decode(previous).is_err());
+}
+
+#[test]
+fn floating_appearance_requires_known_presets_and_explicit_fields() {
+    let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    for (field, values) in [
+        (
+            "fontSize",
+            vec!["standard", "larger", "large", "extraLarge"],
+        ),
+        (
+            "background",
+            vec![
+                "default",
+                "darkGray",
+                "inkBlue",
+                "warmWhite",
+                "lightGray",
+                "black",
+                "white",
+            ],
+        ),
+    ] {
+        for value in values {
+            let mut changed = current.clone();
+            changed["floating"][field] = value.into();
+            assert!(decode(changed).is_ok());
+        }
+        let mut invalid = current.clone();
+        invalid["floating"][field] = "unknown".into();
+        assert!(decode(invalid).is_err());
+    }
+    for field in ["fontSize", "bold", "background"] {
+        let mut missing = current.clone();
+        missing["floating"].as_object_mut().unwrap().remove(field);
+        assert!(decode(missing).is_err());
+    }
+    for value in [
+        serde_json::json!(1),
+        serde_json::json!("false"),
+        serde_json::Value::Null,
+    ] {
+        let mut invalid = current.clone();
+        invalid["floating"]["bold"] = value;
+        assert!(decode(invalid).is_err());
+    }
+}
+
+#[test]
+fn previous_floating_appearance_adds_dividers_without_changing_saved_choices() {
+    let expected = ResidentPreferences {
+        revision: 97,
+        floating: FloatingPreferences {
+            layout: FloatingLayout::Vertical,
+            background_opacity: 60,
+            snap_to_edges: false,
+            bold: true,
+            font_size: FloatingFontSize::ExtraLarge,
+            background: FloatingBackground::InkBlue,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut previous = serde_json::to_value(&expected).unwrap();
+    previous["schemaVersion"] = 32.into();
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("dividers");
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("clickThrough");
+    assert_eq!(decode(previous.clone()).unwrap(), expected);
+    previous["floating"]["dividers"] = false.into();
+    assert!(
+        decode(previous).is_err(),
+        "older schemas reject future fields"
+    );
+}
+
+#[test]
+fn floating_dividers_require_an_explicit_boolean_and_round_trip() {
+    let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    for enabled in [true, false] {
+        let mut changed = current.clone();
+        changed["floating"]["dividers"] = enabled.into();
+        let decoded = decode(changed).unwrap();
+        assert_eq!(decoded.floating.dividers, enabled);
+        assert_eq!(
+            decode(serde_json::to_value(&decoded).unwrap()).unwrap(),
+            decoded
+        );
+    }
+    for invalid in [
+        serde_json::json!(0),
+        serde_json::json!("false"),
+        serde_json::Value::Null,
+    ] {
+        let mut changed = current.clone();
+        changed["floating"]["dividers"] = invalid;
+        assert!(decode(changed).is_err());
+    }
+    let mut missing = current;
+    missing["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("dividers");
+    assert!(decode(missing).is_err());
+}
+
+#[test]
+fn click_through_migrates_disabled_and_preserves_previous_choices() {
+    let expected = ResidentPreferences {
+        revision: 123,
+        windows_display_mode: WindowsDisplayMode::Both,
+        show_icon: false,
+        floating: FloatingPreferences {
+            dividers: false,
+            locked: true,
+            layout: FloatingLayout::Vertical,
+            background_opacity: 60,
+            background: FloatingBackground::Black,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut previous = serde_json::to_value(&expected).unwrap();
+    previous["schemaVersion"] = 33.into();
+    previous["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("clickThrough");
+    assert_eq!(decode(previous.clone()).unwrap(), expected);
+    previous["floating"]["clickThrough"] = true.into();
+    assert!(
+        decode(previous).is_err(),
+        "previous schemas reject future fields"
+    );
+}
+
+#[test]
+fn click_through_requires_an_explicit_boolean_and_retains_recovery() {
+    let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
+    assert!(!ResidentPreferences::default().floating.click_through);
+    for enabled in [false, true] {
+        let mut value = current.clone();
+        value["floating"]["clickThrough"] = enabled.into();
+        let mut preferences = decode(value).unwrap();
+        assert_eq!(preferences.floating.click_through, enabled);
+        preferences.show_icon = false;
+        for mode in [WindowsDisplayMode::Floating, WindowsDisplayMode::Both] {
+            preferences.windows_display_mode = mode;
+            assert_eq!(preferences.effective_icon(), cfg!(windows));
+        }
+        assert_eq!(
+            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            preferences
+        );
+    }
+    for invalid in [
+        serde_json::json!(null),
+        serde_json::json!(1),
+        serde_json::json!("true"),
+    ] {
+        let mut value = current.clone();
+        value["floating"]["clickThrough"] = invalid;
+        assert!(decode(value).is_err());
+    }
+    let mut missing = current;
+    missing["floating"]
+        .as_object_mut()
+        .unwrap()
+        .remove("clickThrough");
+    assert!(decode(missing).is_err());
 }

@@ -4,11 +4,24 @@ import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 
 export function preferencesFixture(): ResidentPreferences {
   return {
-    schemaVersion: 28,
+    schemaVersion: 34,
     windowsCpuTemperatureEnabled: false,
     revision: 0,
     enabled: true,
     showIcon: true,
+    windowsDisplayMode: 'taskbar',
+    floating: {
+      layout: 'horizontal',
+      alwaysOnTop: true,
+      locked: false,
+      backgroundOpacity: 100,
+      snapToEdges: true,
+      fontSize: 'standard',
+      bold: false,
+      dividers: true,
+      clickThrough: false,
+      background: 'default',
+    },
     taskbarPosition: 'right',
     taskbarBackground: true,
     taskbarCompact: false,
