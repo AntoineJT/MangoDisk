@@ -48,6 +48,9 @@ They do not depend on a running Tauri application, and they do not move native
 UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
 and native presentation remain explicit desktop adapters.
 
+Bootstrap completes the initial native display apply before background publication
+can acquire display state.
+
 ## Contracts and cadence
 
 Fresh installations enable resident display with Logo, CPU, memory, disk usage,

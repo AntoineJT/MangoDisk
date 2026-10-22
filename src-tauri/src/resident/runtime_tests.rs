@@ -133,6 +133,7 @@ fn test_state() -> ResidentState {
         preference_update: Mutex::new(()),
         network_traffic: Mutex::new(None),
         preferences: Mutex::new(preferences),
+        display_initialized: AtomicBool::new(true),
         panel_open: AtomicBool::new(true),
         panel_ready: AtomicBool::new(true),
         panel_creation: Mutex::new(()),

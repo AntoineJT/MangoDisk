@@ -18,6 +18,11 @@ impl Presentation {
             let mut stalled = false;
             let mut panel_seeded = false;
             while events.recv().is_ok() {
+                // A native tray call can wait for the main thread. Until bootstrap
+                // finishes, taking DisplayState here could deadlock setup's first apply.
+                if !state.display_initialized.load(Ordering::Acquire) {
+                    continue;
+                }
                 let started = std::time::Instant::now();
                 // Preference commits and publications share a gate. Sampling never waits
                 // for this gate, and only the newest reading survives a blocked shell.

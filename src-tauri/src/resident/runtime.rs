@@ -33,6 +33,7 @@ pub struct ResidentState {
     pub network_traffic:
         Mutex<Option<Arc<mangodisk_core::system_resources::network_traffic::NetworkTraffic>>>,
     pub preferences: Mutex<ResidentPreferences>,
+    pub display_initialized: AtomicBool,
     pub panel_open: AtomicBool,
     pub panel_ready: AtomicBool,
     pub panel_creation: Mutex<()>,
@@ -76,6 +77,7 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
         preference_update: Mutex::new(()),
         network_traffic: Mutex::new(None),
         preferences: Mutex::new(preferences),
+        display_initialized: AtomicBool::new(false),
         panel_open: AtomicBool::new(false),
         panel_ready: AtomicBool::new(false),
         panel_creation: Mutex::new(()),

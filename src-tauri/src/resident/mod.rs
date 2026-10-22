@@ -45,6 +45,10 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
         .unwrap_or_else(|error| error.into_inner())
         .clone();
     tray_display::apply_preferences(app, &preferences, &reading)?;
+    state
+        .display_initialized
+        .store(true, std::sync::atomic::Ordering::Release);
+    state.wake();
     log::info!("resident_started enabled={}", preferences.enabled);
     Ok(())
 }
