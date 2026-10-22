@@ -57,6 +57,9 @@ The native menu assembles controls and commits preferences; `menu_preferences`
 owns its supported choices and pure field updates. Windows resource-panel
 anchors, metric clicks and click-through live in `interaction`; AppKit and
 Win32 visibility and mouse state remain in their native adapters.
+Both native context menus group font, bold, background, opacity and dividers
+under Appearance. Windows keeps topmost, position lock and edge snapping as
+root-level shortcuts alongside the shared layout and configuration actions.
 The settings display-mode control is shared while each platform retains its
 own persisted mode and supported choices.
 

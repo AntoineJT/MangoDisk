@@ -100,6 +100,11 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
             None::<&str>,
         )?)?;
     }
+    let dividers = check(
+        "floating-dividers",
+        "/floatingMonitor/dividers",
+        preferences.floating.dividers,
+    )?;
     let settings = item("floating-settings", "/systemStatus/configureAction")?;
     let reset = item("floating-reset", "/floatingMonitor/resetPosition")?;
     let opacity = Submenu::new(app, labels.text("/floatingMonitor/backgroundOpacity"), true)?;
@@ -115,6 +120,14 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
     }
     let separator = PredefinedMenuItem::separator(app)?;
     let second = PredefinedMenuItem::separator(app)?;
+    #[cfg(windows)]
+    let interaction_separator = PredefinedMenuItem::separator(app)?;
+    let appearance = Submenu::with_items(
+        app,
+        labels.text("/systemStatus/settingsTabs/appearance"),
+        true,
+        &[&font_size, &bold, &background, &opacity, &dividers],
+    )?;
     let menu = Menu::with_items(
         app,
         &[
@@ -127,10 +140,9 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
             &locked,
             #[cfg(windows)]
             &snap,
-            &font_size,
-            &bold,
-            &background,
-            &opacity,
+            #[cfg(windows)]
+            &interaction_separator,
+            &appearance,
             &second,
             &settings,
             &reset,

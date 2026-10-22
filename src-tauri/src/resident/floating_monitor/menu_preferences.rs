@@ -24,6 +24,7 @@ pub(super) fn apply(preferences: &mut FloatingPreferences, action: &str) -> bool
     match action {
         "floating-horizontal" => preferences.layout = FloatingLayout::Horizontal,
         "floating-vertical" => preferences.layout = FloatingLayout::Vertical,
+        "floating-dividers" => preferences.dividers = !preferences.dividers,
         "floating-bold" => preferences.bold = !preferences.bold,
         "floating-top" => preferences.always_on_top = !preferences.always_on_top,
         "floating-lock" => preferences.locked = !preferences.locked,
@@ -104,6 +105,7 @@ mod tests {
     fn toggles_change_only_the_requested_field_and_can_be_reversed() {
         let original = FloatingPreferences::default();
         for action in [
+            "floating-dividers",
             "floating-bold",
             "floating-top",
             "floating-lock",
@@ -112,6 +114,7 @@ mod tests {
             let mut preferences = original.clone();
             let mut expected = original.clone();
             match action {
+                "floating-dividers" => expected.dividers = false,
                 "floating-bold" => expected.bold = true,
                 "floating-top" => expected.always_on_top = false,
                 "floating-lock" => expected.locked = true,
