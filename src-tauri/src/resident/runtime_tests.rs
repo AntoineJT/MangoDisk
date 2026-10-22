@@ -139,6 +139,8 @@ fn test_state() -> ResidentState {
         panel_creation: Mutex::new(()),
         panel_action: Mutex::new(()),
         panel_requested_at: Mutex::new(None),
+        #[cfg(windows)]
+        panel_hide_blurs: std::sync::atomic::AtomicU32::new(0),
         panel_metric: Mutex::new(MetricId::Cpu),
         panel_source: Mutex::new(String::new()),
         reading: Mutex::new(ResidentReading {

@@ -35,6 +35,44 @@ pub fn toggle_from(
     source: &str,
     metric: Option<MetricId>,
 ) -> tauri::Result<()> {
+    toggle_entry(app, source, EntryRequest::Resume(metric))
+}
+
+#[cfg(windows)]
+pub fn toggle_metric_from(
+    app: &tauri::AppHandle,
+    source: &str,
+    metric: MetricId,
+) -> tauri::Result<()> {
+    toggle_entry(app, source, EntryRequest::Select(metric))
+}
+
+#[derive(Clone, Copy)]
+enum EntryRequest {
+    Resume(Option<MetricId>),
+    #[cfg(any(windows, test))]
+    Select(MetricId),
+}
+
+impl EntryRequest {
+    fn selection(self, previous: MetricId, is_open: bool) -> MetricId {
+        match self {
+            Self::Resume(requested) => entry_selection(previous, requested, is_open),
+            #[cfg(any(windows, test))]
+            Self::Select(requested) => requested,
+        }
+    }
+
+    fn repeats(self, previous: MetricId) -> bool {
+        match (self, previous) {
+            (Self::Resume(_), _) => true,
+            #[cfg(any(windows, test))]
+            (Self::Select(requested), previous) => requested == previous,
+        }
+    }
+}
+
+fn toggle_entry(app: &tauri::AppHandle, source: &str, request: EntryRequest) -> tauri::Result<()> {
     let state = app.state::<Arc<ResidentState>>();
     let _action = state
         .panel_action
@@ -46,7 +84,12 @@ pub fn toggle_from(
         .unwrap_or_else(|error| error.into_inner())
         .as_str()
         == source;
-    if state.panel_open.load(Ordering::Relaxed) && same {
+    let was_open = state.panel_open.load(Ordering::Relaxed);
+    let previous = *state
+        .panel_metric
+        .lock()
+        .unwrap_or_else(|error| error.into_inner());
+    if was_open && same && request.repeats(previous) {
         log::info!("resident_panel_entry source={source} action=hide reason=repeated_click");
         hide(app);
         return Ok(());
@@ -55,13 +98,14 @@ pub fn toggle_from(
         .panel_source
         .lock()
         .unwrap_or_else(|error| error.into_inner()) = source.into();
-    let was_open = state.panel_open.load(Ordering::Relaxed);
-    let previous = *state
-        .panel_metric
-        .lock()
-        .unwrap_or_else(|error| error.into_inner());
-    let selected = entry_selection(previous, metric, was_open);
-    if selected != previous || (was_open && metric.is_some()) {
+    let selected = request.selection(previous, was_open);
+    let notify = match request {
+        EntryRequest::Resume(metric) => was_open && metric.is_some(),
+        // Explicit shortcuts must also leave the frontend-only overview tab.
+        #[cfg(any(windows, test))]
+        EntryRequest::Select(_) => true,
+    };
+    if selected != previous || notify {
         select_metric(app, selected);
     }
     log::info!("resident_panel_entry source={source} switching={was_open} metric={selected:?}");
@@ -83,10 +127,14 @@ pub fn open(app: &tauri::AppHandle) -> tauri::Result<()> {
     if !state.enabled() {
         return Ok(());
     }
+    #[cfg(windows)]
+    let needs_focus = !native_panel_is_focused(app);
+    #[cfg(not(windows))]
+    let needs_focus = true;
     *state
         .panel_requested_at
         .lock()
-        .unwrap_or_else(|error| error.into_inner()) = Some(std::time::Instant::now());
+        .unwrap_or_else(|error| error.into_inner()) = needs_focus.then(std::time::Instant::now);
     log::info!(
         "resident_panel_open_requested ready={}",
         state.panel_ready.load(Ordering::Relaxed)
@@ -129,6 +177,8 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
     if app.get_webview_window(PANEL_LABEL).is_none() {
+        #[cfg(windows)]
+        state.panel_hide_blurs.store(0, Ordering::Relaxed);
         let started = std::time::Instant::now();
         let builder =
             WebviewWindowBuilder::new(app, PANEL_LABEL, WebviewUrl::App("tray-panel.html".into()))
@@ -180,6 +230,16 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
         window.on_window_event(move |event| match event {
             WindowEvent::Focused(false) => {
                 log::info!("resident_panel_focus_changed focused=false");
+                #[cfg(windows)]
+                {
+                    let state = app.state::<Arc<ResidentState>>();
+                    if ignore_queued_blur(&state.panel_hide_blurs, native_panel_is_focused(&app)) {
+                        log::info!(
+                            "resident_panel_blur_ignored reason=programmatic_hide_or_newer_focus"
+                        );
+                        return;
+                    }
+                }
                 // Native entry presses can take focus before delivering the tray
                 // event. Preserve open intent so that press closes, rather than
                 // immediately reopening, the panel.
@@ -190,6 +250,11 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
                 }
             }
             WindowEvent::Focused(true) => {
+                #[cfg(windows)]
+                if !native_panel_is_focused(&app) {
+                    log::info!("resident_panel_focus_ignored reason=stale_focus");
+                    return;
+                }
                 log::info!("resident_panel_focus_changed focused=true");
                 let state = app.state::<Arc<ResidentState>>();
                 if let Some(started) = state
@@ -238,6 +303,28 @@ fn macos_panel_behavior(
     use objc2_app_kit::NSWindowCollectionBehavior as Behavior;
 
     (current & !(Behavior::Managed | Behavior::Transient)) | Behavior::Stationary
+}
+
+#[cfg(windows)]
+fn native_panel_is_focused(app: &tauri::AppHandle) -> bool {
+    app.get_webview_window(PANEL_LABEL)
+        .and_then(|window| window.hwnd().ok())
+        .is_some_and(|hwnd| unsafe {
+            windows_sys::Win32::UI::WindowsAndMessaging::GetForegroundWindow() == hwnd.0.cast()
+        })
+}
+
+#[cfg(any(windows, test))]
+fn ignore_queued_blur(pending: &std::sync::atomic::AtomicU32, focused: bool) -> bool {
+    let mut count = pending.load(Ordering::Relaxed);
+    while count > 0 {
+        match pending.compare_exchange_weak(count, count - 1, Ordering::Relaxed, Ordering::Relaxed)
+        {
+            Ok(_) => return true,
+            Err(actual) => count = actual,
+        }
+    }
+    focused
 }
 
 #[cfg(windows)]
@@ -357,7 +444,19 @@ pub fn hide(app: &tauri::AppHandle) {
         .lock()
         .unwrap_or_else(|error| error.into_inner()) = None;
     if let Some(window) = app.get_webview_window(PANEL_LABEL) {
+        #[cfg(windows)]
+        // This getter drains earlier queued show/focus requests before Hide.
+        let expects_blur = window.is_focused().unwrap_or(false);
+        // Each focused native hide queues one blur, possibly after a newer open.
+        #[cfg(windows)]
+        if expects_blur {
+            state.panel_hide_blurs.fetch_add(1, Ordering::Relaxed);
+        }
         if let Err(error) = window.hide() {
+            #[cfg(windows)]
+            if expects_blur {
+                ignore_queued_blur(&state.panel_hide_blurs, false);
+            }
             log::warn!("resident_panel_hide_failed error={error}");
         } else {
             let _ = app.emit_to(PANEL_LABEL, VISIBILITY_EVENT, false);
@@ -670,6 +769,42 @@ mod tests {
             entry_selection(MetricId::Cpu, Some(MetricId::Memory), true),
             MetricId::Memory
         );
+    }
+
+    #[test]
+    fn explicit_resource_entries_toggle_the_current_metric_and_select_it_on_reopening() {
+        for metric in [
+            MetricId::Cpu,
+            MetricId::Gpu,
+            MetricId::Memory,
+            MetricId::Disk,
+            MetricId::Network,
+        ] {
+            let request = EntryRequest::Select(metric);
+            for previous in [MetricId::Cpu, MetricId::Memory] {
+                assert_eq!(request.selection(previous, false), metric);
+                assert_eq!(request.selection(previous, true), metric);
+                assert_eq!(request.repeats(previous), metric == previous);
+            }
+        }
+        // Tray entries retain their existing source-based toggle and remembered tab.
+        let tray = EntryRequest::Resume(Some(MetricId::Cpu));
+        assert!(tray.repeats(MetricId::Memory));
+        assert_eq!(tray.selection(MetricId::Memory, false), MetricId::Memory);
+        assert_eq!(tray.selection(MetricId::Memory, true), MetricId::Cpu);
+    }
+
+    #[test]
+    fn queued_native_hides_preserve_a_reopened_panel_but_the_next_outside_blur_dismisses() {
+        let pending = std::sync::atomic::AtomicU32::new(2);
+        // Two older hide/show cycles may deliver their blurs after the next open.
+        assert!(ignore_queued_blur(&pending, false));
+        assert!(ignore_queued_blur(&pending, false));
+        // A stale blur cannot override the OS reporting this panel as focused.
+        assert!(ignore_queued_blur(&pending, true));
+        // The queue is drained: a real outside click must still dismiss it.
+        assert!(!ignore_queued_blur(&pending, false));
+        assert_eq!(pending.load(Ordering::Relaxed), 0);
     }
 
     #[test]

@@ -39,6 +39,8 @@ pub struct ResidentState {
     pub panel_creation: Mutex<()>,
     pub panel_action: Mutex<()>,
     pub panel_requested_at: Mutex<Option<Instant>>,
+    #[cfg(windows)]
+    pub panel_hide_blurs: std::sync::atomic::AtomicU32,
     pub panel_metric: Mutex<MetricId>,
     pub panel_source: Mutex<String>,
     pub reading: Mutex<ResidentReading>,
@@ -83,6 +85,8 @@ pub fn start(app: &tauri::AppHandle, preferences: ResidentPreferences) -> Arc<Re
         panel_creation: Mutex::new(()),
         panel_action: Mutex::new(()),
         panel_requested_at: Mutex::new(None),
+        #[cfg(windows)]
+        panel_hide_blurs: std::sync::atomic::AtomicU32::new(0),
         panel_metric: Mutex::new(MetricId::Cpu),
         panel_source: Mutex::new(TRAY_ID.into()),
         reading: Mutex::new(ResidentReading {

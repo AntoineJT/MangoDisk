@@ -51,6 +51,9 @@ and native presentation remain explicit desktop adapters.
 Bootstrap completes the initial native display apply before background publication
 can acquire display state.
 
+Clicking the current resource closes its visible panel; a different resource
+switches the content, and reopening selects the requested resource.
+
 ## Contracts and cadence
 
 Fresh installations enable resident display with Logo, CPU, memory, disk usage,
