@@ -85,7 +85,10 @@ pub fn windows_desired(preferences: &ResidentPreferences, taskbar_active: bool) 
     if !preferences.enabled {
         return Vec::new();
     }
-    if taskbar_active {
+    if taskbar_active
+        || preferences.windows_display_mode
+            == crate::resident::preference_schema::WindowsDisplayMode::Floating
+    {
         if preferences.effective_icon() {
             vec![DisplayId::App]
         } else {

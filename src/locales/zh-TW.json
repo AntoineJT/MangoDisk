@@ -4410,5 +4410,58 @@
     "systemRead": "系統累計讀取",
     "systemWritten": "系統累計寫入",
     "systemHint": "系統提供的所有磁碟累計讀寫量\n重新啟動 MangoDisk 不會歸零，起點由系統與驅動程式決定\n與 SMART 使用壽命累計量不同"
+  },
+  "floatingMonitor": {
+    "title": "系統狀態",
+    "displayMode": "顯示方式",
+    "taskbar": "工作列",
+    "floating": "懸浮視窗",
+    "both": "同時顯示",
+    "layout": "配置",
+    "horizontal": "橫向",
+    "vertical": "直向",
+    "alwaysOnTop": "一律置頂",
+    "locked": "鎖定位置",
+    "resetPosition": "重設位置",
+    "chooseMetrics": "在設定中選擇顯示指標",
+    "backgroundOpacity": "背景不透明度",
+    "snapToEdges": "貼邊吸附",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "記憶體",
+      "disk": "磁碟",
+      "cpuTemperature": "CPU 溫度",
+      "gpuTemperature": "GPU 溫度",
+      "diskTemperature": "磁碟溫度",
+      "batteryTemperature": "電池溫度",
+      "chargingPower": "充電功率",
+      "batteryPower": "電池功率",
+      "systemPower": "整機功率",
+      "fanSpeed": "GPU 風扇",
+      "upload": "上傳",
+      "download": "下載"
+    },
+    "fontSize": "字型大小",
+    "bold": "粗體顯示",
+    "clickThrough": "滑鼠穿透",
+    "clickThroughHint": "開啟後無法拖曳或按右鍵操作，可透過系統匣關閉",
+    "dividers": "顯示分隔線",
+    "background": "背景",
+    "fontSizes": {
+      "standard": "標準",
+      "larger": "較大",
+      "large": "大",
+      "extraLarge": "特大"
+    },
+    "backgrounds": {
+      "default": "預設",
+      "darkGray": "深灰",
+      "inkBlue": "墨藍",
+      "warmWhite": "暖白",
+      "lightGray": "淺灰",
+      "black": "黑色",
+      "white": "白色"
+    }
   }
 }

@@ -434,3 +434,17 @@ fn complete_display_catalogue_does_not_enable_unselected_or_unsupported_provider
         .iter()
         .all(|demand| !demand.battery && !demand.system_power && !demand.fan_speed));
 }
+
+#[test]
+fn floating_display_reuses_overview_demand_without_enabling_details() {
+    use crate::resident::preference_schema::WindowsDisplayMode;
+    let state = test_state();
+    state.panel_open.store(false, Ordering::Relaxed);
+    let baseline = state.demands(false);
+    state.preferences.lock().unwrap().windows_display_mode = WindowsDisplayMode::Floating;
+    assert_eq!(state.demands(false), baseline);
+    assert!(state.demands(false).iter().all(|demand| !demand.detailed));
+    state.panel_open.store(true, Ordering::Relaxed);
+    *state.panel_metric.lock().unwrap() = MetricId::Memory;
+    assert!(state.demands(false)[2].detailed);
+}

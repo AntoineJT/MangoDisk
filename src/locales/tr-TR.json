@@ -4410,5 +4410,58 @@
     "systemRead": "Sistem okuması",
     "systemWritten": "Sistem yazması",
     "systemHint": "Sistemin bildirdiği tüm disklerin birikimli G/Ç miktarı\nMangoDisk’i yeniden başlatmak sayaçları sıfırlamaz\nBaşlangıç OS ve sürücüye bağlıdır; SMART ömür boyu toplamından farklıdır"
+  },
+  "floatingMonitor": {
+    "title": "Sistem durumu",
+    "displayMode": "Görüntüleme modu",
+    "taskbar": "Görev çubuğu",
+    "floating": "Kayan pencere",
+    "both": "İkisi de",
+    "layout": "Düzen",
+    "horizontal": "Yatay",
+    "vertical": "Dikey",
+    "alwaysOnTop": "Her zaman üstte",
+    "locked": "Konumu kilitle",
+    "resetPosition": "Konumu sıfırla",
+    "chooseMetrics": "Ayarlardan ölçümleri seçin",
+    "backgroundOpacity": "Arka plan opaklığı",
+    "snapToEdges": "Ekran kenarlarına yasla",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Bellek",
+      "disk": "Disk",
+      "cpuTemperature": "CPU ısısı",
+      "gpuTemperature": "GPU ısısı",
+      "diskTemperature": "Disk ısısı",
+      "batteryTemperature": "Pil ısısı",
+      "chargingPower": "Şarj",
+      "batteryPower": "Pil gücü",
+      "systemPower": "Sistem",
+      "fanSpeed": "GPU fanı",
+      "upload": "Gönder",
+      "download": "İndirme"
+    },
+    "fontSize": "Yazı boyutu",
+    "bold": "Kalın yazı",
+    "clickThrough": "Tıklamaları geçir",
+    "clickThroughHint": "Sürükleme ve sağ tıklama devre dışı kalır. Sistem tepsisinden kapatabilirsiniz",
+    "dividers": "Ayırıcıları göster",
+    "background": "Arka plan",
+    "fontSizes": {
+      "standard": "Standart",
+      "larger": "Daha büyük",
+      "large": "Büyük",
+      "extraLarge": "Çok büyük"
+    },
+    "backgrounds": {
+      "default": "Varsayılan",
+      "darkGray": "Koyu gri",
+      "inkBlue": "Mürekkep mavisi",
+      "warmWhite": "Sıcak beyaz",
+      "lightGray": "Açık gri",
+      "black": "Siyah",
+      "white": "Beyaz"
+    }
   }
 }

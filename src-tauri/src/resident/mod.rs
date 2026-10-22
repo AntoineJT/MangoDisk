@@ -5,6 +5,7 @@ mod cpu_auxiliary_sampling;
 pub(crate) mod diagnostics;
 mod disk_health_sampling;
 mod disk_temperature_sampling;
+pub mod floating_monitor;
 pub mod main_window;
 mod memory_automatic;
 pub mod memory_preferences;
@@ -21,6 +22,8 @@ pub mod runtime;
 mod sampling_diagnostics;
 mod sampling_schedule;
 mod sampling_workers;
+#[cfg(windows)]
+mod windows_frame;
 
 use std::sync::Arc;
 use tauri::Manager;
@@ -34,7 +37,10 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
     #[cfg(target_os = "linux")]
     application_icons::install();
     #[cfg(windows)]
-    taskbar_display::install(app);
+    {
+        taskbar_display::install(app);
+        floating_monitor::install(app);
+    }
     tray_display::install(app)?;
     memory_preferences::install(app);
     let preferences = preferences::load(app);
@@ -49,6 +55,8 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
         .display_initialized
         .store(true, std::sync::atomic::Ordering::Release);
     state.wake();
+    #[cfg(windows)]
+    floating_monitor::prewarm(app);
     log::info!("resident_started enabled={}", preferences.enabled);
     Ok(())
 }

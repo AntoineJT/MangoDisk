@@ -4410,5 +4410,58 @@
     "systemRead": "시스템 누적 읽기",
     "systemWritten": "시스템 누적 쓰기",
     "systemHint": "시스템이 보고한 모든 디스크의 누적 읽기·쓰기 양\nMangoDisk를 다시 시작해도 초기화되지 않습니다\n시작 시점은 OS와 드라이버에 따르며 SMART 수명 누적값과 다릅니다"
+  },
+  "floatingMonitor": {
+    "title": "시스템 상태",
+    "displayMode": "표시 방식",
+    "taskbar": "작업 표시줄",
+    "floating": "플로팅 창",
+    "both": "둘 다",
+    "layout": "레이아웃",
+    "horizontal": "가로",
+    "vertical": "세로",
+    "alwaysOnTop": "항상 위에 표시",
+    "locked": "위치 고정",
+    "resetPosition": "위치 초기화",
+    "chooseMetrics": "설정에서 표시 항목 선택",
+    "backgroundOpacity": "배경 불투명도",
+    "snapToEdges": "화면 가장자리에 맞춤",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "메모리",
+      "disk": "디스크",
+      "cpuTemperature": "CPU 온도",
+      "gpuTemperature": "GPU 온도",
+      "diskTemperature": "디스크 온도",
+      "batteryTemperature": "배터리 온도",
+      "chargingPower": "충전 전력",
+      "batteryPower": "배터리 전력",
+      "systemPower": "시스템 전력",
+      "fanSpeed": "GPU 팬",
+      "upload": "업로드",
+      "download": "다운로드"
+    },
+    "fontSize": "글자 크기",
+    "bold": "굵은 글씨",
+    "clickThrough": "마우스 통과",
+    "clickThroughHint": "드래그와 우클릭을 사용할 수 없습니다. 시스템 트레이에서 해제하세요",
+    "dividers": "구분선 표시",
+    "background": "배경",
+    "fontSizes": {
+      "standard": "기본",
+      "larger": "조금 크게",
+      "large": "크게",
+      "extraLarge": "아주 크게"
+    },
+    "backgrounds": {
+      "default": "기본",
+      "darkGray": "진회색",
+      "inkBlue": "잉크 블루",
+      "warmWhite": "따뜻한 흰색",
+      "lightGray": "연회색",
+      "black": "검정",
+      "white": "흰색"
+    }
   }
 }

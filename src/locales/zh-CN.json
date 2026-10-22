@@ -4410,5 +4410,58 @@
     "systemRead": "系统累计读取",
     "systemWritten": "系统累计写入",
     "systemHint": "系统提供的全部磁盘累计读写量\n重启 MangoDisk 不清零，起点由系统和驱动决定\n与 SMART 寿命累计量不同"
+  },
+  "floatingMonitor": {
+    "title": "系统状态",
+    "displayMode": "显示方式",
+    "taskbar": "任务栏",
+    "floating": "悬浮窗",
+    "both": "同时显示",
+    "layout": "布局",
+    "horizontal": "横向",
+    "vertical": "竖向",
+    "alwaysOnTop": "始终置顶",
+    "locked": "锁定位置",
+    "resetPosition": "重置位置",
+    "chooseMetrics": "在设置中选择显示指标",
+    "backgroundOpacity": "背景不透明度",
+    "snapToEdges": "贴边吸附",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "内存",
+      "disk": "磁盘",
+      "cpuTemperature": "CPU 温度",
+      "gpuTemperature": "GPU 温度",
+      "diskTemperature": "磁盘温度",
+      "batteryTemperature": "电池温度",
+      "chargingPower": "充电功率",
+      "batteryPower": "电池功率",
+      "systemPower": "整机功率",
+      "fanSpeed": "GPU 风扇",
+      "upload": "上传",
+      "download": "下载"
+    },
+    "fontSize": "字体大小",
+    "bold": "加粗显示",
+    "clickThrough": "鼠标穿透",
+    "clickThroughHint": "开启后无法拖动或右键操作，可通过托盘关闭",
+    "dividers": "显示分割线",
+    "background": "背景",
+    "fontSizes": {
+      "standard": "标准",
+      "larger": "较大",
+      "large": "大",
+      "extraLarge": "特大"
+    },
+    "backgrounds": {
+      "default": "默认",
+      "darkGray": "深灰",
+      "inkBlue": "墨蓝",
+      "warmWhite": "暖白",
+      "lightGray": "浅灰",
+      "black": "黑色",
+      "white": "白色"
+    }
   }
 }

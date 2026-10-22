@@ -4410,5 +4410,58 @@
     "systemRead": "Lectura del sistema",
     "systemWritten": "Sistema escrito",
     "systemHint": "E/S acumulativa informada por el sistema para todos los discos\nReiniciar MangoDisk no restablece estos contadores\nEl punto de partida depende del sistema operativo y del controlador.\nSeparado de los totales de vida SMART"
+  },
+  "floatingMonitor": {
+    "title": "Estado del sistema",
+    "displayMode": "Modo de visualización",
+    "taskbar": "Barra de tareas",
+    "floating": "Ventana flotante",
+    "both": "Ambos",
+    "layout": "Distribución",
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "alwaysOnTop": "Siempre visible",
+    "locked": "Bloquear posición",
+    "resetPosition": "Restablecer posición",
+    "chooseMetrics": "Elegir métricas en ajustes",
+    "backgroundOpacity": "Opacidad del fondo",
+    "snapToEdges": "Ajustar a los bordes",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Memoria",
+      "disk": "Disco",
+      "cpuTemperature": "Temp CPU",
+      "gpuTemperature": "Temp GPU",
+      "diskTemperature": "Temp disco",
+      "batteryTemperature": "Temp bat",
+      "chargingPower": "Carga",
+      "batteryPower": "Batería",
+      "systemPower": "Sistema",
+      "fanSpeed": "Vent. GPU",
+      "upload": "Subida",
+      "download": "Bajada"
+    },
+    "fontSize": "Tamaño de letra",
+    "bold": "Texto en negrita",
+    "clickThrough": "Paso del ratón",
+    "clickThroughHint": "Desactiva el arrastre y el clic derecho. Desactívalo desde la bandeja del sistema",
+    "dividers": "Mostrar separadores",
+    "background": "Fondo",
+    "fontSizes": {
+      "standard": "Normal",
+      "larger": "Más grande",
+      "large": "Grande",
+      "extraLarge": "Muy grande"
+    },
+    "backgrounds": {
+      "default": "Predeterminado",
+      "darkGray": "Gris oscuro",
+      "inkBlue": "Azul tinta",
+      "warmWhite": "Blanco cálido",
+      "lightGray": "Gris claro",
+      "black": "Negro",
+      "white": "Blanco"
+    }
   }
 }

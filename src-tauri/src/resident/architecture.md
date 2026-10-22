@@ -1,7 +1,7 @@
 # Resident system status
 
 The resident adapter combines independent Core readings into native menu-bar/tray
-entries and one reusable detail panel. It does not own filesystem cleanup,
+entries, a Windows floating monitor, and one reusable detail panel. It does not own filesystem cleanup,
 application termination, or memory-reclamation algorithms.
 
 ## Ownership
@@ -25,6 +25,9 @@ application termination, or memory-reclamation algorithms.
 | `taskbar_display/native` | Native-thread window ownership, creation and shell restart lifecycle |
 | `taskbar_display/native/messages`, `interaction` | Reentrant Win32 dispatch, pointer hit testing and context menus |
 | `taskbar_display/native/update`, `rendering` | Live placement, lease coordination, visibility and native paint recovery |
+| `floating_monitor/window`, `menu` | Windows floating-window lifecycle, coalesced summary publication and native interactions |
+| `floating_monitor/placement`, `geometry` | Monitor-relative positions, work-area recovery, snap and bounded layouts |
+| `windows_frame` | Shared frame recalculation before physical sizing of borderless Windows surfaces |
 | `preference_schema` | Current preference models, validation and pure release upgrades |
 | `preferences` | Revision conflicts, native application and persistence rollback |
 | `panel` / `main_window` | Independent presentation, source anchoring, focus and background-launch behavior |
@@ -48,11 +51,103 @@ They do not depend on a running Tauri application, and they do not move native
 UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
 and native presentation remain explicit desktop adapters.
 
-Bootstrap completes the initial native display apply before background publication
-can acquire display state.
+## Windows floating monitor
 
+`windowsDisplayMode` selects taskbar, floating, or both; macOS and Linux keep their
+existing surfaces. The monitoring enable switch and metric/source/color choices
+remain shared. Floating mode releases the taskbar lease and never restores numeric
+tray entries as a fallback. A brand icon remains available for settings and quitting. The floating window has
+no manual hide action; changing display mode controls whether it is present.
+Close requests do not hide or destroy the strip; explicit Quit exits normally.
+
+Bootstrap completes the initial native display apply before background publication
+can acquire display state. Floating WebView prewarming runs after bootstrap to
+avoid a main-thread/native-call lock cycle during cold startup.
+
+The floating surface is a compact status strip without a persistent title bar.
+It uses 20 logical-pixel rows by default and inline labels and values, with right-click
+or Shift+F10 for its native menu. The entire surface starts a native move after
+a four-pixel pointer threshold; ordinary clicks toggle mapped resource details, and
+a completed drag suppresses its trailing click. Fixed cells keep targets
+stable as values change; small work areas scroll instead of moving off-screen.
 Clicking the current resource closes its visible panel; a different resource
-switches the content, and reopening selects the requested resource.
+switches the content, and reopening selects the requested resource. Native entry
+focus transitions retain toggle intent until the click is delivered; abandoned
+presses and blank-cell clicks dismiss the unfocused panel after release.
+
+Edge snapping is on by default and configurable through settings or the native
+context menu. Disabling it preserves the exact release point inside the work area;
+offscreen positions still clamp to its bounds. Older floating preferences gain an
+enabled snapping flag without resetting layout, opacity, or other choices.
+
+Compact cells use 20 logical-pixel rows. The WebView measures each localized label
+and bounded numeric/unit samples in the actual fonts, then sends validated item
+measurements to the native layout adapter. Native layout balances at most five
+columns, sizes each column to its widest item, and bounds the window to the work
+area, including a scrollbar allowance when needed. Vertical layout uses the widest
+item. Only language, item selection, fonts, or DPI changes request measurement;
+live readings never resize columns. A fixed complete-reading slot uses one numeric
+style for digits and units and keeps its right edge stable across value, unit,
+missing-reading changes. Each font role has its own measurement node, configured
+before insertion; switching a connected clone's class can retain stale font metrics
+in WebView2. Measurement failure uses diagnosed 108-pixel cells and retries on subsequent snapshots.
+Localized compact labels identify every metric, including upload and download;
+accessible labels retain their full descriptions. Fan values omit the redundant
+RPM suffix on this surface. Ordinary fan readings reserve four digits; larger values
+use compact thousands (for example, 12.3k), while accessible text and resource details
+retain exact readings. Paired fan rows reserve their own font budget only when that
+display mode is selected; changing modes requests measurement. Multiple fan rows fit
+within the same 20-pixel cell.
+
+A transparent native window and transparent document canvas expose the desktop
+outside the CSS-rounded surface. `backgroundOpacity` accepts integer percentages
+50–100 (default 100); only the surface background is blended, while text and hit
+targets retain full opacity. The settings selector and native context submenu
+share these preferences. Schema 29 upgrades preserve existing choices and add 100% background opacity.
+
+The Windows floating `clickThrough` interaction setting defaults to false. It ignores native cursor events for that window only; drag, metric and context-menu commands also reject stale interaction requests while enabled. The tray retains an independent localized toggle, registered once for all tray handles, with checked/enabled state refreshed after preference changes. The recovery icon must be visible before cursor events are ignored. Previous preference schemas upgrade with click-through disabled.
+
+The `dividers` appearance toggle defaults to true and controls dashed separators in both layouts, including trailing empty cells in horizontal grids. Schema 32 upgrades preserve all existing choices and add this setting. Separators are painted without changing cell dimensions.
+
+Windows floating preferences include four font sizes (`standard`, `larger`,
+`large`, `extraLarge`), a bold toggle, and seven background choices (`default`,
+`darkGray`, `inkBlue`, `warmWhite`, `lightGray`, `black`, `white`). Default follows
+the application theme; presets own foreground, border and status colors while
+retaining the saved 50–100% background opacity. Existing configurations retain
+standard type, regular weight and the default palette when migrated.
+
+Floating snapshot schema 6 carries these settings. Typography uses scales
+1, 1.15, 1.3 and 1.5 with matching native row heights 20, 23, 26 and 30 CSS pixels.
+The layout request includes font size and bold state so stale measurements cannot
+resize a newer appearance. Localized labels and bounded value samples are measured
+in the actual WebView fonts; readings and background changes do not determine
+geometry. Shared columns and right-aligned complete readings remain stable.
+
+The floating WebView consumes only formatted `DisplayEntry` summaries and resolved column widths (event schema
+5), with native color hysteresis. It never enables detailed sampling or process
+lists. Hidden windows receive no periodic events. Native menus provide layout,
+keep-on-top, lock, edge snapping, font size, bold text, background presets and opacity, reset, and settings actions without clipping to the small
+window. Locking prevents native drag requests but leaves metric navigation enabled.
+The Windows drag adapter packs signed screen coordinates for `WM_NCLBUTTONDOWN`;
+the pinned Tao implementation passes a pointer-valued LPARAM, which cannot start
+the native move loop reliably. Keep this compatibility boundary local to the
+floating window and recheck it when updating Tao.
+
+`floating-position.json` stores a version-1 monitor-relative bookmark independently
+of preference revisions. Invalid bookmarks rebuild to the default position. Work
+area and DPI changes clamp and resize the window; user drags snap only after release.
+An axis with no remaining movement space retains its saved relative anchor, so a
+temporarily constrained layout does not reset the position on a larger display.
+Only completion of an explicit native drag marks a position as a user edit. Windows
+move notifications caused by RDP, DPI, or work-area changes do not replace it.
+Horizontal cells retain stable widths, balance wrapped rows, and scroll when a
+small work area cannot hold all selected devices. Details open outside the monitor
+surface where space permits. Foreign fullscreen windows on its display temporarily
+hide the monitor without changing the user's display mode.
+
+Acceptance must cover Windows 10 and 11: taskbar lease release/restoration, both
+layouts and themes, lock/menu/metric interactions, display-mode transitions, cold restart,
+fullscreen, DPI/work-area changes, negative coordinates, and unavailable readings.
 
 ## Contracts and cadence
 

@@ -1,8 +1,8 @@
 //! Native display models shared by menu-bar, tray, taskbar, and panel adapters.
 use mangodisk_core::system_resources::metrics::MetricId;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DisplayId {
     App,

@@ -35,6 +35,10 @@ const commandErrorCodes = [
   'taskJoinFailed',
 ];
 const dynamicKeyGroups = {
+  // Windows native floating menus and the typed display-mode selector.
+  floatingMonitor: ['taskbar', 'floating', 'both', 'resetPosition'],
+  'floatingMonitor.fontSizes': ['standard', 'larger', 'large', 'extraLarge'],
+  'floatingMonitor.backgrounds': ['default', 'darkGray', 'inkBlue', 'warmWhite', 'lightGray', 'black', 'white'],
   // Native startup and recovery dialogs remain usable when Vue cannot mount.
   webviewRuntime: ['updateRequired', 'update', 'exit', 'openFailed', 'recoveryFailed'],
   // Native resident menus resolve these keys through Rust's Labels adapter.

@@ -4410,5 +4410,58 @@
     "systemRead": "System read",
     "systemWritten": "System written",
     "systemHint": "System-reported cumulative I/O for all disks\nRestarting MangoDisk does not reset these counters\nThe start point depends on the OS and driver\nSeparate from SMART lifetime totals"
+  },
+  "floatingMonitor": {
+    "title": "System status",
+    "displayMode": "Display mode",
+    "taskbar": "Taskbar",
+    "floating": "Floating window",
+    "both": "Both",
+    "layout": "Layout",
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "alwaysOnTop": "Always on top",
+    "locked": "Lock position",
+    "resetPosition": "Reset position",
+    "chooseMetrics": "Choose metrics in settings",
+    "backgroundOpacity": "Background opacity",
+    "snapToEdges": "Snap to screen edges",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Memory",
+      "disk": "Disk",
+      "cpuTemperature": "CPU temp",
+      "gpuTemperature": "GPU temp",
+      "diskTemperature": "Disk temp",
+      "batteryTemperature": "Batt temp",
+      "chargingPower": "Charging",
+      "batteryPower": "Battery",
+      "systemPower": "System",
+      "fanSpeed": "GPU fan",
+      "upload": "Upload",
+      "download": "Download"
+    },
+    "fontSize": "Font size",
+    "bold": "Bold text",
+    "clickThrough": "Click-through",
+    "clickThroughHint": "Disables dragging and right-click actions. Turn off from the system tray",
+    "dividers": "Show dividers",
+    "background": "Background",
+    "fontSizes": {
+      "standard": "Standard",
+      "larger": "Larger",
+      "large": "Large",
+      "extraLarge": "Extra large"
+    },
+    "backgrounds": {
+      "default": "Default",
+      "darkGray": "Dark gray",
+      "inkBlue": "Ink blue",
+      "warmWhite": "Warm white",
+      "lightGray": "Light gray",
+      "black": "Black",
+      "white": "White"
+    }
   }
 }

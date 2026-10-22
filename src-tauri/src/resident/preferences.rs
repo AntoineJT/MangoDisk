@@ -113,6 +113,9 @@ pub fn apply(
         .lock()
         .map_err(|_| Failure::state("preferences_reading"))?
         .clone();
+    #[cfg(windows)]
+    super::floating_monitor::prepare(app, &preferences)
+        .map_err(|error| Failure::record("floating_prepare", &error))?;
     if let Err(error) = super::tray_display::apply_preferences(app, &preferences, &reading) {
         if let Err(rollback) = super::tray_display::apply_preferences(app, &current, &reading) {
             Failure::record("preferences_display_rollback", &rollback);
@@ -151,6 +154,12 @@ pub fn apply(
                 .unwrap_or_else(|error| error.into_inner()) = reading.clone();
         }
     }
+    #[cfg(windows)]
+    if preferences.enabled
+        && (!current.enabled || current.windows_display_mode != preferences.windows_display_mode)
+    {
+        super::floating_monitor::show(app);
+    }
     if preferences.enabled {
         super::panel::prewarm(app);
     } else {
@@ -158,10 +167,17 @@ pub fn apply(
     }
     state.wake();
     log::info!(
-        "resident_preferences_saved enabled={} revision={} show_icon={} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",
+        "resident_preferences_saved enabled={} revision={} show_icon={} windows_mode={:?} floating_layout={:?} floating_top={} floating_locked={} floating_click_through={} floating_background_opacity={} floating_snap_to_edges={} floating_font_size={:?} floating_bold={} floating_background={:?} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",
         preferences.enabled,
         preferences.revision,
         preferences.effective_icon(),
+        preferences.windows_display_mode,
+        preferences.floating.layout,
+        preferences.floating.always_on_top,
+        preferences.floating.locked,
+        preferences.floating.click_through,
+        preferences.floating.background_opacity, preferences.floating.snap_to_edges,
+        preferences.floating.font_size, preferences.floating.bold, preferences.floating.background,
         preferences
             .metrics
             .iter()

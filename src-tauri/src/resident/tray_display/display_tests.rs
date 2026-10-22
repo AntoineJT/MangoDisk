@@ -960,3 +960,19 @@ fn confirmed_battery_removal_never_reuses_a_fresh_power_value() {
     assert_eq!(entry.color_value, None);
     assert!(entry.tooltip.ends_with("This device has no battery"));
 }
+
+#[test]
+fn floating_only_never_falls_back_to_notification_area_metrics() {
+    use crate::resident::preference_schema::WindowsDisplayMode;
+    let preferences = ResidentPreferences {
+        windows_display_mode: WindowsDisplayMode::Floating,
+        ..Default::default()
+    };
+    assert_eq!(windows_desired(&preferences, false), vec![DisplayId::App]);
+    assert_eq!(windows_desired(&preferences, true), vec![DisplayId::App]);
+    let disabled = ResidentPreferences {
+        enabled: false,
+        ..preferences
+    };
+    assert!(windows_desired(&disabled, false).is_empty());
+}

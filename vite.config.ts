@@ -29,6 +29,7 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        'floating-monitor': fileURLToPath(new URL('./floating-monitor.html', import.meta.url)),
         'tray-panel': fileURLToPath(new URL('./tray-panel.html', import.meta.url)),
         'memory-settings': fileURLToPath(new URL('./memory-settings.html', import.meta.url)),
       },

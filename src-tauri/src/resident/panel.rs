@@ -244,7 +244,7 @@ fn ensure_created(app: &tauri::AppHandle) -> tauri::Result<()> {
                 // event. Preserve open intent so that press closes, rather than
                 // immediately reopening, the panel.
                 if tray_owns_focus(&app) {
-                    log::info!("resident_panel_blur_deferred reason=tray_interaction");
+                    log::info!("resident_panel_blur_deferred reason=entry_interaction");
                 } else {
                     hide(&app);
                 }
@@ -353,9 +353,6 @@ fn tray_owns_focus(app: &tauri::AppHandle) -> bool {
                     )
                 })
         });
-    if !over_entry && !super::taskbar_display::contains_point(app, cursor.x, cursor.y) {
-        return false;
-    }
     // Cursor position alone is insufficient: Alt+Tab must still dismiss the
     // panel when the pointer happens to remain over the tray icon.
     unsafe {
@@ -363,15 +360,49 @@ fn tray_owns_focus(app: &tauri::AppHandle) -> bool {
             x: cursor.x as i32,
             y: cursor.y as i32,
         });
+        let root = GetAncestor(surface, GA_ROOT);
+        // Match the actual native window, not its rectangle: an occluded strip
+        // must not retain the panel when the user activates another application.
+        let over_floating = app
+            .get_webview_window(super::floating_monitor::LABEL)
+            .and_then(|window| window.hwnd().ok())
+            .is_some_and(|hwnd| root == hwnd.0.cast());
+        if !over_entry
+            && !super::taskbar_display::contains_point(app, cursor.x, cursor.y)
+            && !over_floating
+        {
+            return false;
+        }
         // Embedded no-activate children can receive the press before Explorer
         // becomes foreground. Keep open intent until button-up consumes it.
         // A pointer merely parked here must not prevent keyboard dismissal.
-        !surface.is_null()
+        let deferred = !surface.is_null()
             && defer_entry_blur(
-                GetAncestor(surface, GA_ROOT) == GetForegroundWindow(),
+                root == GetForegroundWindow(),
                 GetAsyncKeyState(VK_LBUTTON as i32) < 0,
-            )
+            );
+        if deferred && over_floating {
+            settle_floating_blur(app);
+        }
+        deferred
     }
+}
+
+#[cfg(windows)]
+fn settle_floating_blur(app: &tauri::AppHandle) {
+    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
+
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        // A metric click will toggle or refocus the panel on button-up. Blank
+        // cells and window dragging have no metric command, so dismiss their
+        // deferred blur after release instead of leaving an unfocused panel open.
+        while unsafe { GetAsyncKeyState(VK_LBUTTON as i32) } < 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        tray_pointer_left(&app);
+    });
 }
 
 #[cfg(any(windows, test))]
@@ -518,18 +549,22 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         )
     });
     #[cfg(windows)]
-    let (anchor, anchor_source) =
-        if let Some(point) = super::taskbar_display::anchor(app, Some(&source)) {
-            (Some(point), "taskbar_entry")
-        } else if let Some(point) = anchor {
-            (Some(point), "tray_entry")
-        } else if let Some(point) = super::taskbar_display::anchor(app, None) {
-            // Settings can open the panel after its previous entry was hidden or removed.
-            // Keep that popup near the remaining taskbar display rather than the screen top.
-            (Some(point), "taskbar_fallback")
-        } else {
-            (None, "monitor_fallback")
-        };
+    let (anchor, anchor_source) = if let Some(point) = (source == super::floating_monitor::LABEL)
+        .then(|| super::floating_monitor::anchor(app))
+        .flatten()
+    {
+        (Some(point), "floating_monitor")
+    } else if let Some(point) = super::taskbar_display::anchor(app, Some(&source)) {
+        (Some(point), "taskbar_entry")
+    } else if let Some(point) = anchor {
+        (Some(point), "tray_entry")
+    } else if let Some(point) = super::taskbar_display::anchor(app, None) {
+        // Settings can open the panel after its previous entry was hidden or removed.
+        // Keep that popup near the remaining taskbar display rather than the screen top.
+        (Some(point), "taskbar_fallback")
+    } else {
+        (None, "monitor_fallback")
+    };
     #[cfg(not(windows))]
     let anchor_source = if anchor.is_some() {
         "tray_entry"
@@ -570,6 +605,16 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
             area.size.height as f64,
         );
         let anchor = anchor.unwrap_or((work.0 + work.2 - width / 2.0, work.1));
+        #[cfg(windows)]
+        let floating_position = (source == super::floating_monitor::LABEL)
+            .then(|| {
+                super::floating_monitor::panel_position(app, work, (width, height), 6.0 * scale)
+            })
+            .flatten();
+        #[cfg(windows)]
+        let (x, y) = floating_position
+            .unwrap_or_else(|| position(anchor, work, (width, height), 6.0 * scale));
+        #[cfg(not(windows))]
         let (x, y) = position(anchor, work, (width, height), 6.0 * scale);
         window.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32))?;
         // A hidden Windows panel can retain the previous display's DPI. Move
@@ -577,7 +622,7 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
         // conversion cannot clip the WebView after a scale/display change.
         #[cfg(windows)]
         {
-            refresh_windows_frame(&window)?;
+            super::windows_frame::refresh(&window)?;
             window.set_size(tauri::PhysicalSize::new(
                 width.round() as u32,
                 height.round() as u32,
@@ -641,34 +686,6 @@ fn show_window(app: &tauri::AppHandle) -> tauri::Result<()> {
             "resident_panel_show_dispatched elapsed_ms={}",
             started.elapsed().as_millis()
         );
-    }
-    Ok(())
-}
-
-#[cfg(windows)]
-fn refresh_windows_frame(window: &tauri::WebviewWindow) -> tauri::Result<()> {
-    use windows_sys::Win32::UI::WindowsAndMessaging::{
-        SetWindowPos, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER,
-    };
-
-    // Before its first show, a shadowed borderless window can still report the
-    // hidden caption as a client-area offset. Tao adds that stale offset when
-    // sizing, extending the popup over the taskbar. Recalculate the native frame
-    // before measuring offsets, including after a target-monitor DPI transition.
-    let hwnd = window.hwnd()?.0;
-    let updated = unsafe {
-        SetWindowPos(
-            hwnd.cast(),
-            std::ptr::null_mut(),
-            0,
-            0,
-            0,
-            0,
-            SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER,
-        )
-    };
-    if updated == 0 {
-        return Err(std::io::Error::last_os_error().into());
     }
     Ok(())
 }

@@ -44,11 +44,41 @@ pub struct DisplayState {
     #[cfg(target_os = "linux")]
     indicator_title: Option<String>,
     failed: bool,
+    #[cfg(windows)]
+    menu_preferences: Option<(
+        u64,
+        bool,
+        crate::resident::preference_schema::WindowsDisplayMode,
+        bool,
+    )>,
     colors: color_state::ColorState,
 }
 
 pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
     app.manage(Mutex::new(DisplayState::default()));
+    #[cfg(windows)]
+    app.on_menu_event(|app, event| {
+        if event.id().as_ref() != "resident-click-through" {
+            return;
+        }
+        // Tray builders receive global menu events. Register a toggle only once,
+        // otherwise retained metric icons could toggle the setting repeatedly.
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move {
+            app.state::<Mutex<DisplayState>>()
+                .lock()
+                .unwrap_or_else(|error| error.into_inner())
+                .menu_preferences = None;
+            if let Err(error) = super::floating_monitor::toggle_click_through(&app) {
+                super::diagnostics::Failure::record("floating_click_through_toggle", &error);
+                main_window::request(
+                    &app,
+                    main_window::Destination::DisplaySettings,
+                    "tray_toggle_failed",
+                );
+            }
+        });
+    });
     #[cfg(target_os = "macos")]
     {
         macos_thread::call(app, |app, _mtm| {
@@ -88,7 +118,11 @@ fn summary(app: &tauri::AppHandle, loop_max_ms: u128) {
     log::info!("resident_runtime_summary tray_renders={renders:?} tray_handles={handles} loop_max_ms={loop_max_ms}");
 }
 
-fn menu(app: &tauri::AppHandle, labels: &labels::Labels) -> tauri::Result<Menu<tauri::Wry>> {
+fn menu(
+    app: &tauri::AppHandle,
+    labels: &labels::Labels,
+    _preferences: &ResidentPreferences,
+) -> tauri::Result<Menu<tauri::Wry>> {
     // AppIndicator does not emit tray clicks on Linux. Keep the detail panel
     // reachable through the native menu that the desktop opens instead.
     #[cfg(target_os = "linux")]
@@ -123,7 +157,22 @@ fn menu(app: &tauri::AppHandle, labels: &labels::Labels) -> tauri::Result<Menu<t
     let menu = Menu::new(app)?;
     #[cfg(target_os = "linux")]
     menu.append(&status)?;
-    menu.append_items(&[&open, &settings, &quit])?;
+    menu.append_items(&[&open, &settings])?;
+    #[cfg(windows)]
+    {
+        let labels = crate::services::native_labels::NativeLabels::for_locale(&labels.locale);
+        menu.append(&tauri::menu::CheckMenuItem::with_id(
+            app,
+            "resident-click-through",
+            labels.text("/floatingMonitor/clickThrough"),
+            _preferences.enabled
+                && _preferences.windows_display_mode
+                    != crate::resident::preference_schema::WindowsDisplayMode::Taskbar,
+            _preferences.floating.click_through,
+            None::<&str>,
+        )?)?;
+    }
+    menu.append(&quit)?;
     Ok(menu)
 }
 
@@ -228,7 +277,7 @@ fn ensure(app: &tauri::AppHandle, id: DisplayId, labels: &labels::Labels) -> tau
         });
     // tray-icon 0.25 retains the menu and attaches it only during native
     // tracking, preserving left-click delivery on macOS 27 (#365).
-    let builder = builder.menu(&menu(app, labels)?);
+    let builder = builder.menu(&menu(app, labels, &ResidentPreferences::default())?);
     let tray = builder.build(app)?;
     tray.set_visible(false)?;
     Ok(())
@@ -389,6 +438,17 @@ fn render(
     for id in &desired {
         ensure(app, *id, &labels)?;
     }
+    #[cfg(windows)]
+    let menu_preferences = (
+        preferences.revision,
+        preferences.enabled,
+        preferences.windows_display_mode,
+        preferences.floating.click_through,
+    );
+    #[cfg(windows)]
+    let changed_menu = state.menu_preferences != Some(menu_preferences);
+    #[cfg(not(windows))]
+    let changed_menu = false;
     for id in DisplayId::ALL {
         if let Some(tray) = app.tray_by_id(id.tray_id()) {
             // Handles are retained and reused, with at most six for the process.
@@ -405,12 +465,18 @@ fn render(
                     state.entries.remove(&id);
                 }
             }
-            if changed_locale {
-                tray.set_menu(Some(menu(app, &labels)?))?;
+            if changed_locale || changed_menu {
+                tray.set_menu(Some(menu(app, &labels, preferences)?))?;
             }
         }
     }
     state.visible = desired;
+    #[cfg(windows)]
+    {
+        state.menu_preferences = Some(menu_preferences);
+        // Queue inert window updates only after the tray recovery surface is ready.
+        super::floating_monitor::update(app, preferences, &entries);
+    }
     if !preferences.enabled {
         state.locale = labels.locale;
         return Ok(());

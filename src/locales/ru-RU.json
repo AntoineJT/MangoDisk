@@ -4410,5 +4410,58 @@
     "systemRead": "Чтение системы",
     "systemWritten": "Запись системы",
     "systemHint": "Накопленные системные счётчики всех дисков\nПерезапуск MangoDisk их не обнуляет\nНачало отсчёта зависит от ОС и драйвера; это не итог SMART за срок службы"
+  },
+  "floatingMonitor": {
+    "title": "Состояние системы",
+    "displayMode": "Режим отображения",
+    "taskbar": "Панель задач",
+    "floating": "Плавающее окно",
+    "both": "Оба",
+    "layout": "Расположение",
+    "horizontal": "Горизонтальное",
+    "vertical": "Вертикальное",
+    "alwaysOnTop": "Поверх других окон",
+    "locked": "Закрепить положение",
+    "resetPosition": "Сбросить положение",
+    "chooseMetrics": "Выберите показатели в настройках",
+    "backgroundOpacity": "Непрозрачность фона",
+    "snapToEdges": "Привязка к краям экрана",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Память",
+      "disk": "Диск",
+      "cpuTemperature": "Темп CPU",
+      "gpuTemperature": "Темп GPU",
+      "diskTemperature": "Темп диска",
+      "batteryTemperature": "Темп бат",
+      "chargingPower": "Зарядка",
+      "batteryPower": "Батарея",
+      "systemPower": "Система",
+      "fanSpeed": "Вент. GPU",
+      "upload": "Отдача",
+      "download": "Приём"
+    },
+    "fontSize": "Размер шрифта",
+    "bold": "Жирный текст",
+    "clickThrough": "Пропускать нажатия",
+    "clickThroughHint": "Перетаскивание и правый клик недоступны. Отключите в системном трее",
+    "dividers": "Разделители",
+    "background": "Фон",
+    "fontSizes": {
+      "standard": "Стандартный",
+      "larger": "Увеличенный",
+      "large": "Крупный",
+      "extraLarge": "Очень крупный"
+    },
+    "backgrounds": {
+      "default": "По умолчанию",
+      "darkGray": "Тёмно-серый",
+      "inkBlue": "Чернильно-синий",
+      "warmWhite": "Тёплый белый",
+      "lightGray": "Светло-серый",
+      "black": "Чёрный",
+      "white": "Белый"
+    }
   }
 }

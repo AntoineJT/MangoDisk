@@ -4410,5 +4410,58 @@
     "systemRead": "Lecture du système",
     "systemWritten": "Système écrit",
     "systemHint": "E/S cumulatives signalées par le système pour tous les disques\nLe redémarrage de MangoDisk ne réinitialise pas ces compteurs\nLe point de départ dépend du système d'exploitation et du pilote\nSéparé des totaux SMART sur toute la durée de vie"
+  },
+  "floatingMonitor": {
+    "title": "État du système",
+    "displayMode": "Mode d’affichage",
+    "taskbar": "Barre des tâches",
+    "floating": "Fenêtre flottante",
+    "both": "Les deux",
+    "layout": "Disposition",
+    "horizontal": "Horizontale",
+    "vertical": "Verticale",
+    "alwaysOnTop": "Toujours au premier plan",
+    "locked": "Verrouiller la position",
+    "resetPosition": "Réinitialiser la position",
+    "chooseMetrics": "Choisir les mesures dans les paramètres",
+    "backgroundOpacity": "Opacité du fond",
+    "snapToEdges": "Aligner sur les bords",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Mémoire",
+      "disk": "Disque",
+      "cpuTemperature": "Temp CPU",
+      "gpuTemperature": "Temp GPU",
+      "diskTemperature": "Temp disq",
+      "batteryTemperature": "Temp batt",
+      "chargingPower": "Charge",
+      "batteryPower": "Batterie",
+      "systemPower": "Système",
+      "fanSpeed": "Vent. GPU",
+      "upload": "Envoi",
+      "download": "Réception"
+    },
+    "fontSize": "Taille du texte",
+    "bold": "Texte en gras",
+    "clickThrough": "Clics traversants",
+    "clickThroughHint": "Désactive le déplacement et le clic droit. À désactiver depuis la zone de notification",
+    "dividers": "Afficher les séparateurs",
+    "background": "Fond",
+    "fontSizes": {
+      "standard": "Standard",
+      "larger": "Plus grand",
+      "large": "Grand",
+      "extraLarge": "Très grand"
+    },
+    "backgrounds": {
+      "default": "Par défaut",
+      "darkGray": "Gris foncé",
+      "inkBlue": "Bleu encre",
+      "warmWhite": "Blanc chaud",
+      "lightGray": "Gris clair",
+      "black": "Noir",
+      "white": "Blanc"
+    }
   }
 }

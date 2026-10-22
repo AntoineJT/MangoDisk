@@ -1,5 +1,6 @@
 use mangodisk_core::system_resources::metrics::MetricId;
 use std::sync::Arc;
+use tauri::Manager;
 
 use super::error::{into_command_result, CommandResult};
 use crate::resident::{
@@ -222,4 +223,63 @@ pub async fn monitoring_reset_network_traffic(
         resident::network_traffic::reset(&state, &interface_id, started_at_ms)
     })
     .await
+}
+
+#[tauri::command]
+pub async fn resident_floating_ready(
+    window: tauri::WebviewWindow,
+) -> CommandResult<Option<resident::floating_monitor::Snapshot>> {
+    if window.label() != resident::floating_monitor::LABEL {
+        return Ok(None);
+    }
+    Ok(resident::floating_monitor::ready(window.app_handle()))
+}
+
+#[tauri::command]
+pub async fn resident_floating_layout(
+    window: tauri::WebviewWindow,
+    measurement: resident::floating_monitor::LayoutMeasurement,
+) -> CommandResult<bool> {
+    if window.label() != resident::floating_monitor::LABEL {
+        return Ok(false);
+    }
+    if !measurement.valid() {
+        return Err(super::error::CommandError::invalid_input(
+            "resident_floating_layout",
+        ));
+    }
+    Ok(resident::floating_monitor::set_layout(
+        window.app_handle(),
+        measurement,
+    ))
+}
+
+#[tauri::command]
+pub async fn resident_floating_menu(window: tauri::WebviewWindow) -> CommandResult<()> {
+    into_command_result(
+        "resident_floating_menu",
+        resident::floating_monitor::show_menu(window),
+    )
+}
+
+#[tauri::command]
+pub async fn resident_floating_drag(window: tauri::WebviewWindow) -> CommandResult<()> {
+    into_command_result(
+        "resident_floating_drag",
+        resident::floating_monitor::start_drag(window),
+    )
+}
+
+#[tauri::command]
+pub async fn resident_floating_metric(
+    window: tauri::WebviewWindow,
+    metric: MetricId,
+) -> CommandResult<()> {
+    if window.label() != resident::floating_monitor::LABEL {
+        return Ok(());
+    }
+    into_command_result(
+        "resident_floating_metric",
+        resident::floating_monitor::toggle_metric(window.app_handle(), metric),
+    )
 }

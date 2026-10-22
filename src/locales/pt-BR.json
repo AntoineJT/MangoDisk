@@ -4410,5 +4410,58 @@
     "systemRead": "Leitura do sistema",
     "systemWritten": "Gravação do sistema",
     "systemHint": "E/S acumulada de todos os discos, informada pelo sistema\nReiniciar o MangoDisk não zera esses contadores\nO início depende do SO e do driver; difere do total vitalício SMART"
+  },
+  "floatingMonitor": {
+    "title": "Estado do sistema",
+    "displayMode": "Modo de exibição",
+    "taskbar": "Barra de tarefas",
+    "floating": "Janela flutuante",
+    "both": "Ambos",
+    "layout": "Disposição",
+    "horizontal": "Horizontal",
+    "vertical": "Vertical",
+    "alwaysOnTop": "Sempre no topo",
+    "locked": "Bloquear posição",
+    "resetPosition": "Redefinir posição",
+    "chooseMetrics": "Escolha as métricas nas configurações",
+    "backgroundOpacity": "Opacidade do fundo",
+    "snapToEdges": "Ajustar às bordas",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "Memória",
+      "disk": "Disco",
+      "cpuTemperature": "Temp CPU",
+      "gpuTemperature": "Temp GPU",
+      "diskTemperature": "Temp disco",
+      "batteryTemperature": "Temp bat",
+      "chargingPower": "Carga",
+      "batteryPower": "Bateria",
+      "systemPower": "Sistema",
+      "fanSpeed": "Vent. GPU",
+      "upload": "Envio",
+      "download": "Receber"
+    },
+    "fontSize": "Tamanho da fonte",
+    "bold": "Texto em negrito",
+    "clickThrough": "Cliques através",
+    "clickThroughHint": "Desativa arrastar e clicar com o botão direito. Desative na bandeja do sistema",
+    "dividers": "Mostrar divisórias",
+    "background": "Fundo",
+    "fontSizes": {
+      "standard": "Padrão",
+      "larger": "Maior",
+      "large": "Grande",
+      "extraLarge": "Muito grande"
+    },
+    "backgrounds": {
+      "default": "Padrão",
+      "darkGray": "Cinza escuro",
+      "inkBlue": "Azul-tinta",
+      "warmWhite": "Branco quente",
+      "lightGray": "Cinza claro",
+      "black": "Preto",
+      "white": "Branco"
+    }
   }
 }

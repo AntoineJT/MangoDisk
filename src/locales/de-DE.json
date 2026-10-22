@@ -4410,5 +4410,58 @@
     "systemRead": "System gelesen",
     "systemWritten": "System geschrieben",
     "systemHint": "Vom System gemeldete kumulative E/A für alle Festplatten\nDurch einen Neustart von MangoDisk werden diese Zähler nicht zurückgesetzt\nDer Startpunkt hängt vom Betriebssystem und Treiber ab\nGetrennt von den SMART-Lebensdauersummen"
+  },
+  "floatingMonitor": {
+    "title": "Systemstatus",
+    "displayMode": "Anzeigemodus",
+    "taskbar": "Taskleiste",
+    "floating": "Schwebendes Fenster",
+    "both": "Beides",
+    "layout": "Anordnung",
+    "horizontal": "Horizontal",
+    "vertical": "Vertikal",
+    "alwaysOnTop": "Immer im Vordergrund",
+    "locked": "Position sperren",
+    "resetPosition": "Position zurücksetzen",
+    "chooseMetrics": "Messwerte in den Einstellungen wählen",
+    "backgroundOpacity": "Deckkraft des Hintergrunds",
+    "snapToEdges": "An Bildschirmrändern einrasten",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "RAM",
+      "disk": "Disk",
+      "cpuTemperature": "CPU-Temp",
+      "gpuTemperature": "GPU-Temp",
+      "diskTemperature": "Disk-Temp",
+      "batteryTemperature": "Akku-Temp",
+      "chargingPower": "Laden",
+      "batteryPower": "Akku",
+      "systemPower": "System",
+      "fanSpeed": "GPU-Lüfter",
+      "upload": "Upload",
+      "download": "Download"
+    },
+    "fontSize": "Schriftgröße",
+    "bold": "Fettschrift",
+    "clickThrough": "Mausdurchleitung",
+    "clickThroughHint": "Deaktiviert Ziehen und Rechtsklicks. Im Infobereich ausschalten",
+    "dividers": "Trennlinien anzeigen",
+    "background": "Hintergrund",
+    "fontSizes": {
+      "standard": "Standard",
+      "larger": "Größer",
+      "large": "Groß",
+      "extraLarge": "Sehr groß"
+    },
+    "backgrounds": {
+      "default": "Standard",
+      "darkGray": "Dunkelgrau",
+      "inkBlue": "Dunkelblau",
+      "warmWhite": "Warmweiß",
+      "lightGray": "Hellgrau",
+      "black": "Schwarz",
+      "white": "Weiß"
+    }
   }
 }

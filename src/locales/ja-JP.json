@@ -4410,5 +4410,58 @@
     "systemRead": "システム総読み取り",
     "systemWritten": "システム総書き込み",
     "systemHint": "システムが報告する全ディスクの累積読み書き量\nMangoDisk の再起動ではリセットされません\n起点は OS とドライバーによります。SMART の生涯累積値とは異なります"
+  },
+  "floatingMonitor": {
+    "title": "システム状態",
+    "displayMode": "表示方法",
+    "taskbar": "タスクバー",
+    "floating": "フローティング",
+    "both": "両方",
+    "layout": "レイアウト",
+    "horizontal": "横並び",
+    "vertical": "縦並び",
+    "alwaysOnTop": "常に手前に表示",
+    "locked": "位置を固定",
+    "resetPosition": "位置をリセット",
+    "chooseMetrics": "設定で表示項目を選択",
+    "backgroundOpacity": "背景の不透明度",
+    "snapToEdges": "画面の端に吸着",
+    "labels": {
+      "cpu": "CPU",
+      "gpu": "GPU",
+      "memory": "メモリ",
+      "disk": "ディスク",
+      "cpuTemperature": "CPU 温度",
+      "gpuTemperature": "GPU 温度",
+      "diskTemperature": "ディスク温度",
+      "batteryTemperature": "電池温度",
+      "chargingPower": "充電電力",
+      "batteryPower": "電池電力",
+      "systemPower": "総電力",
+      "fanSpeed": "GPU ファン",
+      "upload": "送信",
+      "download": "受信"
+    },
+    "fontSize": "文字サイズ",
+    "bold": "太字",
+    "clickThrough": "マウス透過",
+    "clickThroughHint": "有効にするとドラッグや右クリックはできません。システムトレイから解除できます",
+    "dividers": "区切り線",
+    "background": "背景",
+    "fontSizes": {
+      "standard": "標準",
+      "larger": "やや大きい",
+      "large": "大きい",
+      "extraLarge": "特大"
+    },
+    "backgrounds": {
+      "default": "デフォルト",
+      "darkGray": "ダークグレー",
+      "inkBlue": "インクブルー",
+      "warmWhite": "ウォームホワイト",
+      "lightGray": "ライトグレー",
+      "black": "黒",
+      "white": "白"
+    }
   }
 }
