@@ -26,6 +26,17 @@ const trailingCellCount = computed(() => {
 const failed = ref(false);
 const fontScale = computed(() => FLOATING_FONT_SCALES[snapshot.value?.preferences.fontSize ?? 'standard']);
 const surface = ref<HTMLElement>();
+const keyboardFocus = ref(false);
+function trackKeyboardFocus(event: KeyboardEvent) {
+  if (event.key === 'Tab') keyboardFocus.value = true;
+}
+function clearKeyboardFocus() {
+  keyboardFocus.value = false;
+}
+function openPointerMenu() {
+  clearKeyboardFocus();
+  openMenu();
+}
 const measurements = ref<FloatingItemMeasurement[]>([]);
 const slots = computed(() => new Map(measurements.value.map(item => [`${item.id}:${item.gpuDeviceId ?? ''}`, item])));
 const entryCounts = computed(() => {
@@ -132,6 +143,7 @@ function metricStyle(entry: FloatingEntry) {
 }
 onMounted(async () => {
   window.addEventListener('resize', refreshFontSizing);
+  window.addEventListener('keydown', trackKeyboardFocus, true);
   document.fonts?.addEventListener('loadingdone', refreshFontSizing);
   try {
     let received = false;
@@ -162,6 +174,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   disposed = true;
   window.removeEventListener('resize', refreshFontSizing);
+  window.removeEventListener('keydown', trackKeyboardFocus, true);
   document.fonts?.removeEventListener('loadingdone', refreshFontSizing);
   unlisteners.forEach(stop => stop());
 });
@@ -181,6 +194,7 @@ function toggleDetail(id: FloatingMetricId) {
 let dragOrigin: { x: number; y: number; clientX: number; clientY: number } | null = null;
 let dragged = false;
 function prepareMove(event: PointerEvent) {
+  clearKeyboardFocus();
   dragged = false;
   dragOrigin =
     event.button === 0 && !snapshot.value?.preferences.locked
@@ -229,6 +243,7 @@ function suppressDraggedClick(event: MouseEvent) {
     class="floating-monitor"
     :class="{ vertical: snapshot?.preferences.layout === 'vertical', locked: snapshot?.preferences.locked }"
     :data-interactive="snapshot?.interactive ?? false"
+    :data-keyboard-focus="keyboardFocus"
     :data-background="snapshot?.preferences.background ?? 'default'"
     :data-bold="snapshot?.preferences.bold ?? false"
     :data-dividers="snapshot?.preferences.dividers ?? true"
@@ -248,7 +263,7 @@ function suppressDraggedClick(event: MouseEvent) {
     @pointerleave="finishMove"
     @click.capture="suppressDraggedClick"
     @dragstart.prevent
-    @contextmenu.prevent="openMenu()"
+    @contextmenu.prevent="openPointerMenu()"
     @keydown.shift.f10.prevent="openMenu()"
   >
     <div v-if="snapshot?.entries.length" class="metrics">
@@ -310,11 +325,13 @@ function suppressDraggedClick(event: MouseEvent) {
 .floating-monitor:not(.locked) .metric {
   touch-action: none;
 }
-.floating-monitor:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: -2px;
-}
+.floating-monitor:focus-visible,
 button:focus-visible {
+  outline: none;
+}
+/* WebKit may retain focus-visible when a native menu returns pointer focus. */
+.floating-monitor[data-keyboard-focus='true']:focus-visible,
+.floating-monitor[data-keyboard-focus='true'] button:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: -2px;
 }

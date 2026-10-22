@@ -148,6 +148,29 @@ describe('floating monitor interaction and lifecycle', () => {
     await surface.trigger('contextmenu');
     expect(native.menu).toHaveBeenCalledOnce();
   });
+  it('shows focus cues only after keyboard navigation and clears them for pointer menus', async () => {
+    native.ready.mockResolvedValue({ ...snapshot(), interactive: false });
+    const wrapper = render();
+    await flushPromises();
+    const surface = wrapper.get('main');
+    expect(surface.attributes('data-keyboard-focus')).toBe('false');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    await flushPromises();
+    expect(surface.attributes('data-keyboard-focus')).toBe('true');
+    await surface.trigger('keydown', { key: 'F10', shiftKey: true });
+    expect(native.menu).toHaveBeenCalledOnce();
+    expect(surface.attributes('data-keyboard-focus')).toBe('true');
+    await surface.trigger('contextmenu');
+    expect(surface.attributes('data-keyboard-focus')).toBe('false');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    await flushPromises();
+    expect(surface.attributes('data-keyboard-focus')).toBe('false');
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    await flushPromises();
+    await surface.trigger('pointerdown', { button: 2 });
+    expect(surface.attributes('data-keyboard-focus')).toBe('false');
+    expect(native.toggleMetric).not.toHaveBeenCalled();
+  });
   it('opens only the context menu when macOS has no selected metrics', async () => {
     native.ready.mockResolvedValue({ ...snapshot(), interactive: false, entries: [] });
     const wrapper = render();
