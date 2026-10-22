@@ -51,6 +51,13 @@ They do not depend on a running Tauri application, and they do not move native
 UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
 and native presentation remain explicit desktop adapters.
 
+The floating monitor keeps `window` lifecycle, `placement` persistence,
+`geometry` calculations and `sizing` validation separate from native behavior.
+The native menu assembles controls and commits preferences; `menu_preferences`
+owns its supported choices and pure field updates. Windows resource-panel
+anchors, metric clicks and click-through live in `interaction`; Win32 visibility
+and mouse state remain in the native adapter.
+
 ## Windows floating monitor
 
 `windowsDisplayMode` selects taskbar, floating, or both; macOS and Linux keep their

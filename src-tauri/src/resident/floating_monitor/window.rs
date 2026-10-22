@@ -227,25 +227,15 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
         .clone();
     let Some(mut snapshot) = snapshot else {
         if window.is_visible()? {
-            set_visible(&window, false)?;
+            super::native::set_visible(&window, false)?;
         }
         return Ok(());
     };
-    let click_through = snapshot.preferences.click_through;
-    if state.click_through.load(Ordering::Relaxed) != click_through {
-        if click_through {
-            // Never make the window inert before an independent recovery entry exists.
-            let tray = app.tray_by_id(crate::resident::TRAY_ID).ok_or_else(|| {
-                tauri::Error::Io(std::io::Error::other("floating_recovery_tray_missing"))
-            })?;
-            tray.set_visible(true)?;
-        }
-        window.set_ignore_cursor_events(click_through)?;
-        state.click_through.store(click_through, Ordering::Relaxed);
-        log::info!(
-            "resident_floating_click_through enabled={click_through} recovery=tray outcome=applied"
-        );
-    }
+    super::interaction::apply_cursor_events(
+        &window,
+        &state.click_through,
+        snapshot.preferences.click_through,
+    )?;
     if !state.ready.load(Ordering::Relaxed) {
         app.emit_to(LABEL, EVENT, &snapshot)?;
         return Ok(());
@@ -273,35 +263,18 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
     if snapshot.columns.is_none() {
         return Ok(());
     }
-    let fullscreen = fullscreen(&window);
+    let fullscreen = super::native::fullscreen(&window);
     let visible = !fullscreen;
     if visible {
         app.emit_to(LABEL, EVENT, &snapshot)?;
     }
     if visible != window.is_visible()? {
         if visible {
-            set_visible(&window, true)?;
+            super::native::set_visible(&window, true)?;
         } else {
-            set_visible(&window, false)?;
+            super::native::set_visible(&window, false)?;
         }
         log::info!("resident_floating_visibility visible={visible} fullscreen={fullscreen}");
-    }
-    Ok(())
-}
-
-fn set_visible(window: &tauri::WebviewWindow, visible: bool) -> tauri::Result<()> {
-    use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
-    // Tao's Show activates a previously hidden window even with focused(false).
-    // Own both visibility transitions here: its cached visibility stays hidden,
-    // so Tao's Hide would otherwise skip hiding a natively shown monitor.
-    unsafe {
-        ShowWindow(
-            window.hwnd()?.0.cast(),
-            if visible { SW_SHOWNOACTIVATE } else { SW_HIDE },
-        );
-    }
-    if window.is_visible()? != visible {
-        return Err(std::io::Error::other("floating window visibility was not applied").into());
     }
     Ok(())
 }
@@ -346,103 +319,4 @@ pub(super) fn reset(app: &tauri::AppHandle) {
     position.reset();
     drop(position);
     show(app);
-}
-
-pub fn anchor(app: &tauri::AppHandle) -> Option<(f64, f64)> {
-    let window = app.get_webview_window(LABEL)?;
-    let point = window.outer_position().ok()?;
-    let size = window.outer_size().ok()?;
-    Some((
-        point.x as f64 + size.width as f64 / 2.0,
-        point.y as f64 + size.height as f64 / 2.0,
-    ))
-}
-
-pub fn panel_position(
-    app: &tauri::AppHandle,
-    work: (f64, f64, f64, f64),
-    size: (f64, f64),
-    gap: f64,
-) -> Option<(f64, f64)> {
-    let window = app.get_webview_window(LABEL)?;
-    let origin = window.outer_position().ok()?;
-    let bounds = window.outer_size().ok()?;
-    Some(super::geometry::detail_position(
-        super::geometry::Area {
-            x: origin.x,
-            y: origin.y,
-            width: bounds.width,
-            height: bounds.height,
-        },
-        work,
-        size,
-        gap,
-    ))
-}
-
-pub fn toggle_metric(
-    app: &tauri::AppHandle,
-    metric: mangodisk_core::system_resources::metrics::MetricId,
-) -> tauri::Result<()> {
-    if app
-        .state::<std::sync::Arc<crate::resident::runtime::ResidentState>>()
-        .preferences
-        .lock()
-        .unwrap_or_else(|error| error.into_inner())
-        .floating
-        .click_through
-    {
-        return Ok(());
-    }
-    crate::resident::panel::toggle_metric_from(app, LABEL, metric)
-}
-
-fn fullscreen(window: &tauri::WebviewWindow) -> bool {
-    use windows_sys::Win32::{
-        Foundation::RECT,
-        UI::WindowsAndMessaging::{
-            GetClassNameW, GetForegroundWindow, GetWindowLongW, GetWindowRect,
-            GetWindowThreadProcessId, GWL_STYLE, WS_CAPTION, WS_MAXIMIZE, WS_THICKFRAME,
-        },
-    };
-    unsafe {
-        let foreground = GetForegroundWindow();
-        if foreground.is_null() {
-            return false;
-        }
-        let mut pid = 0;
-        GetWindowThreadProcessId(foreground, &mut pid);
-        if pid == std::process::id() {
-            return false;
-        }
-        let mut class = [0u16; 128];
-        let length = GetClassNameW(foreground, class.as_mut_ptr(), class.len() as i32);
-        let class = String::from_utf16_lossy(&class[..length.max(0) as usize]);
-        if matches!(
-            class.as_str(),
-            "Progman" | "WorkerW" | "Shell_TrayWnd" | "Shell_SecondaryTrayWnd"
-        ) {
-            return false;
-        }
-        let mut rect = RECT::default();
-        if GetWindowRect(foreground, &mut rect) == 0 {
-            return false;
-        }
-        let Ok(Some(monitor)) = window.current_monitor() else {
-            return false;
-        };
-        let origin = monitor.position();
-        let size = monitor.size();
-        let style = GetWindowLongW(foreground, GWL_STYLE) as u32;
-        rect.left <= origin.x
-            && rect.top <= origin.y
-            && rect.right >= origin.x + size.width as i32
-            && rect.bottom >= origin.y + size.height as i32
-            && (style & (WS_CAPTION | WS_THICKFRAME) == 0
-                || (style & WS_MAXIMIZE == 0
-                    && rect.left == origin.x
-                    && rect.top == origin.y
-                    && rect.right == origin.x + size.width as i32
-                    && rect.bottom == origin.y + size.height as i32))
-    }
 }

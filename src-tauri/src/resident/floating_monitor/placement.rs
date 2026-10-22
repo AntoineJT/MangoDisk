@@ -54,9 +54,8 @@ pub(super) fn apply(
     placement: &Mutex<Placement>,
     widths: &[f64],
 ) -> tauri::Result<Option<Vec<f64>>> {
-    use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetAsyncKeyState, VK_LBUTTON};
-    // Never reposition or persist intermediate coordinates during native dragging.
-    if unsafe { GetAsyncKeyState(VK_LBUTTON as i32) } < 0 {
+    // Native move loops own geometry until the pointer is released.
+    if super::native::dragging() {
         return Ok(placement
             .lock()
             .unwrap_or_else(|e| e.into_inner())

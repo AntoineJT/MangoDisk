@@ -7,6 +7,11 @@ mod geometry;
 mod interaction;
 #[cfg(windows)]
 mod menu;
+#[cfg(any(windows, test))]
+mod menu_preferences;
+#[cfg(windows)]
+#[path = "windows.rs"]
+mod native;
 #[cfg(windows)]
 mod placement;
 mod sizing;
@@ -32,13 +37,10 @@ pub struct Snapshot {
 pub use sizing::LayoutMeasurement;
 
 #[cfg(windows)]
-pub use interaction::toggle as toggle_click_through;
+pub use interaction::{anchor, panel_position, toggle_click_through, toggle_metric};
 
 #[cfg(windows)]
-pub use window::{
-    anchor, install, panel_position, prepare, prewarm, ready, set_layout, show, toggle_metric,
-    update,
-};
+pub use window::{install, prepare, prewarm, ready, set_layout, show, update};
 
 #[cfg(windows)]
 pub(crate) use window::recreate_webview;

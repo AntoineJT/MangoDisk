@@ -1,7 +1,7 @@
 //! Native menus stay outside the compact WebView bounds and remain keyboard accessible.
-use super::{window, LABEL};
+use super::{menu_preferences, window, LABEL};
 use crate::resident::{
-    preference_schema::{FloatingBackground, FloatingFontSize, FloatingLayout, WindowsDisplayMode},
+    preference_schema::{FloatingLayout, WindowsDisplayMode},
     preferences,
     runtime::ResidentState,
 };
@@ -80,12 +80,7 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
         preferences.floating.bold,
     )?;
     let font_size = Submenu::new(app, labels.text("/floatingMonitor/fontSize"), true)?;
-    for (id, value) in [
-        ("standard", FloatingFontSize::Standard),
-        ("larger", FloatingFontSize::Larger),
-        ("large", FloatingFontSize::Large),
-        ("extraLarge", FloatingFontSize::ExtraLarge),
-    ] {
+    for (id, value) in menu_preferences::FONT_SIZES {
         font_size.append(&CheckMenuItem::with_id(
             app,
             format!("floating-font-{id}"),
@@ -96,15 +91,7 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
         )?)?;
     }
     let background = Submenu::new(app, labels.text("/floatingMonitor/background"), true)?;
-    for (id, value) in [
-        ("default", FloatingBackground::Default),
-        ("darkGray", FloatingBackground::DarkGray),
-        ("inkBlue", FloatingBackground::InkBlue),
-        ("warmWhite", FloatingBackground::WarmWhite),
-        ("lightGray", FloatingBackground::LightGray),
-        ("black", FloatingBackground::Black),
-        ("white", FloatingBackground::White),
-    ] {
+    for (id, value) in menu_preferences::BACKGROUNDS {
         background.append(&CheckMenuItem::with_id(
             app,
             format!("floating-background-{id}"),
@@ -117,7 +104,7 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
     let settings = item("floating-settings", "/systemStatus/configureAction")?;
     let reset = item("floating-reset", "/floatingMonitor/resetPosition")?;
     let opacity = Submenu::new(app, labels.text("/floatingMonitor/backgroundOpacity"), true)?;
-    for value in [100, 90, 80, 70, 60, 50] {
+    for value in menu_preferences::OPACITIES {
         opacity.append(&CheckMenuItem::with_id(
             app,
             format!("floating-opacity-{value}"),
@@ -174,48 +161,8 @@ fn act(app: &tauri::AppHandle, action: &str) -> tauri::Result<()> {
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .clone();
-        match action {
-            "floating-horizontal" => requested.floating.layout = FloatingLayout::Horizontal,
-            "floating-vertical" => requested.floating.layout = FloatingLayout::Vertical,
-            "floating-bold" => requested.floating.bold = !requested.floating.bold,
-            "floating-font-standard" => requested.floating.font_size = FloatingFontSize::Standard,
-            "floating-font-larger" => requested.floating.font_size = FloatingFontSize::Larger,
-            "floating-font-large" => requested.floating.font_size = FloatingFontSize::Large,
-            "floating-font-extraLarge" => {
-                requested.floating.font_size = FloatingFontSize::ExtraLarge
-            }
-            "floating-background-default" => {
-                requested.floating.background = FloatingBackground::Default
-            }
-            "floating-background-darkGray" => {
-                requested.floating.background = FloatingBackground::DarkGray
-            }
-            "floating-background-inkBlue" => {
-                requested.floating.background = FloatingBackground::InkBlue
-            }
-            "floating-background-warmWhite" => {
-                requested.floating.background = FloatingBackground::WarmWhite
-            }
-            "floating-background-lightGray" => {
-                requested.floating.background = FloatingBackground::LightGray
-            }
-            "floating-background-black" => {
-                requested.floating.background = FloatingBackground::Black
-            }
-            "floating-background-white" => {
-                requested.floating.background = FloatingBackground::White
-            }
-            "floating-top" => requested.floating.always_on_top = !requested.floating.always_on_top,
-            "floating-lock" => requested.floating.locked = !requested.floating.locked,
-            "floating-snap" => requested.floating.snap_to_edges = !requested.floating.snap_to_edges,
-            _ => match action
-                .strip_prefix("floating-opacity-")
-                .and_then(|value| value.parse::<u8>().ok())
-                .filter(|value| [100, 90, 80, 70, 60, 50].contains(value))
-            {
-                Some(value) => requested.floating.background_opacity = value,
-                None => return Ok(()),
-            },
+        if !menu_preferences::apply(&mut requested.floating, action) {
+            return Ok(());
         }
         if requested.windows_display_mode == WindowsDisplayMode::Taskbar {
             return Ok(());
