@@ -198,7 +198,9 @@ onBeforeUnmount(cancelDrag);
 </script>
 <template>
   <div ref="metricRowsElement" @keydown.esc="cancelDrag">
-    <TransitionGroup name="metric-sort" tag="div" class="metric-rows">
+    <!-- Hidden panels have no layout box. Animate only explicit reordering so
+         revealing a tab cannot turn its zero-size bounds into a move animation. -->
+    <TransitionGroup name="metric-sort" tag="div" class="metric-rows" :data-reordering="dragging !== null">
       <slot name="logo" />
       <slot
         v-for="row in visibleRows"
@@ -217,5 +219,13 @@ onBeforeUnmount(cancelDrag);
 .metric-rows {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+}
+.metric-rows[data-reordering='true'] > :deep(.metric-sort-move:not(.pointer-moving)) {
+  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .metric-rows[data-reordering='true'] > :deep(.metric-sort-move:not(.pointer-moving)) {
+    transition: none;
+  }
 }
 </style>

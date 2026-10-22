@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import MdIcon from '@/components/icons/md-icon.vue';
 import MdSettingsRow from '@/components/custom/md-settings-row.vue';
@@ -65,15 +65,42 @@ async function setDisplayEnabled(enabled: boolean) {
 watch(displayEnabled, enabled => {
   if (!enabled) settingsOpen.value = false;
 });
-onMounted(() => {
-  if (!settings.preferences) void settings.load();
+let disposed = false;
+let preferencesRefreshPending = false;
+let stopPreferences: (() => void) | undefined;
+function refreshPreferences() {
+  if (disposed || !preferencesRefreshPending || settings.loading || settings.saving) return;
+  // Native menu edits can arrive before an older read or save response settles.
+  // Consume the pending refresh before loading so a failed read cannot retry indefinitely.
+  preferencesRefreshPending = false;
+  void settings.load();
+}
+watch([() => settings.loading, () => settings.saving], refreshPreferences, { flush: 'post' });
+onMounted(async () => {
+  try {
+    const stop = await ResidentService.onPreferencesChanged(() => {
+      preferencesRefreshPending = true;
+      refreshPreferences();
+    });
+    if (disposed) stop();
+    else stopPreferences = stop;
+  } catch (error) {
+    LoggerService.warn('resident', 'preferences_subscription_failed', { error });
+  }
+  if (!disposed && !settings.preferences) void settings.load();
+});
+onBeforeUnmount(() => {
+  disposed = true;
+  stopPreferences?.();
 });
 </script>
 
 <template>
   <div class="status-settings">
     <MdSettingsRow
-      :title="t(isMacOs ? 'systemStatus.menuBarEnabled' : 'systemStatus.displayEnabled')"
+      :title="
+        t(isMacOs ? 'systemStatus.menuBarEnabled' : isLinux ? 'systemStatus.displayEnabled' : 'floatingMonitor.title')
+      "
       :description="
         t(isMacOs ? 'systemStatus.menuBarHint' : isLinux ? 'systemStatus.linuxDisplayHint' : 'systemStatus.displayHint')
       "

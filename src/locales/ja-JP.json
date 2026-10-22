@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "設定カテゴリ",
+    "settingsTabs": {
+      "content": "表示項目",
+      "appearance": "外観",
+      "interaction": "操作"
+    },
     "fanSpeed": "ファン回転数",
     "gpuFanSpeed": "GPU ファン回転数",
     "gpuFanHint": "ディスプレイドライバーが提供する GPU ファンの実測回転数です。マザーボードやケースのファンは含みません",

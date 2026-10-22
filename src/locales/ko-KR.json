@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "설정 분류",
+    "settingsTabs": {
+      "content": "표시 항목",
+      "appearance": "모양",
+      "interaction": "동작"
+    },
     "fanSpeed": "팬 속도",
     "gpuFanSpeed": "GPU 팬 속도",
     "gpuFanHint": "디스플레이 드라이버가 제공하는 GPU 팬의 실제 RPM입니다. 메인보드 및 케이스 팬은 포함되지 않습니다",

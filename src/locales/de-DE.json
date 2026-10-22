@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Einstellungskategorien",
+    "settingsTabs": {
+      "content": "Inhalte",
+      "appearance": "Darstellung",
+      "interaction": "Verhalten"
+    },
     "fanSpeed": "Lüftergeschwindigkeit",
     "gpuFanSpeed": "GPU-Lüfterdrehzahl",
     "gpuFanHint": "Tatsächliche Drehzahl der GPU-Lüfter vom Grafiktreiber. Mainboard- und Gehäuselüfter sind nicht enthalten",

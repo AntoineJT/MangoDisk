@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "設定分類",
+    "settingsTabs": {
+      "content": "顯示內容",
+      "appearance": "外觀",
+      "interaction": "互動"
+    },
     "fanSpeed": "風扇轉速",
     "gpuFanSpeed": "GPU 風扇轉速",
     "gpuFanHint": "顯示驅動程式提供的 GPU 風扇實際轉速，不包含主機板與機殼風扇",

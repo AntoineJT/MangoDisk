@@ -34,6 +34,9 @@ export class ResidentService {
   static quitApplication(applicationId: string): Promise<ApplicationQuitStatus> {
     return invoke('monitoring_quit_application', { applicationId });
   }
+  static onPreferencesChanged(callback: () => void): Promise<UnlistenFn> {
+    return listen<number>('resident-preferences-changed', callback);
+  }
   static preferences(): Promise<ResidentPreferences> {
     return invoke('resident_get_preferences');
   }

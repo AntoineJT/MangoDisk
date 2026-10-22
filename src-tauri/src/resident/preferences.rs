@@ -1,6 +1,6 @@
 use super::{diagnostics::Failure, runtime::ResidentState};
 use std::{path::PathBuf, sync::Arc};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 pub use super::preference_schema::ResidentPreferences;
 use super::preference_schema::{decode, PREFERENCE_SCHEMA_VERSION};
@@ -165,6 +165,7 @@ pub fn apply(
     } else {
         super::panel::hide(app);
     }
+    let _ = app.emit("resident-preferences-changed", preferences.revision);
     state.wake();
     log::info!(
         "resident_preferences_saved enabled={} revision={} show_icon={} windows_mode={:?} floating_layout={:?} floating_top={} floating_locked={} floating_click_through={} floating_background_opacity={} floating_snap_to_edges={} floating_font_size={:?} floating_bold={} floating_background={:?} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",

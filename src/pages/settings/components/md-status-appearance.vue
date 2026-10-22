@@ -28,9 +28,27 @@ function changeCompact(enabled: boolean) {
 </script>
 
 <template>
-  <MdSettingsGroup plain :title="t('systemStatus.appearanceTitle')">
+  <MdSettingsRow compact :title="t('systemStatus.usageColors')" description="" label-for="usage-colors">
+    <template #help>
+      <MdTooltip :text="t('systemStatus.usageColorsHelp')">
+        <button type="button" class="md-help-action" :aria-label="t('systemStatus.usageColorsHelp')">
+          <MdIcon :name="ICON_NAMES.help" :size="14" />
+        </button>
+      </MdTooltip>
+    </template>
+    <MdSwitch
+      id="usage-colors"
+      :model-value="preferences.usageColors"
+      @update:model-value="emit('change', { usageColors: $event })"
+    />
+  </MdSettingsRow>
+  <MdSettingsGroup
+    v-if="isMacOs || isLinux || preferences.windowsDisplayMode !== 'floating'"
+    plain
+    :title="t(isMacOs || isLinux ? 'systemStatus.appearanceTitle' : 'floatingMonitor.taskbar')"
+  >
     <MdSettingsRow
-      v-if="!isMacOs && !isLinux"
+      v-if="!isMacOs && !isLinux && preferences.windowsDisplayMode !== 'floating'"
       compact
       :title="t('systemStatus.taskbarBackground')"
       description=""
@@ -52,21 +70,5 @@ function changeCompact(enabled: boolean) {
       </template>
       <MdSwitch :id="compactControlId" :model-value="compactEnabled" @update:model-value="changeCompact" />
     </MdSettingsRow>
-    <div>
-      <MdSettingsRow compact :title="t('systemStatus.usageColors')" description="" label-for="usage-colors">
-        <template #help>
-          <MdTooltip :text="t('systemStatus.usageColorsHelp')">
-            <button type="button" class="md-help-action" :aria-label="t('systemStatus.usageColorsHelp')">
-              <MdIcon :name="ICON_NAMES.help" :size="14" />
-            </button>
-          </MdTooltip>
-        </template>
-        <MdSwitch
-          id="usage-colors"
-          :model-value="preferences.usageColors"
-          @update:model-value="emit('change', { usageColors: $event })"
-        />
-      </MdSettingsRow>
-    </div>
   </MdSettingsGroup>
 </template>

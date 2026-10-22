@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Категории настроек",
+    "settingsTabs": {
+      "content": "Показатели",
+      "appearance": "Оформление",
+      "interaction": "Поведение"
+    },
     "fanSpeed": "Скорость вентилятора",
     "gpuFanSpeed": "Вентилятор GPU",
     "gpuFanHint": "Фактические обороты вентиляторов GPU от видеодрайвера. Вентиляторы платы и корпуса не учитываются",

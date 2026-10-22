@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Ayar kategorileri",
+    "settingsTabs": {
+      "content": "İçerik",
+      "appearance": "Görünüm",
+      "interaction": "Davranış"
+    },
     "fanSpeed": "Fan hızı",
     "gpuFanSpeed": "GPU fan hızı",
     "gpuFanHint": "Ekran sürücüsünün bildirdiği GPU fanlarının gerçek devir sayısıdır. Anakart ve kasa fanları dahil değildir",

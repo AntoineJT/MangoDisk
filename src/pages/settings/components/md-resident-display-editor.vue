@@ -16,6 +16,10 @@ import MdDialogFooter from '@/components/custom/md-dialog-footer.vue';
 import MdWindowsTemperatureSetup from './md-windows-temperature-setup.vue';
 import { Select, SelectContent, SelectItem } from '@/components/ui/select';
 import { SelectTrigger } from 'reka-ui';
+import MdResidentSettingsTabs from './md-resident-settings-tabs.vue';
+import MdFloatingAppearance from './md-floating-appearance.vue';
+import MdFloatingBehavior from './md-floating-behavior.vue';
+import MdSettingsGroup from '@/components/custom/md-settings-group.vue';
 import MdTaskbarPosition from './md-taskbar-position.vue';
 import MdStatusAppearance from './md-status-appearance.vue';
 import MdFanDisplaySettings from './md-fan-display-settings.vue';
@@ -81,6 +85,7 @@ const gpuTemperatureStatus = computed(() =>
 );
 const catalogueReading = ref<ResidentReading | null>(null);
 const platform = computed(() => (props.isMacOs ? 'macos' : props.isLinux ? 'linux' : 'windows'));
+const windows = computed(() => platform.value === 'windows');
 function statusKey(row: ResidentPreferences['metrics'][number]) {
   if (row.id === 'cpuTemperature' && platform.value === 'windows') return cpuTemperatureStatusLabel.value;
   return displayMetricStatusKey(
@@ -139,7 +144,12 @@ const visibleRows = computed(() =>
 );
 // Older preferences may have every item cleared. Mirror the native Logo
 // fallback without writing on load, and retain it when the next metric is added.
-const showIcon = computed(() => (settings.draft?.showIcon ?? true) || !visibleRows.value.some(row => row.enabled));
+const floatingRecoveryIcon = computed(
+  () => !props.isMacOs && !props.isLinux && settings.draft?.windowsDisplayMode !== 'taskbar'
+);
+const showIcon = computed(
+  () => floatingRecoveryIcon.value || (settings.draft?.showIcon ?? true) || !visibleRows.value.some(row => row.enabled)
+);
 const selectedCount = computed(() => Number(showIcon.value) + visibleRows.value.filter(row => row.enabled).length);
 function selectionLocked(selected: boolean) {
   return !settings.draft || (selected && selectedCount.value <= 1);
@@ -149,6 +159,10 @@ function enableIcon(enabled: boolean) {
   void settings.change({ showIcon: enabled });
 }
 const settingsOpen = defineModel<boolean>('open', { required: true });
+function resetSectionInteractions() {
+  cancelDrag();
+  expandedSelection.value = null;
+}
 const temperatureSetupOpen = ref(false);
 const selectTemperatureAfterSetup = ref(false);
 const activeColor = ref<ColorMetricId | null>(null);
@@ -293,7 +307,8 @@ defineExpose({
 <template>
   <Dialog :open="settingsOpen && displayEnabled" @update:open="settingsOpen = $event">
     <MdDialogContent
-      class="flex min-h-0 flex-col"
+      class="resident-editor flex min-h-0 flex-col"
+      height="tall"
       :aria-describedby="undefined"
       @interact-outside.prevent
       @escape-key-down="handleDialogEscape"
@@ -301,28 +316,26 @@ defineExpose({
     >
       <MdDialogHeader class="flex-none border-b border-border/70">
         <DialogTitle>{{
-          t(isMacOs ? 'systemStatus.menuBarSettingsTitle' : 'systemStatus.displaySettingsTitle')
+          t(
+            isMacOs
+              ? 'systemStatus.menuBarSettingsTitle'
+              : isLinux
+                ? 'systemStatus.displaySettingsTitle'
+                : 'floatingMonitor.title'
+          )
         }}</DialogTitle>
       </MdDialogHeader>
-      <div class="min-h-0 overflow-y-auto p-5">
-        <div
-          id="resident-display-options"
-          class="display-options"
-          :inert="settings.loading"
-          :aria-busy="settings.loading || settings.saving"
-        >
-          <MdTaskbarPosition
-            v-if="!isMacOs && !isLinux && settings.draft"
-            :preferences="settings.draft"
-            @position="settings.change({ taskbarPosition: $event })"
-          />
-          <MdStatusAppearance
-            v-if="settings.draft"
-            :preferences="settings.draft"
-            :is-mac-os="isMacOs"
-            :is-linux="isLinux"
-            @change="settings.change($event)"
-          />
+      <MdResidentSettingsTabs
+        :open="settingsOpen"
+        :preferences="settings.draft"
+        :is-mac-os="isMacOs"
+        :is-linux="isLinux"
+        :loading="settings.loading"
+        :saving="settings.saving"
+        @change="settings.change($event)"
+        @section-change="resetSectionInteractions"
+      >
+        <template #content>
           <div class="status-controls">
             <div class="controls-heading">
               <h3>{{ t('systemStatus.displayItems') }}</h3>
@@ -346,7 +359,7 @@ defineExpose({
                     <MdCheckbox
                       id="status-app-icon"
                       :model-value="showIcon"
-                      :disabled="selectionLocked(showIcon)"
+                      :disabled="floatingRecoveryIcon || selectionLocked(showIcon)"
                       @update:model-value="enableIcon($event === true)"
                     />
                     {{ t('systemStatus.showIcon') }}
@@ -557,17 +570,53 @@ defineExpose({
               </template>
             </MdResidentMetricOrder>
           </div>
-        </div>
-        <p v-if="settings.error || (displayEnabled && catalogueError)" class="settings-feedback" role="status">
-          <template v-if="settings.error"
-            >{{ t('systemStatus.saveFailed') }}
-            <button @click="settings.load()">{{ t('monitoring.refresh') }}</button></template
-          ><template v-else-if="catalogueError"
-            >{{ t('systemStatus.catalogueFailed') }}
-            <button @click="loadCatalogue">{{ t('monitoring.refresh') }}</button></template
-          >
-        </p>
-      </div>
+        </template>
+        <template #appearance>
+          <template v-if="settings.draft">
+            <MdStatusAppearance
+              :preferences="settings.draft"
+              :is-mac-os="isMacOs"
+              :is-linux="isLinux"
+              @change="settings.change($event)"
+            />
+            <MdSettingsGroup
+              v-if="windows && settings.draft.windowsDisplayMode !== 'taskbar'"
+              plain
+              :title="t('floatingMonitor.floating')"
+            >
+              <MdFloatingAppearance :preferences="settings.draft" @change="settings.change($event)" />
+            </MdSettingsGroup>
+          </template>
+        </template>
+        <template #interaction>
+          <template v-if="settings.draft">
+            <MdSettingsGroup
+              v-if="settings.draft.windowsDisplayMode !== 'floating'"
+              plain
+              :title="t('floatingMonitor.taskbar')"
+            >
+              <MdTaskbarPosition
+                :preferences="settings.draft"
+                @position="settings.change({ taskbarPosition: $event })"
+              />
+            </MdSettingsGroup>
+            <MdFloatingBehavior
+              v-if="settings.draft.windowsDisplayMode !== 'taskbar'"
+              :preferences="settings.draft"
+              @change="settings.change($event)"
+            />
+          </template>
+        </template>
+      </MdResidentSettingsTabs>
+      <p v-if="settings.error || (displayEnabled && catalogueError)" class="settings-feedback" role="status">
+        <template v-if="settings.error"
+          >{{ t('systemStatus.saveFailed') }}
+          <button @click="settings.load()">{{ t('monitoring.refresh') }}</button></template
+        ><template v-else-if="catalogueError"
+          >{{ t('systemStatus.catalogueFailed') }}
+          <button @click="loadCatalogue">{{ t('monitoring.refresh') }}</button></template
+        >
+      </p>
       <MdDialogFooter>
         <Button @click="settingsOpen = false">{{ t('systemStatus.done') }}</Button>
       </MdDialogFooter>
@@ -592,11 +641,6 @@ defineExpose({
 </template>
 <style scoped>
 @reference "@assets/main.css";
-.display-options {
-  display: grid;
-  gap: 14px;
-  min-width: 0;
-}
 .controls-heading {
   @apply text-muted-foreground;
   display: flex;
@@ -629,9 +673,6 @@ defineExpose({
   outline: 2px solid var(--ring);
   outline-offset: 1px;
 }
-.metric-sort-move {
-  transition: transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
 .metric-row.pointer-moving {
   outline: 1px dashed var(--ring);
   outline-offset: -1px;
@@ -649,11 +690,6 @@ defineExpose({
   pointer-events: none;
   will-change: transform;
   cursor: grabbing;
-}
-@media (prefers-reduced-motion: reduce) {
-  .metric-sort-move {
-    transition: none;
-  }
 }
 .metric-heading {
   display: flex;
@@ -792,7 +828,7 @@ defineExpose({
 }
 .settings-feedback {
   @apply text-destructive-text;
-  padding-top: 8px;
+  padding: 8px 20px;
   font-size: 11px;
   line-height: 1.5;
 }

@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Categorias de configurações",
+    "settingsTabs": {
+      "content": "Conteúdo",
+      "appearance": "Aparência",
+      "interaction": "Comportamento"
+    },
     "fanSpeed": "Velocidade da ventoinha",
     "gpuFanSpeed": "Velocidade da ventoinha da GPU",
     "gpuFanHint": "RPM real das ventoinhas da GPU, fornecida pelo driver de vídeo. Não inclui ventoinhas da placa-mãe ou do gabinete",

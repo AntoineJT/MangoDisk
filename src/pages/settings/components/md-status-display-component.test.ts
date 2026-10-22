@@ -20,7 +20,6 @@ vi.mock('@/lib/services/resident/resident-service', () => ({
     savePreferences: vi.fn(),
     catalogue: vi.fn(),
     onReading: vi.fn(),
-    preview: vi.fn(),
     displayStatus: vi.fn(),
     onDisplayStatus: vi.fn(),
     releaseMemory: vi.fn(),
@@ -91,6 +90,82 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe('status display interactions', () => {
+  it('defaults to content, preserves per-mode tab scroll and resets on reopening', async () => {
+    const wrapper = mount(Settings, { props: { isMacOs: false }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    const tabs = () => wrapper.findAll('[role="tab"]');
+    const active = () => wrapper.get('[role="tabpanel"][data-state="active"]');
+    expect(tabs()).toHaveLength(3);
+    expect(tabs()[0]!.attributes('aria-selected')).toBe('true');
+    expect(active().find('#status-cpu').exists()).toBe(true);
+    expect(active().find('#taskbar-compact').exists()).toBe(false);
+    const contentPanel = active();
+    active().element.scrollTop = 120;
+    await active().trigger('scroll');
+    const handle = wrapper.get('[data-metric="cpu"] .drag-handle');
+    await handle.trigger('keydown', { key: ' ' });
+    expect(handle.attributes('aria-pressed')).toBe('true');
+    await tabs()[1]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(handle.attributes('aria-pressed')).toBe('false');
+    expect(active().find('#taskbar-compact').exists()).toBe(true);
+    expect(wrapper.find('.appearance-preview').exists()).toBe(false);
+    active().element.scrollTop = 48;
+    await active().trigger('scroll');
+    await contentPanel.trigger('scroll');
+    await tabs()[0]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(active().element.scrollTop).toBe(120);
+    await tabs()[1]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(active().element.scrollTop).toBe(48);
+    await tabs()[0]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    const store = useResidentSettingsStore();
+    await store.change({ windowsDisplayMode: 'floating' });
+    await flushPromises();
+    expect(active().element.scrollTop).toBe(0);
+    await store.change({ windowsDisplayMode: 'taskbar' });
+    await flushPromises();
+    expect(active().element.scrollTop).toBe(120);
+    await tabs()[2]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(active().find('input[name="taskbar-position"]').exists()).toBe(true);
+    await wrapper
+      .findAll('button')
+      .find(button => button.text() === 'systemStatus.done')!
+      .trigger('click');
+    await flushPromises();
+    await openConfiguration(wrapper);
+    expect(tabs()[0]!.attributes('aria-selected')).toBe('true');
+    expect(active().element.scrollTop).toBe(0);
+  });
+  it.each([
+    { isMacOs: true, isLinux: false },
+    { isMacOs: false, isLinux: true },
+  ])('omits Windows-only behavior on %o', async props => {
+    const wrapper = mount(Settings, { props, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2);
+    expect(wrapper.find('#windows-display-mode').exists()).toBe(false);
+    await wrapper.findAll('[role="tab"]')[1]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    const active = wrapper.get('[role="tabpanel"][data-state="active"]');
+    expect(active.find('.appearance-preview').exists()).toBe(false);
+    expect(active.find('#floating-font-size').exists()).toBe(false);
+    expect(active.find('#taskbar-background').exists()).toBe(false);
+    const compact = active.get(props.isMacOs ? '#menu-bar-compact' : '#linux-tray-compact');
+    await compact.trigger('click');
+    await flushPromises();
+    expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
+      expect.objectContaining(props.isMacOs ? { menuBarCompact: true } : { taskbarCompact: true })
+    );
+  });
+
   it.each(['resolve', 'reject'] as const)(
     'keeps unrelated controls stable during a disk preference save that will %s',
     async outcome => {

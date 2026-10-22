@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Settings categories",
+    "settingsTabs": {
+      "content": "Content",
+      "appearance": "Appearance",
+      "interaction": "Behavior"
+    },
     "fanSpeed": "Fan speed",
     "gpuFanSpeed": "GPU fan speed",
     "gpuFanHint": "Actual GPU fan RPM reported by the display driver. Motherboard and case fans are not included",

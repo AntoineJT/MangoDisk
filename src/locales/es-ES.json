@@ -4055,6 +4055,12 @@
     }
   },
   "systemStatus": {
+    "settingsCategories": "Categorías de ajustes",
+    "settingsTabs": {
+      "content": "Contenido",
+      "appearance": "Apariencia",
+      "interaction": "Comportamiento"
+    },
     "fanSpeed": "Velocidad del ventilador",
     "gpuFanSpeed": "Velocidad del ventilador de GPU",
     "gpuFanHint": "RPM reales de los ventiladores de la GPU, proporcionadas por el controlador gráfico. No incluye ventiladores de placa base ni de caja",
