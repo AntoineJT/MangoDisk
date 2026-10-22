@@ -479,6 +479,11 @@ fn render(
     }
     #[cfg(target_os = "macos")]
     super::floating_monitor::update(app, preferences, &entries);
+    #[cfg(any(windows, target_os = "macos"))]
+    if changed_locale {
+        // A translated title must update even when metric labels keep the same width.
+        super::floating_monitor::update_title(app, &labels.locale)?;
+    }
     if !preferences.enabled {
         state.locale = labels.locale;
         return Ok(());

@@ -44,7 +44,7 @@ pub use sizing::LayoutMeasurement;
 #[cfg(windows)]
 pub use interaction::{anchor, panel_position, toggle_click_through, toggle_metric};
 #[cfg(any(windows, target_os = "macos"))]
-pub use window::{install, prepare, prewarm, ready, set_layout, show, update};
+pub use window::{install, prepare, prewarm, ready, set_layout, show, update, update_title};
 
 #[cfg(windows)]
 pub(crate) use window::recreate_webview;

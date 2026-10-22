@@ -83,6 +83,9 @@ macOS always keeps the monitor on top and movable, without edge snapping. Only
 appearance settings are exposed. Shared Windows interaction choices are retained
 in storage but do not enable interactions on macOS.
 
+Native window titles follow the locale refresh independently of font measurements,
+including selections such as CPU whose label is identical across languages.
+
 Snapshot schema 8 separates native context-menu availability from metric clicks,
 which remain Windows-only. Native adapters own visibility and mouse-button state; layout and
 monitor-relative persistence share the same bounded geometry.

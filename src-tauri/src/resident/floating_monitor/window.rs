@@ -52,10 +52,8 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
     state.click_through.store(false, Ordering::Relaxed);
     let builder =
         WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("floating-monitor.html".into()))
-            .title(format!(
-                "MangoDisk · {}",
-                crate::services::native_labels::NativeLabels::load(app)
-                    .text("/floatingMonitor/title")
+            .title(localized_title(
+                &crate::services::native_labels::NativeLabels::load(app).locale,
             ))
             .inner_size(114.0, 26.0)
             .decorations(false)
@@ -245,6 +243,13 @@ pub fn set_layout(app: &tauri::AppHandle, measurement: LayoutMeasurement) -> boo
     true
 }
 
+pub fn update_title(app: &tauri::AppHandle, locale: &str) -> tauri::Result<()> {
+    if let Some(window) = app.get_webview_window(LABEL) {
+        window.set_title(&localized_title(locale))?;
+    }
+    Ok(())
+}
+
 fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
     let state = app.state::<State>();
     let Some(window) = app.get_webview_window(LABEL) else {
@@ -350,4 +355,29 @@ pub(super) fn reset(app: &tauri::AppHandle) {
     position.reset();
     drop(position);
     show(app);
+}
+
+fn localized_title(locale: &str) -> String {
+    let labels = crate::services::native_labels::NativeLabels::for_locale(locale);
+    format!("MangoDisk · {}", labels.text("/floatingMonitor/title"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::localized_title;
+    use crate::services::native_labels::NativeLabels;
+
+    #[test]
+    fn localized_titles_differ_even_when_metric_labels_are_identical() {
+        let english = NativeLabels::for_locale("en-US");
+        let chinese = NativeLabels::for_locale("zh-CN");
+        assert_eq!(
+            english.text("/floatingMonitor/labels/cpu"),
+            chinese.text("/floatingMonitor/labels/cpu")
+        );
+        assert_eq!(localized_title("en-US"), "MangoDisk · System status");
+        let chinese_title = localized_title("zh-CN");
+        assert_ne!(chinese_title, localized_title("en-US"));
+        assert_ne!(chinese_title, "MangoDisk · —");
+    }
 }
