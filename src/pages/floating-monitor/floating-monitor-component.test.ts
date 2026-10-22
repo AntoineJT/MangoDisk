@@ -42,7 +42,7 @@ let accept: (value: FloatingSnapshot) => void;
 let stop: Mock<() => void>;
 function snapshot(): FloatingSnapshot {
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     interactive: true,
     contextMenu: true,
     columns: [70, 90, 85],
@@ -56,6 +56,7 @@ function snapshot(): FloatingSnapshot {
       bold: false,
       dividers: true,
       clickThrough: false,
+      hideOnFullscreen: true,
       background: 'default',
     },
     entries: [

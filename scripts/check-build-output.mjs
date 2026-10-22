@@ -77,13 +77,15 @@ const maximumLocaleGzipBytes = 60 * 1024;
 // Click-through label/hint measure de/es/fr/ja/ru raw bytes
 // 313293/315030/323348/336813/406422 and fr/ja/pt/ru gzip
 // 64366/63875/61877/72006. Extend only these measured local margins.
+// Fullscreen hiding adds one label: fr/ja/pt/ru gzip measures
+// 64389/63904/61900/72028 bytes. Add only 16 bytes to their local margins.
 const localeChunkLimitOverrides = new Map([
-  ['fr-fr', { bytes: 315 * 1024 + 800, gzipBytes: 62 * 1024 + 896 }],
+  ['fr-fr', { bytes: 315 * 1024 + 800, gzipBytes: 62 * 1024 + 912 }],
   ['de-de', { bytes: maximumLocaleChunkBytes + 2016, gzipBytes: 63 * 1024 + 512 }],
   ['es-es', { bytes: 307 * 1024 + 672, gzipBytes: 61 * 1024 + 384 }],
-  ['pt-br', { bytes: maximumLocaleChunkBytes, gzipBytes: maximumLocaleGzipBytes + 448 }],
-  ['ja-jp', { bytes: 328 * 1024 + 960, gzipBytes: 62 * 1024 + 400 }],
-  ['ru-ru', { bytes: 395 * 1024 + 1952, gzipBytes: 70 * 1024 + 336 }],
+  ['pt-br', { bytes: maximumLocaleChunkBytes, gzipBytes: maximumLocaleGzipBytes + 464 }],
+  ['ja-jp', { bytes: 328 * 1024 + 960, gzipBytes: 62 * 1024 + 416 }],
+  ['ru-ru', { bytes: 395 * 1024 + 1952, gzipBytes: 70 * 1024 + 352 }],
 ]);
 
 function fail(message) {

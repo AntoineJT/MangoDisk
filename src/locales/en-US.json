@@ -4430,6 +4430,7 @@
     "chooseMetrics": "Choose metrics in settings",
     "backgroundOpacity": "Background opacity",
     "snapToEdges": "Snap to screen edges",
+    "hideOnFullscreen": "Auto-hide in fullscreen",
     "labels": {
       "fan": "Fan",
       "cpu": "CPU",

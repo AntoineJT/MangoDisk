@@ -19,9 +19,12 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
             .map_err(|_| "preferences_invalid")?
             .normalize();
     }
-    if version == 34 {
+    if matches!(version, 34..=35) {
         let object = value.as_object_mut().ok_or("preferences_invalid")?;
-        add_macos_defaults(object)?;
+        if version == 34 {
+            add_macos_defaults(object)?;
+        }
+        add_fullscreen_default(object)?;
         object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
         return serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?
@@ -66,6 +69,7 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
             }
         }
         add_macos_defaults(object)?;
+        add_fullscreen_default(object)?;
         object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
         return serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?
@@ -350,6 +354,20 @@ fn add_floating_defaults(object: &mut Map<String, Value>) -> Result<(), &'static
 fn add_macos_defaults(object: &mut Map<String, Value>) -> Result<(), &'static str> {
     if object
         .insert("macosDisplayMode".into(), "menuBar".into())
+        .is_some()
+    {
+        return Err("preferences_invalid");
+    }
+    Ok(())
+}
+
+fn add_fullscreen_default(object: &mut Map<String, Value>) -> Result<(), &'static str> {
+    let floating = object
+        .get_mut("floating")
+        .and_then(Value::as_object_mut)
+        .ok_or("preferences_invalid")?;
+    if floating
+        .insert("hideOnFullscreen".into(), true.into())
         .is_some()
     {
         return Err("preferences_invalid");

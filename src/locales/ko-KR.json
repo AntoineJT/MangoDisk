@@ -4430,6 +4430,7 @@
     "chooseMetrics": "설정에서 표시 항목 선택",
     "backgroundOpacity": "배경 불투명도",
     "snapToEdges": "화면 가장자리에 맞춤",
+    "hideOnFullscreen": "전체 화면에서 자동 숨김",
     "labels": {
       "fan": "팬",
       "cpu": "CPU",

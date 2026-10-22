@@ -4430,6 +4430,7 @@
     "chooseMetrics": "在设置中选择显示指标",
     "backgroundOpacity": "背景不透明度",
     "snapToEdges": "贴边吸附",
+    "hideOnFullscreen": "全屏时自动隐藏",
     "labels": {
       "fan": "风扇",
       "cpu": "CPU",

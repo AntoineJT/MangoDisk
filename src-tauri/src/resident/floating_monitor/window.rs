@@ -167,7 +167,7 @@ pub fn update(
             #[cfg(target_os = "macos")]
             let floating = crate::resident::floating_monitor::native::appearance_only(floating);
             Snapshot {
-                schema_version: 8,
+                schema_version: 9,
                 interactive: cfg!(windows),
                 context_menu: true,
                 entries: entries.to_vec(),
@@ -299,6 +299,9 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
     if snapshot.columns.is_none() {
         return Ok(());
     }
+    #[cfg(windows)]
+    let fullscreen = snapshot.preferences.hide_on_fullscreen && super::native::fullscreen(&window);
+    #[cfg(target_os = "macos")]
     let fullscreen = super::native::fullscreen(&window);
     let visible = !fullscreen;
     if visible {

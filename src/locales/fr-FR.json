@@ -4430,6 +4430,7 @@
     "chooseMetrics": "Choisir les mesures dans les paramètres",
     "backgroundOpacity": "Opacité du fond",
     "snapToEdges": "Aligner sur les bords",
+    "hideOnFullscreen": "Masquer automatiquement en plein écran",
     "labels": {
       "fan": "Ventilateur",
       "cpu": "CPU",

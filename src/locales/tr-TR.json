@@ -4430,6 +4430,7 @@
     "chooseMetrics": "Ayarlardan ölçümleri seçin",
     "backgroundOpacity": "Arka plan opaklığı",
     "snapToEdges": "Ekran kenarlarına yasla",
+    "hideOnFullscreen": "Tam ekranda otomatik gizle",
     "labels": {
       "fan": "Fan",
       "cpu": "CPU",

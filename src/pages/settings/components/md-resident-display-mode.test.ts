@@ -145,3 +145,28 @@ describe('shared resident display mode', () => {
     wrapper.unmount();
   });
 });
+
+describe('Windows fullscreen hiding settings', () => {
+  it.each(Object.keys(locales))('preserves unrelated floating preferences in %s', async locale => {
+    const preferences = preferencesFixture();
+    const wrapper = mount(Behavior, {
+      props: { preferences },
+      global: { plugins: [createI18n({ legacy: false, locale, messages: locales })] },
+    });
+    expect(wrapper.text()).toContain(locales[locale]!.floatingMonitor.hideOnFullscreen);
+    const toggle = wrapper.findAllComponents(MdSwitch).find(item => item.attributes('id') === 'floating-fullscreen')!;
+    expect(toggle.props('modelValue')).toBe(true);
+    toggle.vm.$emit('update:modelValue', false);
+    expect(wrapper.emitted('change')?.at(-1)).toEqual([
+      { floating: { ...preferences.floating, hideOnFullscreen: false } },
+    ]);
+    await wrapper.setProps({
+      preferences: { ...preferences, floating: { ...preferences.floating, hideOnFullscreen: false } },
+    });
+    expect(toggle.props('modelValue')).toBe(false);
+    toggle.vm.$emit('update:modelValue', true);
+    expect(wrapper.emitted('change')?.at(-1)).toEqual([{ floating: preferences.floating }]);
+    expect(preferences.floating.hideOnFullscreen).toBe(true);
+    wrapper.unmount();
+  });
+});

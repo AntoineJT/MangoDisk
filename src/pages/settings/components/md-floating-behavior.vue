@@ -44,5 +44,17 @@ const { t } = useI18n();
         @update:model-value="emit('change', { floating: { ...preferences.floating, clickThrough: $event } })"
       />
     </MdSettingsRow>
+    <MdSettingsRow
+      compact
+      :title="t('floatingMonitor.hideOnFullscreen')"
+      description=""
+      label-for="floating-fullscreen"
+    >
+      <MdSwitch
+        id="floating-fullscreen"
+        :model-value="preferences.floating.hideOnFullscreen"
+        @update:model-value="emit('change', { floating: { ...preferences.floating, hideOnFullscreen: $event } })"
+      />
+    </MdSettingsRow>
   </MdSettingsGroup>
 </template>

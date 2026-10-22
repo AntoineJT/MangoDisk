@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 mod migrations;
 pub use migrations::decode;
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 35;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 36;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -80,6 +80,7 @@ pub struct FloatingPreferences {
     pub bold: bool,
     pub dividers: bool,
     pub click_through: bool,
+    pub hide_on_fullscreen: bool,
     pub background: FloatingBackground,
 }
 
@@ -95,6 +96,7 @@ impl Default for FloatingPreferences {
             bold: false,
             dividers: true,
             click_through: false,
+            hide_on_fullscreen: true,
             background: FloatingBackground::Default,
         }
     }

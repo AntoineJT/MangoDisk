@@ -142,6 +142,22 @@ describe('status display interactions', () => {
     expect(tabs()[0]!.attributes('aria-selected')).toBe('true');
     expect(active().element.scrollTop).toBe(0);
   });
+  it.each(['floating', 'both'] as const)('keeps Windows fullscreen controls off macOS in %s mode', async mode => {
+    const preferences = preferencesFixture();
+    preferences.macosDisplayMode = mode;
+    preferences.windowsDisplayMode = 'both';
+    preferences.floating.hideOnFullscreen = false;
+    vi.mocked(ResidentService.preferences).mockResolvedValue(preferences);
+    const wrapper = mount(Settings, { props: { isMacOs: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2);
+    await wrapper.findAll('[role="tab"]')[1]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(wrapper.find('#floating-font-size').exists()).toBe(true);
+    expect(wrapper.find('#floating-fullscreen').exists()).toBe(false);
+  });
   it.each([
     { isMacOs: true, isLinux: false },
     { isMacOs: false, isLinux: true },
@@ -1051,7 +1067,7 @@ describe('status display interactions', () => {
     await wrapper.get('input[name="taskbar-position"][value="auto"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
-      expect.objectContaining({ schemaVersion: 35, taskbarPosition: 'auto' })
+      expect.objectContaining({ schemaVersion: 36, taskbarPosition: 'auto' })
     );
   });
 

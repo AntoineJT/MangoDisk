@@ -73,6 +73,12 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
         "/floatingMonitor/snapToEdges",
         preferences.floating.snap_to_edges,
     )?;
+    #[cfg(windows)]
+    let fullscreen = check(
+        "floating-fullscreen",
+        "/floatingMonitor/hideOnFullscreen",
+        preferences.floating.hide_on_fullscreen,
+    )?;
     let bold = check(
         "floating-bold",
         "/floatingMonitor/bold",
@@ -140,6 +146,8 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
             &locked,
             #[cfg(windows)]
             &snap,
+            #[cfg(windows)]
+            &fullscreen,
             #[cfg(windows)]
             &interaction_separator,
             &appearance,

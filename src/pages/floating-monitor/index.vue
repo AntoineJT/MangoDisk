@@ -56,7 +56,7 @@ async function perform(action: () => Promise<void>) {
   }
 }
 function accept(value: FloatingSnapshot | null) {
-  if (!disposed && value?.schemaVersion === 8) {
+  if (!disposed && value?.schemaVersion === 9) {
     snapshot.value = value;
     if (sizingFailed || sizedKey !== sizingKey.value) queueSizing();
   }

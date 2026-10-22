@@ -4430,6 +4430,7 @@
     "chooseMetrics": "Messwerte in den Einstellungen wählen",
     "backgroundOpacity": "Deckkraft des Hintergrunds",
     "snapToEdges": "An Bildschirmrändern einrasten",
+    "hideOnFullscreen": "Bei Vollbild automatisch ausblenden",
     "labels": {
       "fan": "Lüfter",
       "cpu": "CPU",

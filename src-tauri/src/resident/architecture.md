@@ -86,7 +86,7 @@ in storage but do not enable interactions on macOS.
 Native window titles follow the locale refresh independently of font measurements,
 including selections such as CPU whose label is identical across languages.
 
-Snapshot schema 8 separates native context-menu availability from metric clicks,
+Snapshot schema 9 separates native context-menu availability from metric clicks,
 which remain Windows-only. Native adapters own visibility and mouse-button state; layout and
 monitor-relative persistence share the same bounded geometry.
 
@@ -157,7 +157,7 @@ the application theme; presets own foreground, border and status colors while
 retaining the saved 50–100% background opacity. Existing configurations retain
 standard type, regular weight and the default palette when migrated.
 
-Floating snapshot schema 8 carries these settings. Typography uses scales
+Floating snapshot schema 9 carries these settings. Typography uses scales
 1, 1.15, 1.3 and 1.5 with matching native row heights 20, 23, 26 and 30 CSS pixels.
 The layout request includes font size and bold state so stale measurements cannot
 resize a newer appearance. Localized labels and bounded value samples are measured
@@ -183,8 +183,12 @@ Only completion of an explicit native drag marks a position as a user edit. Wind
 move notifications caused by RDP, DPI, or work-area changes do not replace it.
 Horizontal cells retain stable widths, balance wrapped rows, and scroll when a
 small work area cannot hold all selected devices. Details open outside the monitor
-surface where space permits. Foreign fullscreen windows on its display temporarily
-hide the monitor without changing the user's display mode.
+surface where space permits. Windows exposes `floating.hideOnFullscreen` in its
+behavior settings and context menu, enabled by default for new and migrated
+configurations. When enabled, foreign fullscreen windows on its display temporarily
+hide the monitor without changing the user's display mode. Disabling it skips
+fullscreen detection and restores the monitor immediately. macOS retains its
+AppKit fullscreen exclusion independently of this Windows-only setting.
 
 Acceptance must cover Windows 10 and 11: taskbar lease release/restoration, both
 layouts and themes, lock/menu/metric interactions, display-mode transitions, cold restart,
@@ -205,9 +209,9 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 35; resource readings use version 31.
+Resident preferences use schema version 36; resource readings use version 31.
 The runtime and IPC accept only the current structure. Persisted configurations from
-release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32, 33 and 34 upgrade directly to schema 35;
+release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32, 33, 34 and 35 upgrade directly to schema 36;
 development-only schemas, including 26 and 27, have no migration contract. Each
 supported release has a frozen fixture beside the pure decoder. Upgrades retain
 saved order, visibility, colors, source choices and consent; newly introduced

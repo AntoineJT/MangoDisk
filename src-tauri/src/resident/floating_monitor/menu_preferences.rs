@@ -29,6 +29,7 @@ pub(super) fn apply(preferences: &mut FloatingPreferences, action: &str) -> bool
         "floating-top" => preferences.always_on_top = !preferences.always_on_top,
         "floating-lock" => preferences.locked = !preferences.locked,
         "floating-snap" => preferences.snap_to_edges = !preferences.snap_to_edges,
+        "floating-fullscreen" => preferences.hide_on_fullscreen = !preferences.hide_on_fullscreen,
         _ => {
             if let Some((_, value)) = action
                 .strip_prefix("floating-font-")
@@ -110,6 +111,7 @@ mod tests {
             "floating-top",
             "floating-lock",
             "floating-snap",
+            "floating-fullscreen",
         ] {
             let mut preferences = original.clone();
             let mut expected = original.clone();
@@ -119,6 +121,7 @@ mod tests {
                 "floating-top" => expected.always_on_top = false,
                 "floating-lock" => expected.locked = true,
                 "floating-snap" => expected.snap_to_edges = false,
+                "floating-fullscreen" => expected.hide_on_fullscreen = false,
                 _ => unreachable!(),
             }
             assert!(apply(&mut preferences, action));
