@@ -144,8 +144,10 @@ const visibleRows = computed(() =>
 );
 // Older preferences may have every item cleared. Mirror the native Logo
 // fallback without writing on load, and retain it when the next metric is added.
-const floatingRecoveryIcon = computed(
-  () => !props.isMacOs && !props.isLinux && settings.draft?.windowsDisplayMode !== 'taskbar'
+const floatingRecoveryIcon = computed(() =>
+  props.isMacOs
+    ? settings.draft?.macosDisplayMode !== 'menuBar'
+    : !props.isLinux && settings.draft?.windowsDisplayMode !== 'taskbar'
 );
 const showIcon = computed(
   () => floatingRecoveryIcon.value || (settings.draft?.showIcon ?? true) || !visibleRows.value.some(row => row.enabled)
@@ -315,15 +317,7 @@ defineExpose({
       @close-auto-focus="restoreConfigurationFocus"
     >
       <MdDialogHeader class="flex-none border-b border-border/70">
-        <DialogTitle>{{
-          t(
-            isMacOs
-              ? 'systemStatus.menuBarSettingsTitle'
-              : isLinux
-                ? 'systemStatus.displaySettingsTitle'
-                : 'floatingMonitor.title'
-          )
-        }}</DialogTitle>
+        <DialogTitle>{{ t(isLinux ? 'systemStatus.displaySettingsTitle' : 'floatingMonitor.title') }}</DialogTitle>
       </MdDialogHeader>
       <MdResidentSettingsTabs
         :open="settingsOpen"
@@ -580,7 +574,10 @@ defineExpose({
               @change="settings.change($event)"
             />
             <MdSettingsGroup
-              v-if="windows && settings.draft.windowsDisplayMode !== 'taskbar'"
+              v-if="
+                (windows && settings.draft.windowsDisplayMode !== 'taskbar') ||
+                (isMacOs && settings.draft.macosDisplayMode !== 'menuBar')
+              "
               plain
               :title="t('floatingMonitor.floating')"
             >

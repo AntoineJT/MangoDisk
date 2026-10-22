@@ -12,7 +12,9 @@ export interface FloatingEntry {
   fanRows?: { id: number; text: string; tone: FloatingEntry['tone'] }[];
 }
 export interface FloatingSnapshot {
-  schemaVersion: 6;
+  schemaVersion: 8;
+  interactive: boolean;
+  contextMenu: boolean;
   entries: FloatingEntry[];
   preferences: ResidentPreferences['floating'];
   columns: number[] | null;

@@ -44,6 +44,7 @@ impl Placement {
         self.area = None;
         self.columns = None;
     }
+    #[cfg(any(windows, test))]
     pub(super) fn is_applied(&self) -> bool {
         self.area.is_some() && self.columns.is_some()
     }
@@ -135,6 +136,7 @@ pub(super) fn apply(
         // Move before sizing so a monitor transition cannot use the previous DPI.
         placement.lock().unwrap_or_else(|e| e.into_inner()).applied = Some(point);
         window.set_position(PhysicalPosition::new(point.0, point.1))?;
+        #[cfg(windows)]
         crate::resident::windows_frame::refresh(window)?;
         window.set_size(PhysicalSize::new(size.0, size.1))?;
         let captured = bookmark.after_placement(

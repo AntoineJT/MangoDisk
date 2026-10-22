@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "Her gösterge için koşulları ve renkleri ayarlayın",
     "menuBarCompactHint": "Daha dar aralıklar; ağ birimleri K, M, G olarak kısaltılır",
     "configureAction": "Yapılandır…",
-    "menuBarSettingsTitle": "Menü çubuğu ayarları",
     "displaySettingsTitle": "Görev çubuğu ayarları",
     "done": "Bitti",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "Bu konumda yeterli alan yok. Tepsi simgeleri kullanılıyor; kompakt modu deneyin veya daha az öğe seçin",
     "taskbarUnsupported": "Görev çubuğu çok küçük; tepsi simgeleri kullanılıyor",
     "taskbarUnavailable": "Görev çubuğu bekleniyor. Geçici olarak tepsi simgeleri gösteriliyor",
-    "menuBarEnabled": "Menü çubuğunda göster",
     "displayEnabled": "Görev çubuğunda göster",
-    "menuBarHint": "Sistem kaynaklarını gerçek zamanlı izleyin ve hızla bellek boşaltın",
     "displayHint": "Sistem kaynaklarını gerçek zamanlı izleyin ve hızla bellek boşaltın",
     "linuxDisplayHint": "CPU, bellek, ağ hızı ve disk verilerini görüntüleyin",
     "overview": "Genel bakış",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "Sistem durumu",
     "displayMode": "Görüntüleme modu",
+    "menuBar": "Menü çubuğu",
     "taskbar": "Görev çubuğu",
     "floating": "Kayan pencere",
     "both": "İkisi de",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "Arka plan opaklığı",
     "snapToEdges": "Ekran kenarlarına yasla",
     "labels": {
+      "fan": "Fan",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "Bellek",

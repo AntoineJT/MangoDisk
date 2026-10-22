@@ -35,8 +35,8 @@ const commandErrorCodes = [
   'taskJoinFailed',
 ];
 const dynamicKeyGroups = {
-  // Windows native floating menus and the typed display-mode selector.
-  floatingMonitor: ['taskbar', 'floating', 'both', 'resetPosition'],
+  // Native floating menus and typed platform display-mode selectors.
+  floatingMonitor: ['menuBar', 'taskbar', 'floating', 'both', 'resetPosition'],
   'floatingMonitor.fontSizes': ['standard', 'larger', 'large', 'extraLarge'],
   'floatingMonitor.backgrounds': ['default', 'darkGray', 'inkBlue', 'warmWhite', 'lightGray', 'black', 'white'],
   // Native startup and recovery dialogs remain usable when Vue cannot mount.

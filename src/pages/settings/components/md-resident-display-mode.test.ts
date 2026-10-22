@@ -3,7 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createI18n } from 'vue-i18n';
 import { describe, expect, it } from 'vitest';
 import MdSwitch from '@/components/custom/md-switch.vue';
-import Mode from './md-windows-display-mode.vue';
+import Mode from './md-resident-display-mode.vue';
 import Appearance from './md-floating-appearance.vue';
 import Behavior from './md-floating-behavior.vue';
 import { Select } from '@/components/ui/select';
@@ -24,7 +24,7 @@ describe('Windows display mode settings', () => {
     async (locale, messages) => {
       const preferences = preferencesFixture();
       const wrapper = mount(Mode, {
-        props: { preferences },
+        props: { preferences, platform: 'windows' },
         global: { plugins: [createI18n({ legacy: false, locale, messages: locales })] },
       });
       expect(wrapper.text()).toContain(messages.floatingMonitor.displayMode);
@@ -116,6 +116,32 @@ describe('Windows display mode settings', () => {
     });
     await flushPromises();
     expect(wrapper.get('#floating-opacity').text()).toContain('75%');
+    wrapper.unmount();
+  });
+});
+
+describe('shared resident display mode', () => {
+  it.each(
+    Object.keys(locales).flatMap(locale => (['macos', 'windows'] as const).map(platform => ({ locale, platform })))
+  )('keeps platform choices independent for $platform in $locale', async ({ locale, platform }) => {
+    const preferences = preferencesFixture();
+    const wrapper = mount(Mode, {
+      props: { preferences, platform },
+      global: { plugins: [createI18n({ legacy: false, locale, messages: locales })] },
+    });
+    const nativeMode = platform === 'macos' ? 'menuBar' : 'taskbar';
+    const field = platform === 'macos' ? 'macosDisplayMode' : 'windowsDisplayMode';
+    expect(wrapper.get(`#${platform}-display-mode`).text()).toContain(locales[locale]!.floatingMonitor[nativeMode]);
+    const select = wrapper.getComponent(Select);
+    select.vm.$emit('update:modelValue', platform === 'macos' ? 'taskbar' : 'menuBar');
+    select.vm.$emit('update:modelValue', null);
+    expect(wrapper.emitted('change')).toBeUndefined();
+    for (const mode of [nativeMode, 'floating', 'both']) {
+      select.vm.$emit('update:modelValue', mode);
+      expect(wrapper.emitted('change')?.at(-1)).toEqual([{ [field]: mode }]);
+    }
+    expect(preferences.windowsDisplayMode).toBe('taskbar');
+    expect(preferences.macosDisplayMode).toBe('menuBar');
     wrapper.unmount();
   });
 });

@@ -4,12 +4,13 @@ import { emptyReadings } from '@/lib/utils/system-resources/system-resources';
 
 export function preferencesFixture(): ResidentPreferences {
   return {
-    schemaVersion: 34,
+    schemaVersion: 35,
     windowsCpuTemperatureEnabled: false,
     revision: 0,
     enabled: true,
     showIcon: true,
     windowsDisplayMode: 'taskbar',
+    macosDisplayMode: 'menuBar',
     floating: {
       layout: 'horizontal',
       alwaysOnTop: true,

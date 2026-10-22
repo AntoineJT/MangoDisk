@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "Configurer les conditions et les couleurs pour chaque élément d'affichage",
     "menuBarCompactHint": "Espacement plus serré, avec unités réseau raccourcies en K, M, G",
     "configureAction": "Configurer…",
-    "menuBarSettingsTitle": "Paramètres de la barre de menus",
     "displaySettingsTitle": "Paramètres de la barre des tâches",
     "done": "Terminé",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "Espace insuffisant à cet emplacement. Les icônes de la zone de notification sont utilisées ; essayez le mode compact ou affichez moins d’éléments",
     "taskbarUnsupported": "La barre des tâches est trop petite. Les icônes de la zone de notification sont utilisées",
     "taskbarUnavailable": "En attente de la barre des tâches. Les icônes de la zone de notification sont affichées temporairement",
-    "menuBarEnabled": "Afficher dans la barre de menu",
     "displayEnabled": "Afficher dans la barre des tâches",
-    "menuBarHint": "Surveiller les ressources système en temps réel et libérer rapidement de la mémoire",
     "displayHint": "Surveiller les ressources système en temps réel et libérer rapidement de la mémoire",
     "linuxDisplayHint": "Afficher les statistiques du processeur, de la mémoire, de la vitesse du réseau et du disque",
     "overview": "Aperçu",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "État du système",
     "displayMode": "Mode d’affichage",
+    "menuBar": "Barre des menus",
     "taskbar": "Barre des tâches",
     "floating": "Fenêtre flottante",
     "both": "Les deux",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "Opacité du fond",
     "snapToEdges": "Aligner sur les bords",
     "labels": {
+      "fan": "Ventilateur",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "Mémoire",

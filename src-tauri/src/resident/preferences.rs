@@ -113,7 +113,7 @@ pub fn apply(
         .lock()
         .map_err(|_| Failure::state("preferences_reading"))?
         .clone();
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     super::floating_monitor::prepare(app, &preferences)
         .map_err(|error| Failure::record("floating_prepare", &error))?;
     if let Err(error) = super::tray_display::apply_preferences(app, &preferences, &reading) {
@@ -160,6 +160,12 @@ pub fn apply(
     {
         super::floating_monitor::show(app);
     }
+    #[cfg(target_os = "macos")]
+    if preferences.enabled
+        && (!current.enabled || current.macos_display_mode != preferences.macos_display_mode)
+    {
+        super::floating_monitor::show(app);
+    }
     if preferences.enabled {
         super::panel::prewarm(app);
     } else {
@@ -168,11 +174,12 @@ pub fn apply(
     let _ = app.emit("resident-preferences-changed", preferences.revision);
     state.wake();
     log::info!(
-        "resident_preferences_saved enabled={} revision={} show_icon={} windows_mode={:?} floating_layout={:?} floating_top={} floating_locked={} floating_click_through={} floating_background_opacity={} floating_snap_to_edges={} floating_font_size={:?} floating_bold={} floating_background={:?} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",
+        "resident_preferences_saved enabled={} revision={} show_icon={} windows_mode={:?} macos_mode={:?} floating_layout={:?} floating_top={} floating_locked={} floating_click_through={} floating_background_opacity={} floating_snap_to_edges={} floating_font_size={:?} floating_bold={} floating_background={:?} metrics={:?} position={:?} background={} compact={} menu_bar_compact={} usage_colors={} color_rules={:?} network_manual={} disk_manual={} gpu_adapter={} gpu_display={:?} gpu_temperature_display={:?} elapsed_ms={}",
         preferences.enabled,
         preferences.revision,
         preferences.effective_icon(),
         preferences.windows_display_mode,
+        preferences.macos_display_mode,
         preferences.floating.layout,
         preferences.floating.always_on_top,
         preferences.floating.locked,

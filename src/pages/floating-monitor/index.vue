@@ -45,7 +45,7 @@ async function perform(action: () => Promise<void>) {
   }
 }
 function accept(value: FloatingSnapshot | null) {
-  if (!disposed && value?.schemaVersion === 6) {
+  if (!disposed && value?.schemaVersion === 8) {
     snapshot.value = value;
     if (sizingFailed || sizedKey !== sizingKey.value) queueSizing();
   }
@@ -166,13 +166,16 @@ onBeforeUnmount(() => {
   unlisteners.forEach(stop => stop());
 });
 function openMenu() {
+  if (!snapshot.value?.contextMenu) return;
   void perform(() => FloatingMonitorService.menu());
 }
 function metricLabel(entry: FloatingEntry) {
   if (entry.gpuDevice && (entryCounts.value[entry.id] ?? 0) > 1) return entry.gpuDevice.label;
+  if (entry.id === 'fanSpeed' && !snapshot.value?.interactive) return t('floatingMonitor.labels.fan');
   return t(FLOATING_LABEL_KEYS[entry.id]);
 }
 function toggleDetail(id: FloatingMetricId) {
+  if (!snapshot.value?.interactive) return;
   void perform(() => FloatingMonitorService.toggleMetric(detailMetric(id)));
 }
 let dragOrigin: { x: number; y: number; clientX: number; clientY: number } | null = null;
@@ -225,6 +228,7 @@ function suppressDraggedClick(event: MouseEvent) {
     ref="surface"
     class="floating-monitor"
     :class="{ vertical: snapshot?.preferences.layout === 'vertical', locked: snapshot?.preferences.locked }"
+    :data-interactive="snapshot?.interactive ?? false"
     :data-background="snapshot?.preferences.background ?? 'default'"
     :data-bold="snapshot?.preferences.bold ?? false"
     :data-dividers="snapshot?.preferences.dividers ?? true"
@@ -236,7 +240,7 @@ function suppressDraggedClick(event: MouseEvent) {
       '--floating-columns': snapshot?.columns?.map(width => `${width}px`).join(' '),
     }"
     :aria-label="t('floatingMonitor.title')"
-    tabindex="0"
+    :tabindex="snapshot?.contextMenu ? 0 : undefined"
     @pointerdown="prepareMove"
     @pointermove="move"
     @pointerup="finishMove"
@@ -248,7 +252,8 @@ function suppressDraggedClick(event: MouseEvent) {
     @keydown.shift.f10.prevent="openMenu()"
   >
     <div v-if="snapshot?.entries.length" class="metrics">
-      <button
+      <component
+        :is="snapshot.interactive ? 'button' : 'div'"
         v-for="(entry, index) in snapshot.entries"
         :key="`${entry.id}:${entry.gpuDevice?.id ?? ''}`"
         class="metric"
@@ -268,7 +273,7 @@ function suppressDraggedClick(event: MouseEvent) {
         <span v-else class="metric-value" :data-tone="entry.tone">
           {{ floatingValue(entry) }}
         </span>
-      </button>
+      </component>
       <div
         v-for="index in trailingCellCount"
         :key="`empty-${index}`"
@@ -277,9 +282,14 @@ function suppressDraggedClick(event: MouseEvent) {
         aria-hidden="true"
       />
     </div>
-    <button v-else class="empty-state" @click="openMenu()">
+    <component
+      :is="snapshot?.interactive ? 'button' : 'div'"
+      v-else
+      class="empty-state"
+      @click="snapshot?.interactive && openMenu()"
+    >
       {{ t('floatingMonitor.chooseMetrics') }}
-    </button>
+    </component>
     <span v-if="failed" role="alert" class="error-indicator" :aria-label="t('monitoring.unavailable')">!</span>
   </main>
 </template>

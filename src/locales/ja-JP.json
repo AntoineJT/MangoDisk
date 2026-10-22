@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "表示項目ごとに条件と色を設定できます",
     "menuBarCompactHint": "間隔を詰め、通信速度の単位を K・M・G に省略",
     "configureAction": "設定…",
-    "menuBarSettingsTitle": "メニューバー設定",
     "displaySettingsTitle": "タスクバー設定",
     "done": "完了",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "この位置の空き領域が不足しています。トレイアイコンを使用中です。コンパクト表示にするか表示項目を減らしてください",
     "taskbarUnsupported": "タスクバーが小さすぎるため、トレイに表示しています",
     "taskbarUnavailable": "タスクバーの準備を待っています。一時的にトレイアイコンを表示します",
-    "menuBarEnabled": "メニューバーに表示",
     "displayEnabled": "タスクバーに表示",
-    "menuBarHint": "システムリソースの状態をリアルタイムで確認し、すばやくメモリを解放",
     "displayHint": "システムリソースの状態をリアルタイムで確認し、すばやくメモリを解放",
     "linuxDisplayHint": "CPU・メモリ・通信速度・ディスクの使用状況を確認",
     "overview": "概要",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "システム状態",
     "displayMode": "表示方法",
+    "menuBar": "メニューバー",
     "taskbar": "タスクバー",
     "floating": "フローティング",
     "both": "両方",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "背景の不透明度",
     "snapToEdges": "画面の端に吸着",
     "labels": {
+      "fan": "ファン",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "メモリ",

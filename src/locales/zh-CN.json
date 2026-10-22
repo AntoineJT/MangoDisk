@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "在各显示项中分别设置条件和颜色",
     "menuBarCompactHint": "缩小间距，网速单位简写为 K、M、G",
     "configureAction": "配置…",
-    "menuBarSettingsTitle": "菜单栏设置",
     "displaySettingsTitle": "任务栏设置",
     "done": "完成",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "该位置空间不足，已暂用托盘图标。可开启紧凑模式或减少显示内容",
     "taskbarUnsupported": "当前任务栏尺寸不足，已使用托盘显示",
     "taskbarUnavailable": "正在等待任务栏就绪，暂时显示托盘图标",
-    "menuBarEnabled": "在菜单栏显示",
     "displayEnabled": "在任务栏显示",
-    "menuBarHint": "实时查看系统资源状态，快速释放内存",
     "displayHint": "实时查看系统资源状态，快速释放内存",
     "linuxDisplayHint": "查看 CPU、内存、网速与磁盘使用情况",
     "overview": "概览",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "系统状态",
     "displayMode": "显示方式",
+    "menuBar": "菜单栏",
     "taskbar": "任务栏",
     "floating": "悬浮窗",
     "both": "同时显示",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "背景不透明度",
     "snapToEdges": "贴边吸附",
     "labels": {
+      "fan": "风扇",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "内存",

@@ -1,7 +1,7 @@
 use super::{
     placement::Placement, sizing::ItemMeasurement, LayoutMeasurement, Snapshot, EVENT, LABEL,
 };
-use crate::resident::{preference_schema::WindowsDisplayMode, preferences::ResidentPreferences};
+use crate::resident::preferences::ResidentPreferences;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
@@ -15,6 +15,7 @@ struct State {
     ready: AtomicBool,
     queued: AtomicBool,
     failed: AtomicBool,
+    #[cfg(windows)]
     click_through: AtomicBool,
     measurements: Mutex<Option<LayoutMeasurement>>,
 }
@@ -27,6 +28,7 @@ pub fn install(app: &tauri::AppHandle) {
         ready: AtomicBool::new(false),
         queued: AtomicBool::new(false),
         failed: AtomicBool::new(false),
+        #[cfg(windows)]
         click_through: AtomicBool::new(false),
         measurements: Mutex::new(None),
     });
@@ -46,8 +48,9 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .invalidate_window();
+    #[cfg(windows)]
     state.click_through.store(false, Ordering::Relaxed);
-    let window =
+    let builder =
         WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("floating-monitor.html".into()))
             .title(format!(
                 "MangoDisk · {}",
@@ -64,10 +67,17 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
             .skip_taskbar(true)
             .shadow(false)
             .transparent(true)
-            .always_on_top(preferences.floating.always_on_top)
-            .build()?;
+            .always_on_top(preferences.floating.always_on_top);
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .accept_first_mouse(true)
+        .visible_on_all_workspaces(true);
+    let window = builder.build()?;
+    #[cfg(windows)]
     crate::webview_recovery::install(&window);
     super::menu::install(&window);
+    #[cfg(target_os = "macos")]
+    super::native::configure(&window)?;
     window.on_window_event(move |event| {
         if let WindowEvent::CloseRequested { api, .. } = event {
             api.prevent_close();
@@ -77,6 +87,7 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
     Ok(())
 }
 
+#[cfg(windows)]
 pub(crate) fn recreate_webview(app: &tauri::AppHandle) -> tauri::Result<()> {
     let resident = app.state::<std::sync::Arc<crate::resident::runtime::ResidentState>>();
     let preferences = resident
@@ -129,8 +140,20 @@ pub fn prewarm(app: &tauri::AppHandle) {
     });
 }
 
-fn requested(preferences: &ResidentPreferences) -> bool {
-    preferences.enabled && preferences.windows_display_mode != WindowsDisplayMode::Taskbar
+pub(super) fn requested(preferences: &ResidentPreferences) -> bool {
+    if !preferences.enabled {
+        return false;
+    }
+    #[cfg(windows)]
+    {
+        preferences.windows_display_mode
+            != crate::resident::preference_schema::WindowsDisplayMode::Taskbar
+    }
+    #[cfg(target_os = "macos")]
+    {
+        preferences.macos_display_mode
+            != crate::resident::preference_schema::MacOsDisplayMode::MenuBar
+    }
 }
 
 pub fn update(
@@ -141,11 +164,18 @@ pub fn update(
     let state = app.state::<State>();
     {
         let mut current = state.snapshot.lock().unwrap_or_else(|e| e.into_inner());
-        let next = requested(preferences).then(|| Snapshot {
-            schema_version: 6,
-            entries: entries.to_vec(),
-            preferences: preferences.floating.clone(),
-            columns: None,
+        let next = requested(preferences).then(|| {
+            let floating = preferences.floating.clone();
+            #[cfg(target_os = "macos")]
+            let floating = crate::resident::floating_monitor::native::appearance_only(floating);
+            Snapshot {
+                schema_version: 8,
+                interactive: cfg!(windows),
+                context_menu: true,
+                entries: entries.to_vec(),
+                preferences: floating,
+                columns: None,
+            }
         });
         // Default taskbar mode never creates a WebView or queues floating UI work.
         if current.is_none() && next.is_none() && !state.failed.load(Ordering::Relaxed) {
@@ -231,6 +261,7 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
         }
         return Ok(());
     };
+    #[cfg(windows)]
     super::interaction::apply_cursor_events(
         &window,
         &state.click_through,
@@ -304,8 +335,8 @@ pub fn show(app: &tauri::AppHandle) {
 }
 
 pub(super) fn finish_drag(app: &tauri::AppHandle) {
-    // Windows also sends Moved when RDP, DPI, or work-area changes relocate a
-    // window. Only an explicit native gesture may replace the saved anchor.
+    // Native Moved events also follow DPI and work-area changes. Only an
+    // explicit drag gesture may replace the saved anchor.
     app.state::<State>()
         .position
         .lock()

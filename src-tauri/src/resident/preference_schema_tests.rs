@@ -125,7 +125,7 @@ fn every_display_combination_retains_an_entry() {
 fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields() {
     let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
     for version in (0..PREFERENCE_SCHEMA_VERSION)
-        .filter(|v| ![7, 8, 10, 21, 25, 28, 29, 30, 31, 32, 33].contains(v))
+        .filter(|v| ![7, 8, 10, 21, 25, 28, 29, 30, 31, 32, 33, 34].contains(v))
         .chain([PREFERENCE_SCHEMA_VERSION + 1])
     {
         let mut value = current.clone();
@@ -148,6 +148,7 @@ fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields
         "fanIds",
         "metrics",
         "windowsDisplayMode",
+        "macosDisplayMode",
         "floating",
     ] {
         let mut value = current.clone();
@@ -159,6 +160,45 @@ fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields
         value["gpuDisplay"] = serde_json::json!({"mode":mode});
         assert!(decode(value).is_err());
     }
+}
+
+#[test]
+fn previous_windows_floating_preferences_gain_independent_macos_menu_bar_default() {
+    let expected = ResidentPreferences {
+        revision: 187,
+        windows_display_mode: WindowsDisplayMode::Both,
+        floating: FloatingPreferences {
+            layout: FloatingLayout::Vertical,
+            font_size: FloatingFontSize::Large,
+            bold: true,
+            background_opacity: 70,
+            click_through: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut previous = serde_json::to_value(&expected).unwrap();
+    previous["schemaVersion"] = 34.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
+    assert_eq!(decode(previous.clone()).unwrap(), expected);
+    previous["macosDisplayMode"] = "both".into();
+    assert!(decode(previous).is_err());
+
+    for mode in [
+        MacOsDisplayMode::MenuBar,
+        MacOsDisplayMode::Floating,
+        MacOsDisplayMode::Both,
+    ] {
+        let mut preferences = expected.clone();
+        preferences.macos_display_mode = mode;
+        assert_eq!(
+            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            preferences
+        );
+    }
+    let mut malformed = serde_json::to_value(expected).unwrap();
+    malformed["macosDisplayMode"] = "taskbar".into();
+    assert!(decode(malformed).is_err());
 }
 
 #[test]
@@ -416,6 +456,7 @@ fn disk_temperature_device_is_independent_and_released_preferences_follow_the_se
 fn previous_monitor_settings_upgrade_without_changing_user_choices() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 28.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     previous["revision"] = 91.into();
     previous["enabled"] = false.into();
     previous["taskbarPosition"] = "left".into();
@@ -460,6 +501,7 @@ fn floating_options_reject_unknown_modes_and_preserve_a_recovery_icon() {
 fn previous_floating_settings_keep_layout_and_position_options_with_opaque_background() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 29.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
         previous["floating"].as_object_mut().unwrap().remove(field);
     }
@@ -525,6 +567,7 @@ fn floating_background_opacity_requires_a_bounded_integer_percentage() {
 fn previous_opacity_settings_enable_snapping_without_resetting_other_choices() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 30.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
         previous["floating"].as_object_mut().unwrap().remove(field);
     }
@@ -577,6 +620,7 @@ fn snapping_requires_an_explicit_boolean_in_the_current_schema() {
 fn previous_floating_appearance_keeps_opacity_and_defaults_new_options() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 31.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     previous["floating"]["backgroundOpacity"] = 60.into();
     previous["floating"]["snapToEdges"] = false.into();
     for field in ["fontSize", "bold", "background", "dividers", "clickThrough"] {
@@ -655,6 +699,7 @@ fn previous_floating_appearance_adds_dividers_without_changing_saved_choices() {
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 32.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -719,6 +764,7 @@ fn click_through_migrates_disabled_and_preserves_previous_choices() {
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 33.into();
+    previous.as_object_mut().unwrap().remove("macosDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()

@@ -37,10 +37,9 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
     #[cfg(target_os = "linux")]
     application_icons::install();
     #[cfg(windows)]
-    {
-        taskbar_display::install(app);
-        floating_monitor::install(app);
-    }
+    taskbar_display::install(app);
+    #[cfg(any(windows, target_os = "macos"))]
+    floating_monitor::install(app);
     tray_display::install(app)?;
     memory_preferences::install(app);
     let preferences = preferences::load(app);
@@ -55,7 +54,7 @@ pub fn install(app: &tauri::AppHandle) -> tauri::Result<()> {
         .display_initialized
         .store(true, std::sync::atomic::Ordering::Release);
     state.wake();
-    #[cfg(windows)]
+    #[cfg(any(windows, target_os = "macos"))]
     floating_monitor::prewarm(app);
     log::info!("resident_started enabled={}", preferences.enabled);
     Ok(())

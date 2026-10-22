@@ -1,7 +1,7 @@
 # Resident system status
 
 The resident adapter combines independent Core readings into native menu-bar/tray
-entries, a Windows floating monitor, and one reusable detail panel. It does not own filesystem cleanup,
+entries, a macOS/Windows floating monitor, and one reusable detail panel. It does not own filesystem cleanup,
 application termination, or memory-reclamation algorithms.
 
 ## Ownership
@@ -51,12 +51,38 @@ They do not depend on a running Tauri application, and they do not move native
 UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
 and native presentation remain explicit desktop adapters.
 
-The floating monitor keeps `window` lifecycle, `placement` persistence,
-`geometry` calculations and `sizing` validation separate from native behavior.
+The floating monitor shares `window` lifecycle, `placement` persistence,
+`geometry` calculations and `sizing` validation across macOS and Windows.
 The native menu assembles controls and commits preferences; `menu_preferences`
 owns its supported choices and pure field updates. Windows resource-panel
-anchors, metric clicks and click-through live in `interaction`; Win32 visibility
-and mouse state remain in the native adapter.
+anchors, metric clicks and click-through live in `interaction`; AppKit and
+Win32 visibility and mouse state remain in their native adapters.
+The settings display-mode control is shared while each platform retains its
+own persisted mode and supported choices.
+
+## macOS floating monitor
+
+`macosDisplayMode` independently selects menu bar (default), floating, or both.
+Floating-only mode keeps a brand menu-bar entry for configuration and quitting.
+It reuses the formatted overview readings, localized font measurement, fixed
+columns, typography and palette controls, without enabling detailed sampling.
+
+The macOS surface only displays data. It uses non-focusable metric elements,
+ignores metric commands, and provides no click-through mode. Its native context
+menu shares appearance actions with Windows, plus layout, settings and position
+reset; Windows-only interaction choices are not exposed.
+AppKit orders the borderless window without activating the main application.
+The window joins ordinary Spaces, stays out of window cycling and Mission Control
+tiles, and does not opt into fullscreen auxiliary presentation. Moving uses the
+native drag loop; placement waits for mouse release and persists only explicit
+drags. Programmatic screen, DPI and layout moves never overwrite its bookmark.
+macOS always keeps the monitor on top and movable, without edge snapping. Only
+appearance settings are exposed. Shared Windows interaction choices are retained
+in storage but do not enable interactions on macOS.
+
+Snapshot schema 8 separates native context-menu availability from metric clicks,
+which remain Windows-only. Native adapters own visibility and mouse-button state; layout and
+monitor-relative persistence share the same bounded geometry.
 
 ## Windows floating monitor
 
@@ -125,7 +151,7 @@ the application theme; presets own foreground, border and status colors while
 retaining the saved 50–100% background opacity. Existing configurations retain
 standard type, regular weight and the default palette when migrated.
 
-Floating snapshot schema 6 carries these settings. Typography uses scales
+Floating snapshot schema 8 carries these settings. Typography uses scales
 1, 1.15, 1.3 and 1.5 with matching native row heights 20, 23, 26 and 30 CSS pixels.
 The layout request includes font size and bold state so stale measurements cannot
 resize a newer appearance. Localized labels and bounded value samples are measured
@@ -133,7 +159,7 @@ in the actual WebView fonts; readings and background changes do not determine
 geometry. Shared columns and right-aligned complete readings remain stable.
 
 The floating WebView consumes only formatted `DisplayEntry` summaries and resolved column widths (event schema
-5), with native color hysteresis. It never enables detailed sampling or process
+7), with native color hysteresis. It never enables detailed sampling or process
 lists. Hidden windows receive no periodic events. Native menus provide layout,
 keep-on-top, lock, edge snapping, font size, bold text, background presets and opacity, reset, and settings actions without clipping to the small
 window. Locking prevents native drag requests but leaves metric navigation enabled.
@@ -173,9 +199,9 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 34; resource readings use version 31.
+Resident preferences use schema version 35; resource readings use version 31.
 The runtime and IPC accept only the current structure. Persisted configurations from
-release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32 and 33 upgrade directly to schema 34;
+release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32, 33 and 34 upgrade directly to schema 35;
 development-only schemas, including 26 and 27, have no migration contract. Each
 supported release has a frozen fixture beside the pure decoder. Upgrades retain
 saved order, visibility, colors, source choices and consent; newly introduced

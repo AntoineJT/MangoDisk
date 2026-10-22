@@ -1,10 +1,6 @@
 //! Native menus stay outside the compact WebView bounds and remain keyboard accessible.
 use super::{menu_preferences, window, LABEL};
-use crate::resident::{
-    preference_schema::{FloatingLayout, WindowsDisplayMode},
-    preferences,
-    runtime::ResidentState,
-};
+use crate::resident::{preference_schema::FloatingLayout, preferences, runtime::ResidentState};
 use std::sync::Arc;
 use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
@@ -42,7 +38,7 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .clone();
-    if preferences.floating.click_through {
+    if !window::requested(&preferences) || (cfg!(windows) && preferences.floating.click_through) {
         return Ok(());
     }
     let item = |id, key| MenuItem::with_id(app, id, labels.text(key), true, None::<&str>);
@@ -59,16 +55,19 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
         "/floatingMonitor/vertical",
         preferences.floating.layout == FloatingLayout::Vertical,
     )?;
+    #[cfg(windows)]
     let top = check(
         "floating-top",
         "/floatingMonitor/alwaysOnTop",
         preferences.floating.always_on_top,
     )?;
+    #[cfg(windows)]
     let locked = check(
         "floating-lock",
         "/floatingMonitor/locked",
         preferences.floating.locked,
     )?;
+    #[cfg(windows)]
     let snap = check(
         "floating-snap",
         "/floatingMonitor/snapToEdges",
@@ -122,8 +121,11 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
             &horizontal,
             &vertical,
             &separator,
+            #[cfg(windows)]
             &top,
+            #[cfg(windows)]
             &locked,
+            #[cfg(windows)]
             &snap,
             &font_size,
             &bold,
@@ -134,6 +136,7 @@ pub fn open(window: &tauri::WebviewWindow) -> tauri::Result<()> {
             &reset,
         ],
     )?;
+    log::info!("resident_floating_menu_open locale={}", labels.locale);
     window.popup_menu(&menu)
 }
 
@@ -164,7 +167,7 @@ fn act(app: &tauri::AppHandle, action: &str) -> tauri::Result<()> {
         if !menu_preferences::apply(&mut requested.floating, action) {
             return Ok(());
         }
-        if requested.windows_display_mode == WindowsDisplayMode::Taskbar {
+        if !window::requested(&requested) {
             return Ok(());
         }
         match preferences::apply(app, requested) {

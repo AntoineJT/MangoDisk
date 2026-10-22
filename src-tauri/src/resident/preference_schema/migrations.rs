@@ -19,6 +19,14 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
             .map_err(|_| "preferences_invalid")?
             .normalize();
     }
+    if version == 34 {
+        let object = value.as_object_mut().ok_or("preferences_invalid")?;
+        add_macos_defaults(object)?;
+        object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
+        return serde_json::from_value::<ResidentPreferences>(value)
+            .map_err(|_| "preferences_invalid")?
+            .normalize();
+    }
     if matches!(version, 29..=33) {
         let object = value.as_object_mut().ok_or("preferences_invalid")?;
         let floating = object
@@ -57,6 +65,7 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
                 }
             }
         }
+        add_macos_defaults(object)?;
         object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
         return serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?
@@ -325,6 +334,7 @@ fn percentage_colors(warning: u16, critical: u16) -> Vec<MetricColorRule> {
 }
 
 fn add_floating_defaults(object: &mut Map<String, Value>) -> Result<(), &'static str> {
+    add_macos_defaults(object)?;
     if object.contains_key("windowsDisplayMode") || object.contains_key("floating") {
         return Err("preferences_invalid");
     }
@@ -334,5 +344,15 @@ fn add_floating_defaults(object: &mut Map<String, Value>) -> Result<(), &'static
         serde_json::to_value(super::FloatingPreferences::default())
             .map_err(|_| "preferences_invalid")?,
     );
+    Ok(())
+}
+
+fn add_macos_defaults(object: &mut Map<String, Value>) -> Result<(), &'static str> {
+    if object
+        .insert("macosDisplayMode".into(), "menuBar".into())
+        .is_some()
+    {
+        return Err("preferences_invalid");
+    }
     Ok(())
 }

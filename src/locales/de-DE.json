@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "Konfigurieren Sie Bedingungen und Farben für jedes Anzeigeelement",
     "menuBarCompactHint": "Engere Abstände, mit verkürzten Netzwerkeinheiten auf K, M, G",
     "configureAction": "Konfigurieren…",
-    "menuBarSettingsTitle": "Menüleisteneinstellungen",
     "displaySettingsTitle": "Taskleisteneinstellungen",
     "done": "Fertig",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "An dieser Position ist nicht genügend Platz vorhanden. Verwenden von Taskleistensymbolen; Probieren Sie den Kompaktmodus oder weniger Elemente aus",
     "taskbarUnsupported": "Die Taskleiste ist zu klein; mithilfe von Taskleistensymbolen",
     "taskbarUnavailable": "Warten auf die Taskleiste. Taskleistensymbole werden vorübergehend angezeigt",
-    "menuBarEnabled": "In der Menüleiste anzeigen",
     "displayEnabled": "In der Taskleiste anzeigen",
-    "menuBarHint": "Systemressourcen in Echtzeit überwachen und schnell Arbeitsspeicher freigeben",
     "displayHint": "Systemressourcen in Echtzeit überwachen und schnell Arbeitsspeicher freigeben",
     "linuxDisplayHint": "CPU-, Speicher-, Netzwerkgeschwindigkeits- und Festplattenstatistiken anzeigen",
     "overview": "Übersicht",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "Systemstatus",
     "displayMode": "Anzeigemodus",
+    "menuBar": "Menüleiste",
     "taskbar": "Taskleiste",
     "floating": "Schwebendes Fenster",
     "both": "Beides",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "Deckkraft des Hintergrunds",
     "snapToEdges": "An Bildschirmrändern einrasten",
     "labels": {
+      "fan": "Lüfter",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "RAM",

@@ -42,7 +42,9 @@ let accept: (value: FloatingSnapshot) => void;
 let stop: Mock<() => void>;
 function snapshot(): FloatingSnapshot {
   return {
-    schemaVersion: 6,
+    schemaVersion: 8,
+    interactive: true,
+    contextMenu: true,
     columns: [70, 90, 85],
     preferences: {
       layout: 'horizontal',
@@ -100,6 +102,62 @@ afterEach(() => {
   wrappers.splice(0).forEach(wrapper => wrapper.unmount());
 });
 describe('floating monitor interaction and lifecycle', () => {
+  it.each(Object.entries(locales))('keeps macOS metrics passive and stable in %s', async (locale, messages) => {
+    const value = { ...snapshot(), interactive: false };
+    native.ready.mockResolvedValue(value);
+    const wrapper = render(locale);
+    await flushPromises();
+    expect(wrapper.findAll('button')).toHaveLength(0);
+    expect(wrapper.get('main').attributes('tabindex')).toBe('0');
+    expect(wrapper.get('[data-metric="fanSpeed"] .metric-label').text()).toBe(messages.floatingMonitor.labels.fan);
+    const count = native.layout.mock.calls.length;
+    const grid = wrapper.get('main').attributes('style');
+    await wrapper.get('[data-metric="cpu"]').trigger('click');
+    await wrapper.get('main').trigger('contextmenu');
+    await wrapper.get('main').trigger('keydown', { key: 'F10', shiftKey: true });
+    expect(native.toggleMetric).not.toHaveBeenCalled();
+    expect(native.menu).toHaveBeenCalledTimes(2);
+    for (const digits of ['0', '9', '100', '—']) {
+      accept({ ...value, entries: value.entries.map(entry => (entry.id === 'cpu' ? { ...entry, digits } : entry)) });
+      await flushPromises();
+      expect(wrapper.get('main').attributes('style')).toBe(grid);
+    }
+    expect(native.layout).toHaveBeenCalledTimes(count);
+  });
+  it('keeps macOS primary dragging separate from right-click actions', async () => {
+    native.ready.mockResolvedValue({ ...snapshot(), interactive: false });
+    const wrapper = render();
+    await flushPromises();
+    const surface = wrapper.get('main');
+    const metric = wrapper.get('[data-metric="cpu"]');
+    await metric.trigger('pointerdown', { button: 2, screenX: 10, screenY: 10 });
+    await metric.trigger('pointermove', { buttons: 2, screenX: 30, screenY: 10 });
+    await metric.trigger('contextmenu');
+    expect(native.menu).toHaveBeenCalledOnce();
+    expect(native.drag).not.toHaveBeenCalled();
+    Object.defineProperty(surface.element, 'setPointerCapture', { value: vi.fn() });
+    await metric.trigger('pointerdown', { button: 0, pointerId: 1, screenX: 10, screenY: 10 });
+    await metric.trigger('pointermove', { buttons: 1, screenX: 20, screenY: 10 });
+    await metric.trigger('pointerup');
+    await metric.trigger('click', { detail: 1 });
+    expect(native.drag).toHaveBeenCalledOnce();
+    expect(native.menu).toHaveBeenCalledOnce();
+    expect(native.toggleMetric).not.toHaveBeenCalled();
+    accept({ ...snapshot(), interactive: false, contextMenu: false });
+    await flushPromises();
+    await surface.trigger('contextmenu');
+    expect(native.menu).toHaveBeenCalledOnce();
+  });
+  it('opens only the context menu when macOS has no selected metrics', async () => {
+    native.ready.mockResolvedValue({ ...snapshot(), interactive: false, entries: [] });
+    const wrapper = render();
+    await flushPromises();
+    await wrapper.get('.empty-state').trigger('click');
+    expect(native.menu).not.toHaveBeenCalled();
+    await wrapper.get('.empty-state').trigger('contextmenu');
+    expect(native.menu).toHaveBeenCalledOnce();
+    expect(native.toggleMetric).not.toHaveBeenCalled();
+  });
   it('completes the last horizontal grid row without adding metric buttons or measurements', async () => {
     const wrapper = render();
     await flushPromises();

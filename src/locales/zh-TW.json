@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "在各顯示項目中分別設定條件和顏色",
     "menuBarCompactHint": "縮小間距，網速單位簡寫為 K、M、G",
     "configureAction": "設定…",
-    "menuBarSettingsTitle": "選單列設定",
     "displaySettingsTitle": "工作列設定",
     "done": "完成",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "此位置空間不足，已暫用系統匣圖示。可開啟精簡模式或減少顯示內容",
     "taskbarUnsupported": "目前工作列尺寸不足，已使用系統匣顯示",
     "taskbarUnavailable": "正在等候工作列就緒，暫時顯示系統匣圖示",
-    "menuBarEnabled": "在選單列顯示",
     "displayEnabled": "在工作列顯示",
-    "menuBarHint": "即時查看系統資源狀態，快速釋放記憶體",
     "displayHint": "即時查看系統資源狀態，快速釋放記憶體",
     "linuxDisplayHint": "查看 CPU、記憶體、網速與磁碟使用情況",
     "overview": "概覽",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "系統狀態",
     "displayMode": "顯示方式",
+    "menuBar": "選單列",
     "taskbar": "工作列",
     "floating": "懸浮視窗",
     "both": "同時顯示",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "背景不透明度",
     "snapToEdges": "貼邊吸附",
     "labels": {
+      "fan": "風扇",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "記憶體",

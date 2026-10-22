@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "Configure conditions and colors for each display item",
     "menuBarCompactHint": "Tighter spacing, with network units shortened to K, M, G",
     "configureAction": "Configure…",
-    "menuBarSettingsTitle": "Menu bar settings",
     "displaySettingsTitle": "Taskbar settings",
     "done": "Done",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "Not enough space at this position. Using tray icons; try compact mode or fewer items",
     "taskbarUnsupported": "The taskbar is too small; using tray icons",
     "taskbarUnavailable": "Waiting for the taskbar. Showing tray icons temporarily",
-    "menuBarEnabled": "Show in menu bar",
     "displayEnabled": "Show in taskbar",
-    "menuBarHint": "Monitor system resources in real time and quickly free up memory",
     "displayHint": "Monitor system resources in real time and quickly free up memory",
     "linuxDisplayHint": "View CPU, memory, network speed and disk stats",
     "overview": "Overview",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "System status",
     "displayMode": "Display mode",
+    "menuBar": "Menu bar",
     "taskbar": "Taskbar",
     "floating": "Floating window",
     "both": "Both",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "Background opacity",
     "snapToEdges": "Snap to screen edges",
     "labels": {
+      "fan": "Fan",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "Memory",

@@ -18,12 +18,13 @@ export type ResidentDisplayMetricId =
 export type GpuDisplaySelection = { mode: 'automatic' } | { mode: 'selected'; adapterIds: string[] };
 
 export interface ResidentPreferences {
-  schemaVersion: 34;
+  schemaVersion: 35;
   windowsCpuTemperatureEnabled: boolean;
   revision: number;
   enabled: boolean;
   showIcon: boolean;
   windowsDisplayMode: 'taskbar' | 'floating' | 'both';
+  macosDisplayMode: 'menuBar' | 'floating' | 'both';
   floating: {
     layout: 'horizontal' | 'vertical';
     alwaysOnTop: boolean;

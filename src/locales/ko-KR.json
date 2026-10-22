@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "각 표시 항목에서 조건과 색상을 설정하세요",
     "menuBarCompactHint": "간격을 줄이고 네트워크 속도 단위를 K, M, G로 축약",
     "configureAction": "설정…",
-    "menuBarSettingsTitle": "메뉴 막대 설정",
     "displaySettingsTitle": "작업 표시줄 설정",
     "done": "완료",
     "showIcon": "Logo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "이 위치의 공간이 부족하여 트레이 아이콘을 표시합니다. 간결하게 표시하거나 표시 항목을 줄여 보세요",
     "taskbarUnsupported": "작업 표시줄이 너무 작아 트레이 아이콘으로 표시합니다",
     "taskbarUnavailable": "작업 표시줄을 기다리는 동안 트레이 아이콘을 표시합니다",
-    "menuBarEnabled": "메뉴 막대에 표시",
     "displayEnabled": "작업 표시줄에 표시",
-    "menuBarHint": "시스템 리소스 상태를 실시간으로 확인하고 빠르게 메모리 확보",
     "displayHint": "시스템 리소스 상태를 실시간으로 확인하고 빠르게 메모리 확보",
     "linuxDisplayHint": "CPU, 메모리, 네트워크 속도 및 디스크 사용 현황 확인",
     "overview": "개요",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "시스템 상태",
     "displayMode": "표시 방식",
+    "menuBar": "메뉴 막대",
     "taskbar": "작업 표시줄",
     "floating": "플로팅 창",
     "both": "둘 다",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "배경 불투명도",
     "snapToEdges": "화면 가장자리에 맞춤",
     "labels": {
+      "fan": "팬",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "메모리",

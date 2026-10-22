@@ -3,7 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TabsRoot, TabsList, TabsTrigger, TabsContent } from 'reka-ui';
 import type { ResidentPreferences } from '@/lib/models/resident/resident';
-import MdWindowsDisplayMode from './md-windows-display-mode.vue';
+import MdResidentDisplayMode from './md-resident-display-mode.vue';
 
 const props = defineProps<{
   open: boolean;
@@ -30,7 +30,11 @@ const tabs = computed<SettingsTab[]>(() =>
   windows.value ? ['content', 'appearance', 'interaction'] : ['content', 'appearance']
 );
 const displayMode = computed(() =>
-  windows.value ? (props.preferences?.windowsDisplayMode ?? 'taskbar') : props.isMacOs ? 'macos' : 'linux'
+  windows.value
+    ? (props.preferences?.windowsDisplayMode ?? 'taskbar')
+    : props.isMacOs
+      ? (props.preferences?.macosDisplayMode ?? 'menuBar')
+      : 'linux'
 );
 const scrollPositions = new Map<string, number>();
 const editorBody = ref<HTMLElement>();
@@ -56,8 +60,12 @@ watch(
 );
 </script>
 <template>
-  <div v-if="windows && preferences" class="display-mode-header" :inert="loading" :aria-busy="loading || saving">
-    <MdWindowsDisplayMode :preferences="preferences" @change="emit('change', $event)" />
+  <div v-if="!isLinux && preferences" class="display-mode-header" :inert="loading" :aria-busy="loading || saving">
+    <MdResidentDisplayMode
+      :preferences="preferences"
+      :platform="windows ? 'windows' : 'macos'"
+      @change="emit('change', $event)"
+    />
   </div>
   <TabsRoot v-model="activeTab" class="settings-tabs" :unmount-on-hide="false">
     <TabsList class="settings-tab-list" :aria-label="t('systemStatus.settingsCategories')">

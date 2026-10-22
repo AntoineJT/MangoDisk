@@ -4083,7 +4083,6 @@
     "usageColorsHelp": "Configurar condiciones y colores para cada elemento de visualización",
     "menuBarCompactHint": "Espaciado más reducido, con unidades de red reducidas a K, M, G",
     "configureAction": "Configurar…",
-    "menuBarSettingsTitle": "Configuración de la barra de menú",
     "displaySettingsTitle": "Configuración de la barra de tareas",
     "done": "Hecho",
     "showIcon": "Logotipo",
@@ -4130,9 +4129,7 @@
     "taskbarNoSpace": "No hay suficiente espacio en esta posición. Usando iconos de bandeja; prueba el modo compacto o menos elementos",
     "taskbarUnsupported": "La barra de tareas es demasiado pequeña; usando iconos de bandeja",
     "taskbarUnavailable": "Esperando la barra de tareas. Mostrar iconos de bandeja temporalmente",
-    "menuBarEnabled": "Mostrar en la barra de menú",
     "displayEnabled": "Mostrar en la barra de tareas",
-    "menuBarHint": "Supervisa los recursos del sistema en tiempo real y libera memoria rápidamente",
     "displayHint": "Supervisa los recursos del sistema en tiempo real y libera memoria rápidamente",
     "linuxDisplayHint": "Ver estadísticas de CPU, memoria, velocidad de red y disco",
     "overview": "Descripción general",
@@ -4420,6 +4417,7 @@
   "floatingMonitor": {
     "title": "Estado del sistema",
     "displayMode": "Modo de visualización",
+    "menuBar": "Barra de menús",
     "taskbar": "Barra de tareas",
     "floating": "Ventana flotante",
     "both": "Ambos",
@@ -4433,6 +4431,7 @@
     "backgroundOpacity": "Opacidad del fondo",
     "snapToEdges": "Ajustar a los bordes",
     "labels": {
+      "fan": "Ventilador",
       "cpu": "CPU",
       "gpu": "GPU",
       "memory": "Memoria",

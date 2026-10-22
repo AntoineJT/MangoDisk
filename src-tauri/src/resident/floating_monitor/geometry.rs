@@ -180,6 +180,7 @@ pub(super) fn layout(
 }
 
 /// Prefer above/below the entire strip so details do not cover its metric targets.
+#[cfg(any(windows, test))]
 pub fn detail_position(
     surface: Area,
     work: (f64, f64, f64, f64),

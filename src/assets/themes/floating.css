@@ -111,7 +111,7 @@
   border-top-width: 1px;
   border-top-style: dashed;
 }
-.floating-monitor .metric:hover {
+.floating-monitor[data-interactive='true'] .metric:hover {
   background: color-mix(in srgb, currentColor 8%, transparent);
 }
 .floating-monitor .empty-cell {

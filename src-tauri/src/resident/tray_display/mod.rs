@@ -477,6 +477,8 @@ fn render(
         // Queue inert window updates only after the tray recovery surface is ready.
         super::floating_monitor::update(app, preferences, &entries);
     }
+    #[cfg(target_os = "macos")]
+    super::floating_monitor::update(app, preferences, &entries);
     if !preferences.enabled {
         state.locale = labels.locale;
         return Ok(());
@@ -510,7 +512,13 @@ fn render(
     if let Some(tray) = app.tray_by_id(DisplayId::App.tray_id()) {
         if macos::apply(
             &tray,
-            &entries,
+            if preferences.macos_display_mode
+                == crate::resident::preference_schema::MacOsDisplayMode::Floating
+            {
+                &[]
+            } else {
+                &entries
+            },
             preferences.effective_icon() || entries.is_empty(),
             preferences.menu_bar_compact,
             &summary,
