@@ -107,6 +107,8 @@ share these preferences. Schema 29 upgrades preserve existing choices and add 10
 
 The Windows floating `clickThrough` interaction setting defaults to false. It ignores native cursor events for that window only; drag, metric and context-menu commands also reject stale interaction requests while enabled. The tray retains an independent localized toggle, registered once for all tray handles, with checked/enabled state refreshed after preference changes. The recovery icon must be visible before cursor events are ignored. Previous preference schemas upgrade with click-through disabled.
 
+Shared WebView2 browser recovery also recreates the floating window from current preferences. Each replacement clears document readiness, text measurements and native placement caches while retaining the saved monitor-relative anchor; layout and cursor-event behavior are reapplied before the window becomes visible. Recovery restores the floating anchor before dependent panels, waiting at most five seconds for placement so a failed layout cannot block other windows. Native show/hide transitions use non-activating display to retain resource-panel focus; both transitions stay with this adapter because Tao's visibility cache remains hidden.
+
 The `dividers` appearance toggle defaults to true and controls dashed separators in both layouts, including trailing empty cells in horizontal grids. Schema 32 upgrades preserve all existing choices and add this setting. Separators are painted without changing cell dimensions.
 
 Windows floating preferences include four font sizes (`standard`, `larger`,

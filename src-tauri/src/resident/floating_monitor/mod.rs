@@ -40,6 +40,9 @@ pub use window::{
     update,
 };
 
+#[cfg(windows)]
+pub(crate) use window::recreate_webview;
+
 pub fn show_menu(window: tauri::WebviewWindow) -> tauri::Result<()> {
     #[cfg(windows)]
     if window.label() == LABEL {

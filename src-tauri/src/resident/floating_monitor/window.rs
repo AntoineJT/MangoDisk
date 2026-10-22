@@ -38,6 +38,15 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
     if !requested(preferences) || app.get_webview_window(LABEL).is_some() {
         return Ok(());
     }
+    // Document readiness and native placement cannot survive a WebView replacement.
+    state.ready.store(false, Ordering::Relaxed);
+    *state.measurements.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    state
+        .position
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .invalidate_window();
+    state.click_through.store(false, Ordering::Relaxed);
     let window =
         WebviewWindowBuilder::new(app, LABEL, WebviewUrl::App("floating-monitor.html".into()))
             .title(format!(
@@ -57,8 +66,6 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
             .transparent(true)
             .always_on_top(preferences.floating.always_on_top)
             .build()?;
-    // Cursor-event state belongs to the native handle, not a previous WebView lifetime.
-    state.click_through.store(false, Ordering::Relaxed);
     crate::webview_recovery::install(&window);
     super::menu::install(&window);
     window.on_window_event(move |event| {
@@ -67,6 +74,42 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
         }
     });
     log::info!("resident_floating_created outcome=hidden_until_ready");
+    Ok(())
+}
+
+pub(crate) fn recreate_webview(app: &tauri::AppHandle) -> tauri::Result<()> {
+    let resident = app.state::<std::sync::Arc<crate::resident::runtime::ResidentState>>();
+    let preferences = resident
+        .preferences
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .clone();
+    // Current preferences and fullscreen detection own visibility, not the failed handle.
+    prepare(app, &preferences)?;
+    resident.wake();
+    // Recovery runs on a worker. Restore dependent panels only after their anchor
+    // has real geometry; fullscreen-hidden monitors still complete placement.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while let Some(window) = app.get_webview_window(LABEL) {
+        if app
+            .state::<State>()
+            .position
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_applied()
+        {
+            // This UI-thread getter also drains the render that applied placement.
+            let _ = window.is_visible()?;
+            break;
+        }
+        if std::time::Instant::now() >= deadline {
+            log::warn!(
+                "resident_floating_recovery_layout_timeout outcome=restore_remaining_windows"
+            );
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(25));
+    }
     Ok(())
 }
 
@@ -184,7 +227,7 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
         .clone();
     let Some(mut snapshot) = snapshot else {
         if window.is_visible()? {
-            window.hide()?;
+            set_visible(&window, false)?;
         }
         return Ok(());
     };
@@ -237,11 +280,28 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
     }
     if visible != window.is_visible()? {
         if visible {
-            window.show()?;
+            set_visible(&window, true)?;
         } else {
-            window.hide()?;
+            set_visible(&window, false)?;
         }
         log::info!("resident_floating_visibility visible={visible} fullscreen={fullscreen}");
+    }
+    Ok(())
+}
+
+fn set_visible(window: &tauri::WebviewWindow, visible: bool) -> tauri::Result<()> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
+    // Tao's Show activates a previously hidden window even with focused(false).
+    // Own both visibility transitions here: its cached visibility stays hidden,
+    // so Tao's Hide would otherwise skip hiding a natively shown monitor.
+    unsafe {
+        ShowWindow(
+            window.hwnd()?.0.cast(),
+            if visible { SW_SHOWNOACTIVATE } else { SW_HIDE },
+        );
+    }
+    if window.is_visible()? != visible {
+        return Err(std::io::Error::other("floating window visibility was not applied").into());
     }
     Ok(())
 }

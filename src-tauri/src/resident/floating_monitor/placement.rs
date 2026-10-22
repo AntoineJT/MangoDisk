@@ -36,6 +36,17 @@ impl Placement {
         self.area = None;
         self.moved = None;
     }
+    pub(super) fn invalidate_window(&mut self) {
+        // A replacement handle needs placement even when its monitor and size are unchanged.
+        self.moved = None;
+        self.applied = None;
+        self.size = (0, 0);
+        self.area = None;
+        self.columns = None;
+    }
+    pub(super) fn is_applied(&self) -> bool {
+        self.area.is_some() && self.columns.is_some()
+    }
 }
 pub(super) fn apply(
     window: &tauri::WebviewWindow,
@@ -187,5 +198,48 @@ fn save_position(app: &tauri::AppHandle, bookmark: &Bookmark) {
     })();
     if let Err(error) = result {
         log::warn!("resident_floating_position_save_failed error={error} outcome=runtime_position_retained");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn replacement_window_retains_user_anchor_and_reapplies_native_geometry() {
+        let area = Area {
+            x: -1920,
+            y: 0,
+            width: 1920,
+            height: 1040,
+        };
+        let bookmark = Bookmark {
+            monitor: "secondary".into(),
+            horizontal: 4500,
+            vertical: 7000,
+            ..Bookmark::default()
+        };
+        let size = (480, 100);
+        let point = bookmark.restore(area, size);
+        let mut placement = Placement {
+            bookmark: bookmark.clone(),
+            moved: Some(Instant::now()),
+            applied: Some(point),
+            size,
+            area: Some(area),
+            columns: Some(vec![200.0, 274.0]),
+        };
+        assert!(placement.is_applied());
+
+        placement.invalidate_window();
+
+        assert!(!placement.is_applied());
+        assert_eq!(placement.bookmark, bookmark);
+        assert_eq!(placement.bookmark.restore(area, size), point);
+        assert_ne!(placement.area, Some(area));
+        assert_ne!(placement.size, size);
+        assert!(placement.moved.is_none());
+        assert!(placement.applied.is_none());
+        assert!(placement.columns.is_none());
     }
 }
