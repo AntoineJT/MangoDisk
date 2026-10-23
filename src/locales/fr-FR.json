@@ -2488,7 +2488,7 @@
     },
     "colorThemeTitle": "Palette de couleurs",
     "colorThemeDescription": "Choisir les couleurs indépendamment du mode clair ou sombre",
-    "colorThemeMango": "Mangue classique",
+    "colorThemeMango": "Mango classique",
     "colorThemeWarmGray": "Gris chaud",
     "themeTitle": "Apparence",
     "themeDescription": "Choisir le mode clair, sombre ou celui du système",
@@ -2958,7 +2958,7 @@
       "app.signal-cache": {
         "name": "Cache Signal",
         "description": "Code régénérable, graphiques, dictionnaire, journal et cache de rapport de crash générés par Signal Desktop",
-        "impact": "Les comptes, messages, pièces jointes, bases de données cryptées, paramètres et état de connexion sont conservés. Fermez le signal avant le nettoyage"
+        "impact": "Les comptes, messages, pièces jointes, bases de données cryptées, paramètres et état de connexion sont conservés. Fermez Signal avant le nettoyage"
       },
       "app.postman-cache": {
         "name": "Cache de rendu Postman",
@@ -2996,8 +2996,8 @@
         "impact": "Les conversations, les projets, les informations d'identification, l'état du navigateur et l'état de connexion sont conservés. Fermez ChatGPT et Codex avant le nettoyage"
       },
       "app.codex-diagnostic-cache": {
-        "name": "Anciens rapports de crash du Codex",
-        "description": "Rapports d'erreur du Codex en attente non modifiés depuis 7 jours",
+        "name": "Anciens rapports de crash de Codex",
+        "description": "Rapports d'erreur de Codex en attente non modifiés depuis 7 jours",
         "impact": "Les conversations, projets, informations d'identification, paramètres et rapports récents sont conservés. Fermez Codex et ChatGPT avant le nettoyage"
       },
       "app.claude-cache": {
@@ -3123,12 +3123,12 @@
       "browser.uc-cache": {
         "name": "Cache UC Browser",
         "description": "Données temporaires Web, code, GPU, shader et composants téléchargés enregistrées par UC Browser",
-        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord le navigateur UC ; les données du cache sont reconstruites ou téléchargées à nouveau selon les besoins"
+        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord UC Browser ; les données du cache sont reconstruites ou téléchargées à nouveau selon les besoins"
       },
       "browser.360-speed-cache": {
-        "name": "Cache du navigateur 360 Extreme",
+        "name": "Cache 360 Extreme Browser",
         "description": "Données temporaires sur le Web, le code, le GPU, le shader et les packages de composants téléchargés enregistrés par 360 Extreme Browser",
-        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord le navigateur 360 Extreme ; les données du cache sont reconstruites ou téléchargées à nouveau selon les besoins"
+        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord 360 Extreme Browser ; les données du cache sont reconstruites ou téléchargées à nouveau selon les besoins"
       },
       "browser.sogou-cache": {
         "name": "Cache Sogou Explorer",
@@ -3136,14 +3136,14 @@
         "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord Sogou Explorer ; les données du cache sont reconstruites selon les besoins"
       },
       "browser.360-safe-cache": {
-        "name": "Cache du navigateur sécurisé 360",
+        "name": "Cache 360 Safe Browser",
         "description": "Données temporaires Web, code, GPU, Dawn et shader enregistrées par 360 Safe Browser",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d’abord 360 Safe Browser ; les données du cache sont reconstruites selon les besoins"
       },
       "browser.2345-cache": {
-        "name": "2345 Cache du navigateur",
-        "description": "Données temporaires Web, code, GPU, Dawn et shader enregistrées par le navigateur 2345",
-        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord le navigateur 2345 ; les données du cache sont reconstruites selon les besoins"
+        "name": "Cache 2345 Browser",
+        "description": "Données temporaires Web, code, GPU, Dawn et shader enregistrées par 2345 Browser",
+        "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord 2345 Browser ; les données du cache sont reconstruites selon les besoins"
       },
       "browser.edge-cache": {
         "name": "Cache Edge",
@@ -3206,7 +3206,7 @@
         "impact": "Le code source et les archives sont conservés. Les index de documentation peuvent être régénérés ultérieurement"
       },
       "special.xcode-device-support": {
-        "name": "Prise en charge des appareils Xcode",
+        "name": "Xcode DeviceSupport",
         "description": "Fichiers de support système préparés par Xcode pour le débogage des appareils physiques",
         "impact": "Xcode doit préparer à nouveau le support lors du débogage de la version du système correspondante"
       },
@@ -3236,7 +3236,7 @@
         "impact": "Les dépendances du projet sont conservées. npx peut télécharger à nouveau les outils"
       },
       "dev.node-gyp-cache": {
-        "name": "Cache de construction de nœud-gyp",
+        "name": "Cache de construction node-gyp",
         "description": "En-têtes et cache de build temporaire utilisés pour compiler les modules natifs Node.js",
         "impact": "Le code source est conservé. Les en-têtes requis peuvent être téléchargés à nouveau"
       },
@@ -3271,12 +3271,12 @@
         "impact": "Les environnements virtuels et les interprètes installés sont conservés. Les dépendances peuvent être téléchargées à nouveau"
       },
       "dev.uv-cache": {
-        "name": "cache UV",
+        "name": "Cache uv",
         "description": "Packages téléchargés et construits enregistrés par uv",
         "impact": "Les projets, environnements virtuels et installations Python gérées sont conservés. Les packages peuvent être téléchargés ou reconstruits"
       },
       "dev.dart-analysis-cache": {
-        "name": "Cache d'analyse de fléchettes",
+        "name": "Cache d'analyse Dart",
         "description": "Résultats d'analyse mis en cache générés par les outils Dart et Flutter",
         "impact": "Les projets et SDK sont conservés. Les éditeurs et les outils d’analyse devront peut-être reconstruire leurs index"
       },
@@ -3286,14 +3286,14 @@
         "impact": "Les dépendances du projet sont conservées. Les environnements d'exécution ou les ressources de build natives peuvent être à nouveau téléchargés"
       },
       "dev.cargo-cache": {
-        "name": "Cache de paquets Cargo",
-        "description": "Packages téléchargés enregistrés par Cargo",
+        "name": "Cache de crates Cargo",
+        "description": "Crates téléchargées enregistrées par Cargo",
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
       "dev.cargo-extracted-sources": {
         "name": "Cache des sources extraites Cargo",
-        "description": "Arbres sources de caisse extraits par Cargo pour les constructions locales",
-        "impact": "Les projets et les archives de caisses téléchargées sont conservés. Cargo peut extraire ou télécharger à nouveau des sources"
+        "description": "Sources des crates extraites par Cargo pour les constructions locales",
+        "impact": "Les projets et les archives de crates téléchargées sont conservés. Cargo peut extraire ou télécharger à nouveau des sources"
       },
       "dev.go-cache": {
         "name": "Cache de compilation Go",
@@ -3446,7 +3446,7 @@
         "impact": "Seuls les modèles que vous sélectionnez explicitement sont supprimés. La transcription les télécharge à nouveau si nécessaire"
       },
       "special.ai-model-pytorch": {
-        "name": "Modèles de hub PyTorch",
+        "name": "Modèles PyTorch Hub",
         "description": "Modèles de points de contrôle et de fichiers de poids téléchargés par PyTorch Hub",
         "impact": "Seuls les points de contrôle que vous sélectionnez explicitement sont supprimés. Les applications peuvent les télécharger à nouveau lors de la prochaine exécution"
       },
@@ -3522,7 +3522,7 @@
       },
       "project.maven-build-artifacts": {
         "name": "Fichiers de compilation Maven",
-        "description": "Sortie compilée dans les dossiers cibles du projet Maven",
+        "description": "Sortie compilée dans les dossiers target du projet Maven",
         "impact": "Source et pom.xml sont conservés. La prochaine version recompile le projet"
       },
       "project.gradle-build-artifacts": {
@@ -3532,7 +3532,7 @@
       },
       "project.sbt-build-artifacts": {
         "name": "Fichiers de compilation SBT",
-        "description": "Sortie compilée sous les dossiers cibles SBT",
+        "description": "Sortie compilée sous les dossiers target SBT",
         "impact": "Les définitions de source et de build Scala sont conservées. La prochaine version recompile les cibles"
       },
       "project.dotnet-build-artifacts": {
@@ -3567,7 +3567,7 @@
       },
       "project.elixir-build-artifacts": {
         "name": "Fichiers de compilation Elixir",
-        "description": "Mélangez les caches de sortie et de service de langage",
+        "description": "Sorties de Mix et caches du service de langage",
         "impact": "Le code source Elixir et mix.exs sont conservés. Les outils recréeront leurs caches"
       },
       "project.terraform-build-artifacts": {
@@ -3578,7 +3578,7 @@
       "project.unity-build-artifacts": {
         "name": "Fichiers de compilation Unity",
         "description": "Dossiers Unity Library, Temp, Obj et diagnostic",
-        "impact": "Les actifs et les paramètres du projet sont conservés. Réimporter un projet peut prendre du temps"
+        "impact": "Les dossiers Assets et ProjectSettings sont conservés. Réimporter un projet peut prendre du temps"
       },
       "project.unreal-build-artifacts": {
         "name": "Fichiers de compilation Unreal",
@@ -3592,7 +3592,7 @@
       },
       "project.haskell-build-artifacts": {
         "name": "Fichiers de compilation Haskell",
-        "description": "Dossiers de construction Local Stack et Cabal",
+        "description": "Dossiers de construction Stack et Cabal dans les projets Haskell",
         "impact": "La source Haskell et la configuration du projet sont conservées. La prochaine version recompile les cibles"
       },
       "project.composer-build-artifacts": {
@@ -3603,7 +3603,7 @@
       "project.jupyter-build-artifacts": {
         "name": "Points de contrôle du notebook Jupyter",
         "description": "Dossiers de points de contrôle automatiques générés à côté des notebooks Jupyter",
-        "impact": "Des cahiers sont tenus. Jupyter recrée les points de contrôle au fur et à mesure que vous continuez à modifier"
+        "impact": "Les notebooks sont conservés. Jupyter recrée les points de contrôle au fur et à mesure que vous continuez à modifier"
       },
       "project.pixi-build-artifacts": {
         "name": "Environnement du projet Pixi",
@@ -3621,8 +3621,8 @@
         "impact": "Les environnements et packages installés sont conservés. Conda peut télécharger à nouveau ces fichiers"
       },
       "special.codex-archived-sessions": {
-        "name": "Anciennes sessions archivées du Codex",
-        "description": "Archives de conversations du Codex non modifiées depuis 30 jours",
+        "name": "Anciennes sessions archivées de Codex",
+        "description": "Archives de conversations de Codex non modifiées depuis 30 jours",
         "impact": "Seules les sessions archivées sélectionnées sont définitivement supprimées. Ils ne peuvent pas être rouverts ou récupérés"
       },
       "special.rust-toolchains": {
@@ -3651,7 +3651,7 @@
         "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Ils doivent être téléchargés à nouveau ; l’historique du compte et des vidéos regardées reste conservé"
       },
       "special.qqlive-playback-cache": {
-        "name": "Cache de lecture vidéo Tencent",
+        "name": "Cache de lecture Tencent Video",
         "description": "Fragments de lecture HLS temporaires en dehors des téléchargements hors ligne enregistrés",
         "impact": "Les vidéos devront peut-être être à nouveau mises en mémoire tampon. La connexion et les téléchargements hors ligne enregistrés restent conservés. Non sélectionné par défaut"
       },
@@ -3702,7 +3702,7 @@
       },
       "special.macos-universal-binaries": {
         "name": "Binaires universels",
-        "description": "Code silicium Intel ou Apple supplémentaire inclus dans les applications Mac compatibles",
+        "description": "Code Intel ou Apple silicon supplémentaire inclus dans les applications Mac compatibles",
         "impact": "Conserve le code nécessaire à ce Mac et vérifie chaque application avant et après le nettoyage. Les applications en cours d'exécution ou qui ne peuvent pas être modifiées en toute sécurité sont ignorées. Réinstallez ou mettez à jour une application pour restaurer la prise en charge des deux types de processeur"
       },
       "app.apple-mail-cache": {
@@ -3717,7 +3717,7 @@
       },
       "app.cargo-cache": {
         "name": "Cache de téléchargement Cargo",
-        "description": "Sources de caisse téléchargées et cache du référentiel Git",
+        "description": "Sources des crates téléchargées et cache du référentiel Git",
         "impact": "Les chaînes d'outils et les projets sont conservés. Les versions ultérieures peuvent télécharger à nouveau des fichiers"
       },
       "app.chrome-cache": {
@@ -3883,12 +3883,12 @@
       "dev.hex-cache": {
         "name": "Cache de paquets Hex",
         "description": "Packages téléchargés par Hex",
-        "impact": "Les informations d'identification et les paramètres sont conservés. Arrêtez d'abord les tâches de mixage"
+        "impact": "Les informations d'identification et les paramètres sont conservés. Arrêtez d'abord les tâches Mix"
       },
       "dev.mise-cache": {
         "name": "Cache mise",
         "description": "Métadonnées temporaires mises en cache par mise",
-        "impact": "Les outils et paramètres installés sont conservés. Fermez d'abord la mise en place"
+        "impact": "Les outils et paramètres installés sont conservés. Fermez d'abord mise"
       },
       "dev.rubygems-cache": {
         "name": "Cache de téléchargement RubyGems",
@@ -3917,7 +3917,7 @@
       },
       "project.leiningen-build-artifacts": {
         "name": "Fichiers de compilation Leiningen",
-        "description": "Le répertoire cible dans les projets Leiningen",
+        "description": "Le répertoire target dans les projets Leiningen",
         "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
       },
       "project.meson-build-artifacts": {
@@ -3952,7 +3952,7 @@
       },
       "system.font-cache": {
         "name": "Cache des polices",
-        "description": "Caches de configuration de polices et de rendu de glyphes",
+        "description": "Caches Fontconfig et de rendu des glyphes",
         "impact": "Les polices installées sont conservées. Le cache peut se reconstruire lors de la première utilisation"
       },
       "system.gtk-icon-cache": {
@@ -4253,7 +4253,7 @@
     "videoProcessing": "Traitement vidéo",
     "other": "Autre",
     "renderer": "Rendu",
-    "tiler": "Carreleur",
+    "tiler": "Tiler",
     "activitiesHint": "Utilisation la plus élevée par type de moteur ; les valeurs ne sont pas additionnées",
     "coreCount": "Cœurs GPU",
     "average": "Moyenne sur 1 minute",
