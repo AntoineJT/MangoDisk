@@ -34,7 +34,7 @@ const displayMode = computed(() =>
     ? (props.preferences?.windowsDisplayMode ?? 'taskbar')
     : props.isMacOs
       ? (props.preferences?.macosDisplayMode ?? 'menuBar')
-      : 'linux'
+      : (props.preferences?.linuxDisplayMode ?? 'tray')
 );
 const scrollPositions = new Map<string, number>();
 const editorBody = ref<HTMLElement>();
@@ -60,10 +60,10 @@ watch(
 );
 </script>
 <template>
-  <div v-if="!isLinux && preferences" class="display-mode-header" :inert="loading" :aria-busy="loading || saving">
+  <div v-if="preferences" class="display-mode-header" :inert="loading" :aria-busy="loading || saving">
     <MdResidentDisplayMode
       :preferences="preferences"
-      :platform="windows ? 'windows' : 'macos'"
+      :platform="windows ? 'windows' : isLinux ? 'linux' : 'macos'"
       @change="emit('change', $event)"
     />
   </div>

@@ -36,7 +36,7 @@ const commandErrorCodes = [
 ];
 const dynamicKeyGroups = {
   // Native floating menus and typed platform display-mode selectors.
-  floatingMonitor: ['menuBar', 'taskbar', 'floating', 'both', 'resetPosition'],
+  floatingMonitor: ['menuBar', 'taskbar', 'tray', 'floating', 'both', 'resetPosition'],
   'floatingMonitor.fontSizes': ['standard', 'larger', 'large', 'extraLarge'],
   'floatingMonitor.backgrounds': ['default', 'darkGray', 'inkBlue', 'warmWhite', 'lightGray', 'black', 'white'],
   // Native startup and recovery dialogs remain usable when Vue cannot mount.

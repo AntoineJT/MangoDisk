@@ -7,7 +7,9 @@ use std::{
     sync::Mutex,
     time::{Duration, Instant},
 };
-use tauri::{Manager, PhysicalPosition, PhysicalSize};
+use tauri::Manager;
+#[cfg(not(target_os = "linux"))]
+use tauri::{PhysicalPosition, PhysicalSize};
 pub(super) struct Placement {
     bookmark: Bookmark,
     moved: Option<Instant>,
@@ -117,6 +119,10 @@ pub(super) fn apply(
     );
     let size = layout.size;
     let changed = previous_area != Some(area) || previous_size != size;
+    #[cfg(target_os = "linux")]
+    let remapping = !window.is_visible()?;
+    #[cfg(not(target_os = "linux"))]
+    let remapping = false;
     let point = if moved.is_some() {
         let point = window.outer_position()?;
         geometry::snap(
@@ -132,13 +138,20 @@ pub(super) fn apply(
     } else {
         bookmark.restore(area, size)
     };
-    if changed || moved.is_some() {
-        // Move before sizing so a monitor transition cannot use the previous DPI.
+    // GTK can remap a hidden window at a compositor-selected position even when
+    // its size and work area did not change. Reassert the saved anchor first.
+    if changed || moved.is_some() || remapping {
         placement.lock().unwrap_or_else(|e| e.into_inner()).applied = Some(point);
-        window.set_position(PhysicalPosition::new(point.0, point.1))?;
-        #[cfg(windows)]
-        crate::resident::windows_frame::refresh(window)?;
-        window.set_size(PhysicalSize::new(size.0, size.1))?;
+        #[cfg(target_os = "linux")]
+        super::native::set_bounds(window, point, size)?;
+        #[cfg(not(target_os = "linux"))]
+        {
+            // Move before sizing so a monitor transition cannot use the previous DPI.
+            window.set_position(PhysicalPosition::new(point.0, point.1))?;
+            #[cfg(windows)]
+            crate::resident::windows_frame::refresh(window)?;
+            window.set_size(PhysicalSize::new(size.0, size.1))?;
+        }
         let captured = bookmark.after_placement(
             monitor.name().cloned().unwrap_or_default(),
             area,

@@ -74,7 +74,7 @@ pub fn prepare(app: &tauri::AppHandle, preferences: &ResidentPreferences) -> tau
     #[cfg(windows)]
     crate::webview_recovery::install(&window);
     super::menu::install(&window);
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     super::native::configure(&window)?;
     window.on_window_event(move |event| {
         if let WindowEvent::CloseRequested { api, .. } = event {
@@ -152,6 +152,10 @@ pub(super) fn requested(preferences: &ResidentPreferences) -> bool {
         preferences.macos_display_mode
             != crate::resident::preference_schema::MacOsDisplayMode::MenuBar
     }
+    #[cfg(target_os = "linux")]
+    {
+        preferences.linux_display_mode != crate::resident::preference_schema::LinuxDisplayMode::Tray
+    }
 }
 
 pub fn update(
@@ -164,8 +168,8 @@ pub fn update(
         let mut current = state.snapshot.lock().unwrap_or_else(|e| e.into_inner());
         let next = requested(preferences).then(|| {
             let floating = preferences.floating.clone();
-            #[cfg(target_os = "macos")]
-            let floating = crate::resident::floating_monitor::native::appearance_only(floating);
+            #[cfg(any(target_os = "macos", target_os = "linux"))]
+            let floating = super::passive_preferences(floating);
             Snapshot {
                 schema_version: 9,
                 interactive: cfg!(windows),
@@ -301,7 +305,7 @@ fn render(app: &tauri::AppHandle) -> tauri::Result<()> {
     }
     #[cfg(windows)]
     let fullscreen = snapshot.preferences.hide_on_fullscreen && super::native::fullscreen(&window);
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     let fullscreen = super::native::fullscreen(&window);
     let visible = !fullscreen;
     if visible {
@@ -369,6 +373,27 @@ fn localized_title(locale: &str) -> String {
 mod tests {
     use super::localized_title;
     use crate::services::native_labels::NativeLabels;
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn linux_tray_mode_hides_the_surface_and_both_mode_retains_recovery() {
+        use crate::resident::preference_schema::LinuxDisplayMode;
+        for (mode, visible) in [
+            (LinuxDisplayMode::Tray, false),
+            (LinuxDisplayMode::Floating, true),
+            (LinuxDisplayMode::Both, true),
+        ] {
+            let mut preferences = super::ResidentPreferences {
+                linux_display_mode: mode,
+                show_icon: false,
+                ..Default::default()
+            };
+            assert_eq!(super::requested(&preferences), visible);
+            assert_eq!(preferences.effective_icon(), visible);
+            preferences.enabled = false;
+            assert!(!super::requested(&preferences));
+        }
+    }
 
     #[test]
     fn localized_titles_differ_even_when_metric_labels_are_identical() {

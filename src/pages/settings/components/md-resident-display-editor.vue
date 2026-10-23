@@ -147,7 +147,9 @@ const visibleRows = computed(() =>
 const floatingRecoveryIcon = computed(() =>
   props.isMacOs
     ? settings.draft?.macosDisplayMode !== 'menuBar'
-    : !props.isLinux && settings.draft?.windowsDisplayMode !== 'taskbar'
+    : props.isLinux
+      ? settings.draft?.linuxDisplayMode !== 'tray'
+      : settings.draft?.windowsDisplayMode !== 'taskbar'
 );
 const showIcon = computed(
   () => floatingRecoveryIcon.value || (settings.draft?.showIcon ?? true) || !visibleRows.value.some(row => row.enabled)
@@ -317,7 +319,7 @@ defineExpose({
       @close-auto-focus="restoreConfigurationFocus"
     >
       <MdDialogHeader class="flex-none border-b border-border/70">
-        <DialogTitle>{{ t(isLinux ? 'systemStatus.displaySettingsTitle' : 'floatingMonitor.title') }}</DialogTitle>
+        <DialogTitle>{{ t('floatingMonitor.title') }}</DialogTitle>
       </MdDialogHeader>
       <MdResidentSettingsTabs
         :open="settingsOpen"
@@ -576,7 +578,8 @@ defineExpose({
             <MdSettingsGroup
               v-if="
                 (windows && settings.draft.windowsDisplayMode !== 'taskbar') ||
-                (isMacOs && settings.draft.macosDisplayMode !== 'menuBar')
+                (isMacOs && settings.draft.macosDisplayMode !== 'menuBar') ||
+                (isLinux && settings.draft.linuxDisplayMode !== 'tray')
               "
               plain
               :title="t('floatingMonitor.floating')"

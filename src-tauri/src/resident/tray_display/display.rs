@@ -16,8 +16,17 @@ use crate::resident::{preference_schema::DisplayMetricId, preferences::ResidentP
 
 /// Linux AppIndicator exposes frequently changing status through its title
 /// label. Keep the icon stable and compose only the enabled metric fields.
-#[cfg(target_os = "linux")]
-pub fn indicator_title(entries: &[DisplayEntry], compact: bool) -> Option<String> {
+#[cfg(any(target_os = "linux", test))]
+pub fn indicator_title(
+    entries: &[DisplayEntry],
+    preferences: &ResidentPreferences,
+) -> Option<String> {
+    if preferences.linux_display_mode
+        == crate::resident::preference_schema::LinuxDisplayMode::Floating
+    {
+        return None;
+    }
+    let compact = preferences.taskbar_compact;
     let title = entries
         .iter()
         .filter_map(|entry| {

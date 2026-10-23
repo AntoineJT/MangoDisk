@@ -158,6 +158,25 @@ describe('status display interactions', () => {
     expect(wrapper.find('#floating-font-size').exists()).toBe(true);
     expect(wrapper.find('#floating-fullscreen').exists()).toBe(false);
   });
+  it.each(['floating', 'both'] as const)('exposes passive Linux appearance in %s mode', async mode => {
+    const preferences = preferencesFixture();
+    preferences.linuxDisplayMode = mode;
+    preferences.windowsDisplayMode = 'both';
+    vi.mocked(ResidentService.preferences).mockResolvedValue(preferences);
+    const wrapper = mount(Settings, { props: { isMacOs: false, isLinux: true }, global: global() });
+    wrappers.push(wrapper);
+    await flushPromises();
+    await openConfiguration(wrapper);
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2);
+    expect(wrapper.find('#linux-display-mode').exists()).toBe(true);
+    expect(wrapper.find('#status-app-icon').attributes('disabled')).toBeDefined();
+    await wrapper.findAll('[role="tab"]')[1]!.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    expect(wrapper.find('#floating-font-size').exists()).toBe(true);
+    expect(wrapper.find('#linux-tray-compact').exists()).toBe(mode === 'both');
+    expect(wrapper.find('#floating-fullscreen').exists()).toBe(false);
+    expect(wrapper.find('#floating-click-through').exists()).toBe(false);
+  });
   it.each([
     { isMacOs: true, isLinux: false },
     { isMacOs: false, isLinux: true },
@@ -1067,7 +1086,7 @@ describe('status display interactions', () => {
     await wrapper.get('input[name="taskbar-position"][value="auto"]').setValue(true);
     await flushPromises();
     expect(ResidentService.savePreferences).toHaveBeenLastCalledWith(
-      expect.objectContaining({ schemaVersion: 36, taskbarPosition: 'auto' })
+      expect.objectContaining({ schemaVersion: 37, taskbarPosition: 'auto' })
     );
   });
 

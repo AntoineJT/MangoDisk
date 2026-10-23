@@ -3,6 +3,6 @@
   "identifier": "floating-monitor-capability",
   "description": "Floating resource summary and platform-specific monitor interactions",
   "windows": ["floating-monitor"],
-  "platforms": ["windows", "macOS"],
+  "platforms": ["windows", "macOS", "linux"],
   "permissions": ["core:default", "log:allow-log", "os:allow-platform", "store:default"]
 }

@@ -477,9 +477,9 @@ fn render(
         // Queue inert window updates only after the tray recovery surface is ready.
         super::floating_monitor::update(app, preferences, &entries);
     }
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     super::floating_monitor::update(app, preferences, &entries);
-    #[cfg(any(windows, target_os = "macos"))]
+    #[cfg(any(windows, target_os = "macos", target_os = "linux"))]
     if changed_locale {
         // A translated title must update even when metric labels keep the same width.
         super::floating_monitor::update_title(app, &labels.locale)?;
@@ -504,7 +504,7 @@ fn render(
     }
     #[cfg(target_os = "linux")]
     if state.visible.contains(&DisplayId::App) {
-        let title = display::indicator_title(&entries, preferences.taskbar_compact);
+        let title = display::indicator_title(&entries, preferences);
         if state.indicator_title != title {
             if let Some(tray) = app.tray_by_id(DisplayId::App.tray_id()) {
                 tray.set_title(title.as_deref())?;

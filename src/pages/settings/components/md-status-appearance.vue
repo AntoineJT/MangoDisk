@@ -44,12 +44,14 @@ function changeCompact(enabled: boolean) {
   </MdSettingsRow>
   <MdSettingsGroup
     v-if="
-      isLinux || (isMacOs ? preferences.macosDisplayMode !== 'floating' : preferences.windowsDisplayMode !== 'floating')
+      isLinux
+        ? preferences.linuxDisplayMode !== 'floating'
+        : isMacOs
+          ? preferences.macosDisplayMode !== 'floating'
+          : preferences.windowsDisplayMode !== 'floating'
     "
     plain
-    :title="
-      t(isLinux ? 'systemStatus.appearanceTitle' : isMacOs ? 'floatingMonitor.menuBar' : 'floatingMonitor.taskbar')
-    "
+    :title="t(isLinux ? 'floatingMonitor.tray' : isMacOs ? 'floatingMonitor.menuBar' : 'floatingMonitor.taskbar')"
   >
     <MdSettingsRow
       v-if="!isMacOs && !isLinux && preferences.windowsDisplayMode !== 'floating'"

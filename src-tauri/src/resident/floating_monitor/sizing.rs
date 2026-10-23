@@ -1,7 +1,7 @@
 //! Validated font measurements; live readings never determine window geometry.
 use super::super::tray_display::display_entry::DisplayId;
 use crate::resident::preference_schema::FloatingFontSize;
-#[cfg(any(windows, target_os = "macos", test))]
+#[cfg(any(windows, target_os = "macos", target_os = "linux", test))]
 use crate::resident::preference_schema::FloatingPreferences;
 use serde::Deserialize;
 
@@ -29,7 +29,7 @@ impl LayoutMeasurement {
             .is_none_or(|items| valid_measurements(items))
     }
 
-    #[cfg(any(windows, target_os = "macos", test))]
+    #[cfg(any(windows, target_os = "macos", target_os = "linux", test))]
     pub(super) fn matches(
         &self,
         preferences: &FloatingPreferences,
@@ -45,7 +45,7 @@ impl LayoutMeasurement {
 }
 
 impl ItemMeasurement {
-    #[cfg(any(windows, target_os = "macos", test))]
+    #[cfg(any(windows, target_os = "macos", target_os = "linux", test))]
     pub(super) fn width(&self) -> f64 {
         // Match the metric's horizontal padding and label gap.
         super::geometry::item_width(self.label_width, self.value_width)
@@ -70,7 +70,7 @@ fn valid_measurements(items: &[ItemMeasurement]) -> bool {
     items.len() <= 128 && items.iter().all(ItemMeasurement::valid)
 }
 
-#[cfg(any(windows, target_os = "macos", test))]
+#[cfg(any(windows, target_os = "macos", target_os = "linux", test))]
 pub(super) fn matches(items: &[ItemMeasurement], entries: &[super::DisplayEntry]) -> bool {
     valid_measurements(items)
         && items.len() == entries.len()

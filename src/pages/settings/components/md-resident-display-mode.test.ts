@@ -122,26 +122,32 @@ describe('Windows display mode settings', () => {
 
 describe('shared resident display mode', () => {
   it.each(
-    Object.keys(locales).flatMap(locale => (['macos', 'windows'] as const).map(platform => ({ locale, platform })))
+    Object.keys(locales).flatMap(locale =>
+      (['macos', 'windows', 'linux'] as const).map(platform => ({ locale, platform }))
+    )
   )('keeps platform choices independent for $platform in $locale', async ({ locale, platform }) => {
     const preferences = preferencesFixture();
     const wrapper = mount(Mode, {
       props: { preferences, platform },
       global: { plugins: [createI18n({ legacy: false, locale, messages: locales })] },
     });
-    const nativeMode = platform === 'macos' ? 'menuBar' : 'taskbar';
-    const field = platform === 'macos' ? 'macosDisplayMode' : 'windowsDisplayMode';
+    const nativeMode = platform === 'macos' ? 'menuBar' : platform === 'linux' ? 'tray' : 'taskbar';
+    const field =
+      platform === 'macos' ? 'macosDisplayMode' : platform === 'linux' ? 'linuxDisplayMode' : 'windowsDisplayMode';
     expect(wrapper.get(`#${platform}-display-mode`).text()).toContain(locales[locale]!.floatingMonitor[nativeMode]);
     const select = wrapper.getComponent(Select);
     select.vm.$emit('update:modelValue', platform === 'macos' ? 'taskbar' : 'menuBar');
     select.vm.$emit('update:modelValue', null);
     expect(wrapper.emitted('change')).toBeUndefined();
-    for (const mode of [nativeMode, 'floating', 'both']) {
+    for (const mode of [nativeMode, 'floating', 'both'] as const) {
       select.vm.$emit('update:modelValue', mode);
       expect(wrapper.emitted('change')?.at(-1)).toEqual([{ [field]: mode }]);
+      await wrapper.setProps({ preferences: { ...preferences, [field]: mode } });
+      expect(wrapper.get(`#${platform}-display-mode`).text()).toContain(locales[locale]!.floatingMonitor[mode]);
     }
     expect(preferences.windowsDisplayMode).toBe('taskbar');
     expect(preferences.macosDisplayMode).toBe('menuBar');
+    expect(preferences.linuxDisplayMode).toBe('tray');
     wrapper.unmount();
   });
 });

@@ -1,16 +1,7 @@
 //! Passive AppKit surface. Spaces own fullscreen exclusion; menu-bar settings own appearance.
-use crate::resident::preference_schema::FloatingPreferences;
 use objc2::MainThreadMarker;
 use objc2_app_kit::{NSEvent, NSWindow, NSWindowCollectionBehavior};
 use tauri::Manager;
-
-pub(super) fn appearance_only(mut preferences: FloatingPreferences) -> FloatingPreferences {
-    preferences.always_on_top = true;
-    preferences.locked = false;
-    preferences.snap_to_edges = false;
-    preferences.click_through = false;
-    preferences
-}
 
 pub(super) fn configure(window: &tauri::WebviewWindow) -> tauri::Result<()> {
     window.with_webview(|webview| {

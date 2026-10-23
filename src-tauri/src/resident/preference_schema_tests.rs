@@ -125,7 +125,7 @@ fn every_display_combination_retains_an_entry() {
 fn current_schema_rejects_development_versions_unknown_fields_and_missing_fields() {
     let current = serde_json::to_value(ResidentPreferences::default()).unwrap();
     for version in (0..PREFERENCE_SCHEMA_VERSION)
-        .filter(|v| ![7, 8, 10, 21, 25, 28, 29, 30, 31, 32, 33, 34, 35].contains(v))
+        .filter(|v| ![7, 8, 10, 21, 25, 28, 29, 30, 31, 32, 33, 34, 35, 36].contains(v))
         .chain([PREFERENCE_SCHEMA_VERSION + 1])
     {
         let mut value = current.clone();
@@ -179,6 +179,7 @@ fn previous_windows_floating_preferences_gain_independent_macos_menu_bar_default
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 34.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -460,6 +461,7 @@ fn disk_temperature_device_is_independent_and_released_preferences_follow_the_se
 fn previous_monitor_settings_upgrade_without_changing_user_choices() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 28.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous.as_object_mut().unwrap().remove("macosDisplayMode");
     previous["revision"] = 91.into();
     previous["enabled"] = false.into();
@@ -505,6 +507,7 @@ fn floating_options_reject_unknown_modes_and_preserve_a_recovery_icon() {
 fn previous_floating_settings_keep_layout_and_position_options_with_opaque_background() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 29.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -575,6 +578,7 @@ fn floating_background_opacity_requires_a_bounded_integer_percentage() {
 fn previous_opacity_settings_enable_snapping_without_resetting_other_choices() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 30.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -632,6 +636,7 @@ fn snapping_requires_an_explicit_boolean_in_the_current_schema() {
 fn previous_floating_appearance_keeps_opacity_and_defaults_new_options() {
     let mut previous = serde_json::to_value(ResidentPreferences::default()).unwrap();
     previous["schemaVersion"] = 31.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -715,6 +720,7 @@ fn previous_floating_appearance_adds_dividers_without_changing_saved_choices() {
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 32.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -784,6 +790,7 @@ fn click_through_migrates_disabled_and_preserves_previous_choices() {
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 33.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -851,6 +858,7 @@ fn fullscreen_hiding_migrates_enabled_without_resetting_other_choices() {
     };
     let mut previous = serde_json::to_value(&expected).unwrap();
     previous["schemaVersion"] = 35.into();
+    previous.as_object_mut().unwrap().remove("linuxDisplayMode");
     previous["floating"]
         .as_object_mut()
         .unwrap()
@@ -891,5 +899,50 @@ fn fullscreen_hiding_requires_a_boolean_and_preserves_both_values() {
         .as_object_mut()
         .unwrap()
         .remove("hideOnFullscreen");
+    assert!(decode(missing).is_err());
+}
+
+#[test]
+fn linux_display_migrates_to_tray_and_preserves_platform_preferences() {
+    let expected = ResidentPreferences {
+        revision: 93,
+        windows_display_mode: WindowsDisplayMode::Both,
+        macos_display_mode: MacOsDisplayMode::Both,
+        floating: FloatingPreferences {
+            bold: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let mut old = serde_json::to_value(&expected).unwrap();
+    old["schemaVersion"] = 36.into();
+    old.as_object_mut().unwrap().remove("linuxDisplayMode");
+    assert_eq!(decode(old.clone()).unwrap(), expected);
+    old["linuxDisplayMode"] = "floating".into();
+    assert!(decode(old).is_err(), "old schemas reject future fields");
+    for mode in [
+        LinuxDisplayMode::Tray,
+        LinuxDisplayMode::Floating,
+        LinuxDisplayMode::Both,
+    ] {
+        let mut preferences = expected.clone();
+        preferences.linux_display_mode = mode;
+        assert_eq!(
+            decode(serde_json::to_value(&preferences).unwrap()).unwrap(),
+            preferences
+        );
+    }
+    for value in [
+        serde_json::json!("taskbar"),
+        serde_json::json!("menuBar"),
+        serde_json::json!(true),
+        serde_json::Value::Null,
+    ] {
+        let mut invalid = serde_json::to_value(&expected).unwrap();
+        invalid["linuxDisplayMode"] = value;
+        assert!(decode(invalid).is_err());
+    }
+    let mut missing = serde_json::to_value(&expected).unwrap();
+    missing.as_object_mut().unwrap().remove("linuxDisplayMode");
     assert!(decode(missing).is_err());
 }

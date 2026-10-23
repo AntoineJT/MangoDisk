@@ -1,7 +1,7 @@
 # Resident system status
 
 The resident adapter combines independent Core readings into native menu-bar/tray
-entries, a macOS/Windows floating monitor, and one reusable detail panel. It does not own filesystem cleanup,
+entries, a cross-platform floating monitor, and one reusable detail panel. It does not own filesystem cleanup,
 application termination, or memory-reclamation algorithms.
 
 ## Ownership
@@ -25,7 +25,7 @@ application termination, or memory-reclamation algorithms.
 | `taskbar_display/native` | Native-thread window ownership, creation and shell restart lifecycle |
 | `taskbar_display/native/messages`, `interaction` | Reentrant Win32 dispatch, pointer hit testing and context menus |
 | `taskbar_display/native/update`, `rendering` | Live placement, lease coordination, visibility and native paint recovery |
-| `floating_monitor/window`, `menu` | Windows floating-window lifecycle, coalesced summary publication and native interactions |
+| `floating_monitor/window`, `menu` | Cross-platform floating-window lifecycle, coalesced summary publication and native menus |
 | `floating_monitor/placement`, `geometry` | Monitor-relative positions, work-area recovery, snap and bounded layouts |
 | `windows_frame` | Shared frame recalculation before physical sizing of borderless Windows surfaces |
 | `preference_schema` | Current preference models, validation and pure release upgrades |
@@ -52,16 +52,37 @@ UI concepts into Core or Platform. Window lifecycle, sampling-thread ownership
 and native presentation remain explicit desktop adapters.
 
 The floating monitor shares `window` lifecycle, `placement` persistence,
-`geometry` calculations and `sizing` validation across macOS and Windows.
+`geometry` calculations and `sizing` validation across macOS, Windows and Linux.
 The native menu assembles controls and commits preferences; `menu_preferences`
 owns its supported choices and pure field updates. Windows resource-panel
 anchors, metric clicks and click-through live in `interaction`; AppKit and
-Win32 visibility and mouse state remain in their native adapters.
-Both native context menus group font, bold, background, opacity and dividers
+Win32 and GTK visibility and mouse state remain in their native adapters.
+Native context menus group font, bold, background, opacity and dividers
 under Appearance. Windows keeps topmost, position lock and edge snapping as
 root-level shortcuts alongside the shared layout and configuration actions.
 The settings display-mode control is shared while each platform retains its
 own persisted mode and supported choices.
+
+## Linux floating monitor
+
+`linuxDisplayMode` independently selects the existing tray surface (default), a
+passive floating monitor, or both. Both mode keeps the same enabled readings in
+the tray and floating monitor. Floating mode always retains the brand tray entry as a
+recovery and configuration path. Left clicks never open resource panels.
+
+Linux reuses the shared display entries, measured fixed columns, appearance menu,
+settings editor and monitor-relative position bookmark. The GTK adapter keeps the
+window out of the taskbar and pager and prevents focus changes when it appears.
+The native move operation owns dragging; placement captures only an explicit drag
+after button release. Appearance changes do not replace the saved position.
+Before remapping a hidden GTK window, placement reasserts the bookmark even when
+the layout is unchanged. GTK receives the initial position; mapped surfaces use
+one GDK geometry request to avoid clamping a resize against the previous size.
+
+Ubuntu 22 GNOME/X11 is the reference desktop. Absolute placement and position
+restoration depend on the compositor's window-management capabilities; Wayland
+compositors may restrict them. No compositor extensions, global desktop settings
+or Windows interaction controls are introduced.
 
 ## macOS floating monitor
 
@@ -209,9 +230,9 @@ returns that reserved slot directly, so centered buttons do not send the monitor
 to an unrelated outer gap. Unknown environments prefer right,
 and collision checks still apply. These defaults do not replace saved choices.
 
-Resident preferences use schema version 36; resource readings use version 31.
+Resident preferences use schema version 37; resource readings use version 31.
 The runtime and IPC accept only the current structure. Persisted configurations from
-release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32, 33, 34 and 35 upgrade directly to schema 36;
+release tags v1.1.1–v1.1.9 (schemas 7, 8, 10, 21 and 25) and the previous monitoring schemas 28, 29, 30, 31, 32, 33, 34, 35 and 36 upgrade directly to schema 37;
 development-only schemas, including 26 and 27, have no migration contract. Each
 supported release has a frozen fixture beside the pure decoder. Upgrades retain
 saved order, visibility, colors, source choices and consent; newly introduced

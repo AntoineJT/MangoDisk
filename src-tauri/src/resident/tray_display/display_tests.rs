@@ -1,4 +1,30 @@
 use super::*;
+
+#[test]
+fn linux_both_mode_keeps_tray_readings_and_floating_only_hides_them() {
+    use crate::resident::preference_schema::LinuxDisplayMode;
+    let mut cpu = display_entry(DisplayId::Cpu, "CPU 27%");
+    cpu.marker = "CPU".into();
+    cpu.digits = "27".into();
+    let entries = [cpu];
+    for (compact, expected) in [(false, "CPU 27%"), (true, "CPU27%")] {
+        let mut preferences = ResidentPreferences {
+            taskbar_compact: compact,
+            ..Default::default()
+        };
+        for mode in [LinuxDisplayMode::Tray, LinuxDisplayMode::Both] {
+            preferences.linux_display_mode = mode;
+            assert_eq!(
+                indicator_title(&entries, &preferences).as_deref(),
+                Some(expected)
+            );
+            assert!(indicator_title(&[], &preferences).is_none());
+        }
+        preferences.linux_display_mode = LinuxDisplayMode::Floating;
+        assert!(indicator_title(&entries, &preferences).is_none());
+    }
+}
+
 #[test]
 fn disk_temperature_formats_fresh_samples_without_usage_or_history() {
     use mangodisk_core::system_resources::metrics::MetricReading;
@@ -453,7 +479,6 @@ fn temperature_entries_follow_saved_order_including_without_cpu_usage() {
     assert_eq!(ids, [DisplayId::Memory, DisplayId::CpuTemperature]);
 }
 
-#[cfg(target_os = "linux")]
 fn display_entry(id: DisplayId, text: &str) -> DisplayEntry {
     DisplayEntry {
         gpu_device: None,
@@ -469,10 +494,10 @@ fn display_entry(id: DisplayId, text: &str) -> DisplayEntry {
     }
 }
 
-#[cfg(target_os = "linux")]
 #[test]
 fn indicator_title_contains_only_non_empty_enabled_metrics() {
-    assert_eq!(indicator_title(&[], false), None);
+    let preferences = ResidentPreferences::default();
+    assert_eq!(indicator_title(&[], &preferences), None);
     assert_eq!(
         indicator_title(
             &[
@@ -480,13 +505,12 @@ fn indicator_title_contains_only_non_empty_enabled_metrics() {
                 display_entry(DisplayId::Memory, "MEM  48%"),
                 display_entry(DisplayId::Disk, ""),
             ],
-            false,
+            &preferences,
         ),
         Some("CPU  12%  MEM  48%".to_string())
     );
 }
 
-#[cfg(target_os = "linux")]
 #[test]
 fn compact_indicator_title_reduces_width_and_keeps_values() {
     let mut cpu = display_entry(DisplayId::Cpu, "CPU  12%");
@@ -499,8 +523,11 @@ fn compact_indicator_title_reduces_width_and_keeps_values() {
     upload.marker = "↑K".into();
     upload.digits = "82".into();
 
-    let standard = indicator_title(&[cpu.clone(), memory.clone(), upload.clone()], false).unwrap();
-    let compact = indicator_title(&[cpu, memory, upload], true).unwrap();
+    let mut preferences = ResidentPreferences::default();
+    let standard =
+        indicator_title(&[cpu.clone(), memory.clone(), upload.clone()], &preferences).unwrap();
+    preferences.taskbar_compact = true;
+    let compact = indicator_title(&[cpu, memory, upload], &preferences).unwrap();
 
     assert_eq!(compact, "C12% M48% ↑82K");
     assert!(compact.len() < standard.len());

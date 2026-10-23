@@ -19,12 +19,23 @@ pub fn decode(mut value: Value) -> Result<ResidentPreferences, &'static str> {
             .map_err(|_| "preferences_invalid")?
             .normalize();
     }
-    if matches!(version, 34..=35) {
+    if RELEASED_VERSIONS.contains(&version) || matches!(version, 28..=36) {
+        let object = value.as_object_mut().ok_or("preferences_invalid")?;
+        if object
+            .insert("linuxDisplayMode".into(), "tray".into())
+            .is_some()
+        {
+            return Err("preferences_invalid");
+        }
+    }
+    if matches!(version, 34..=36) {
         let object = value.as_object_mut().ok_or("preferences_invalid")?;
         if version == 34 {
             add_macos_defaults(object)?;
         }
-        add_fullscreen_default(object)?;
+        if version < 36 {
+            add_fullscreen_default(object)?;
+        }
         object.insert("schemaVersion".into(), PREFERENCE_SCHEMA_VERSION.into());
         return serde_json::from_value::<ResidentPreferences>(value)
             .map_err(|_| "preferences_invalid")?

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 mod migrations;
 pub use migrations::decode;
 
-pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 36;
+pub(super) const PREFERENCE_SCHEMA_VERSION: u32 = 37;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,6 +21,15 @@ pub enum WindowsDisplayMode {
 pub enum MacOsDisplayMode {
     #[default]
     MenuBar,
+    Floating,
+    Both,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LinuxDisplayMode {
+    #[default]
+    Tray,
     Floating,
     Both,
 }
@@ -44,7 +53,7 @@ pub enum FloatingFontSize {
 }
 
 impl FloatingFontSize {
-    #[cfg(any(windows, target_os = "macos", test))]
+    #[cfg(any(windows, target_os = "macos", target_os = "linux", test))]
     pub(super) fn row_height(self) -> f64 {
         match self {
             Self::Standard => 20.0,
@@ -207,6 +216,7 @@ pub struct ResidentPreferences {
     pub show_icon: bool,
     pub windows_display_mode: WindowsDisplayMode,
     pub macos_display_mode: MacOsDisplayMode,
+    pub linux_display_mode: LinuxDisplayMode,
     pub floating: FloatingPreferences,
     pub taskbar_position: TaskbarPosition,
     pub taskbar_background: bool,
@@ -256,6 +266,7 @@ impl Default for ResidentPreferences {
             show_icon: true,
             windows_display_mode: WindowsDisplayMode::default(),
             macos_display_mode: MacOsDisplayMode::default(),
+            linux_display_mode: LinuxDisplayMode::default(),
             floating: FloatingPreferences::default(),
             taskbar_position: TaskbarPosition::default(),
             taskbar_background: true,
@@ -314,6 +325,7 @@ impl ResidentPreferences {
         self.show_icon
             || (cfg!(windows) && self.windows_display_mode != WindowsDisplayMode::Taskbar)
             || (cfg!(target_os = "macos") && self.macos_display_mode != MacOsDisplayMode::MenuBar)
+            || (cfg!(target_os = "linux") && self.linux_display_mode != LinuxDisplayMode::Tray)
             || !self.metrics.iter().any(|metric| {
                 metric.enabled
                     && (metric.id != DisplayMetricId::CpuTemperature
