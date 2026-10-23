@@ -129,11 +129,11 @@
     "title": "Traces d’activité",
     "idleTitle": "Rechercher les traces d’activité",
     "idleDescription": "Analyser l’activité des navigateurs, des apps et du système",
-    "scan": "Scannez maintenant",
-    "rescan": "Scannez à nouveau",
+    "scan": "Analysez maintenant",
+    "rescan": "Analysez à nouveau",
     "scanning": "Recherche de traces d’activité",
     "scanningSource": "Vérification de {source}",
-    "scanningDescription": "La numérisation ne modifie aucune donnée",
+    "scanningDescription": "L'analyse ne modifie aucune donnée",
     "executing": "Effacement",
     "cancelling": "Arrêt",
     "clearSelected": "Effacer la sélection",
@@ -238,7 +238,7 @@
       "empty": "Aucune trace",
       "browserRunning": "Fermez le navigateur pour nettoyer",
       "applicationRunning": "Fermez l'application pour nettoyer",
-      "scanAfterClose": "Scan après fermeture",
+      "scanAfterClose": "Analyse après fermeture",
       "permissionRequired": "Autorisation requise",
       "unsupported": "Non pris en charge",
       "schemaUnsupported": "Schéma de données inconnu",
@@ -266,7 +266,7 @@
       "successDescription": "{count} trace d’activité effacée et vérifiée | {count} traces d’activité effacées et vérifiées",
       "partialDescription": "Traces effacées : {count} ; éléments non traités : {failed}",
       "cleanedTraces": "Traces effacées",
-      "processedItems": "Articles traités",
+      "processedItems": "Éléments traités",
       "incompleteItems": "Ignoré ou échoué",
       "unknownSource": "Source d’activité",
       "statuses": {
@@ -1304,7 +1304,7 @@
       },
       "windows_explorer_separate-process": {
         "name": "Exécuter les fenêtres de dossiers dans un processus distinct",
-        "description": "Limitez l'impact du crash d'une fenêtre avec un faible coût en mémoire"
+        "description": "Limitez l'impact du plantage d'une fenêtre, au prix d'un léger surcoût en mémoire"
       },
       "windows_explorer_restore-folders-at-login": {
         "name": "Restaurer les fenêtres du dossier après la connexion",
@@ -1581,7 +1581,7 @@
       "authorizationPromptMacos": "MangoDisk a besoin de l'autorisation de l'administrateur pour modifier les paramètres de démarrage",
       "confirm": "Confirmer",
       "applying": "Application des changements…",
-      "refreshFailedResult": "L'opération est terminée, mais la liste n'a pas pu être mise à jour. Scannez à nouveau",
+      "refreshFailedResult": "L'opération est terminée, mais la liste n'a pas pu être mise à jour. Analysez à nouveau",
       "enableSuccessResult": "Activé le démarrage automatique pour « {name} »",
       "disableSuccessResult": "Désactivation du démarrage automatique pour « {name} »",
       "batchEnableSuccessResult": "Éléments activés au démarrage : {count}",
@@ -1596,7 +1596,7 @@
       },
       "skipReasons": {
         "alreadyInDesiredState": "Déjà dans l'état demandé",
-        "catalogExpired": "La session d'analyse a expiré ; scanner à nouveau",
+        "catalogExpired": "La session d'analyse a expiré ; analyser à nouveau",
         "itemChanged": "Configuration du système modifiée après l'analyse",
         "itemMissing": "L'élément n'existe plus",
         "stateUnknown": "L'état configuré ne peut pas être vérifié",
@@ -1739,7 +1739,7 @@
     },
     "scanExclusionsChanged": {
       "title": "Exclusions d'analyse modifiées",
-      "message": "Scannez à nouveau pour appliquer vos exclusions avant le nettoyage"
+      "message": "Analysez à nouveau pour appliquer vos exclusions avant le nettoyage"
     },
     "directoryNotEmpty": {
       "title": "Suppression du dossier incomplète",
@@ -1807,7 +1807,7 @@
       "otherDescription": "{count} lecture a échoué | {count} lectures ont échoué",
       "otherInstructions": "Les éléments illisibles ont été ignorés. Vous pouvez toujours afficher les résultats d'analyse restants",
       "detailsShown": "Échecs de lecture : {total} · Affichés : {count}",
-      "detailsUnavailable": "Les détails n'ont pas été enregistrés. Scannez à nouveau ou vérifiez les journaux",
+      "detailsUnavailable": "Les détails n'ont pas été enregistrés. Analysez à nouveau ou vérifiez les journaux",
       "copyPath": "Copier le chemin : {path}",
       "ignoreWarnings": "Ne plus afficher",
       "ignoreWarningsSetting": "Masquer les alertes d'échec de lecture",
@@ -1833,7 +1833,7 @@
       "application": "Caches d'applications",
       "browser": "Données du navigateur",
       "development": "Outils de développement",
-      "project": "Fichiers générés des projets",
+      "project": "Fichiers de build des projets",
       "xcode": "Données Xcode",
       "applicationOptimization": "Optimisation des applications",
       "ai": "Modèles et caches IA",
@@ -1898,16 +1898,16 @@
     "sourceModified": "Dernière modification {time}",
     "aggregateOnlyDetails": "Seules la portée du nettoyage, le nombre d'éléments et la taille totale sont disponibles ; les fichiers individuels ne peuvent pas être répertoriés",
     "scanMode": {
-      "label": "Choisissez le type de numérisation",
-      "standard": "Numérisation standard",
+      "label": "Choisissez le type d'analyse",
+      "standard": "Analyse standard",
       "standardDescription": "Vérifier les éléments de nettoyage et les projets de développement pour l'utilisateur actuel",
       "selectVolumes": "Choisissez les disques",
       "selectVolumesDescription": "Trouver plus de projets de développement sur d'autres disques",
       "custom": "Nettoyage personnalisé",
       "customDescription": "Rechercher des fichiers à nettoyer dans vos dossiers selon vos critères",
       "volumeDialogTitle": "Choisissez les disques à rechercher",
-      "volumeDialogDescription": "Le disque système est toujours analysé. Sélectionnez d’autres disques pour rechercher des projets de développement et des fichiers de compilation",
-      "systemVolume": "Système · Toujours scanné",
+      "volumeDialogDescription": "Le disque système est toujours analysé. Sélectionnez d’autres disques pour rechercher des projets de développement et des fichiers de build",
+      "systemVolume": "Système · Toujours analysé",
       "volumeCapacity": "{available} disponibles / {total}",
       "noVolumes": "Aucun disque n'est disponible",
       "selectedVolumeCount": "{count} disque sélectionné | {count} disques sélectionnés",
@@ -1961,7 +1961,7 @@
       "empty": "Aucune règle personnalisée pour l'instant",
       "includeStandardRules": "Exécutez également une analyse standard",
       "save": "Enregistrer",
-      "saveAndScan": "Enregistrer et numériser"
+      "saveAndScan": "Enregistrer et analyser"
     }
   },
   "analysis": {
@@ -2021,7 +2021,7 @@
     "title": "Exclusions d’analyse",
     "activeLabel": "Exclusions sur",
     "resultHint": "Des exclusions ont été appliquées à cette analyse. Les résultats peuvent être incomplets",
-    "cleanupResultHint": "Des exclusions ont été appliquées. Les exclusions de chemin affectent uniquement les artefacts de génération de projet",
+    "cleanupResultHint": "Des exclusions ont été appliquées. Les exclusions de chemin affectent uniquement les fichiers de build des projets",
     "description": "Choisissez ce que vous souhaitez ignorer et où les exclusions s'appliquent",
     "chooseFolders": "Choisissez les dossiers à exclure",
     "folderCount": "{count} dossier | {count} dossiers",
@@ -2030,7 +2030,7 @@
     "addingFolder": "Ajout…",
     "removeFolder": "Supprimer ce dossier",
     "emptyTitle": "Cliquez pour ajouter des dossiers ou faites-les glisser ici",
-    "cleanupScopeHint": "Ce dossier est ignoré lors de la recherche de fichiers générés par les projets. D’autres éléments du nettoyage approfondi peuvent encore nettoyer son contenu",
+    "cleanupScopeHint": "Ce dossier est ignoré lors de la recherche de fichiers de build des projets. D’autres éléments du nettoyage approfondi peuvent encore nettoyer son contenu",
     "limitReached": "Vous pouvez exclure jusqu'à {count} dossiers",
     "save": "Enregistrer",
     "saving": "Sauvegarde…",
@@ -2137,7 +2137,7 @@
     "clearSelection": "Tout désélectionner",
     "selected": "Sélection",
     "noResults": "Aucun fichier en double ne correspond aux conditions actuelles",
-    "noResultsDescription": "Changez de type de fichier, réduisez la taille minimale du fichier ou choisissez un autre emplacement et numérisez à nouveau",
+    "noResultsDescription": "Changez de type de fichier, réduisez la taille minimale du fichier ou choisissez un autre emplacement et analysez à nouveau",
     "selectGroup": "Sélectionner {count} copie | Sélectionner {count} copies",
     "selectGroupHint": "Conservez un fichier et sélectionnez les autres copies en utilisant votre paramètre actuel",
     "protectedGroup": "Tous protégés",
@@ -2158,7 +2158,7 @@
   "applicationLeftovers": {
     "categoryTitle": "Résidus d’apps",
     "scanning": "Vérification des données laissées par les applications supprimées…",
-    "scanHint": "Seules les données clairement liées à une application qui n'est plus installée sont affichées. Le scan ne change rien",
+    "scanHint": "Seules les données clairement liées à une application qui n'est plus installée sont affichées. L'analyse ne change rien",
     "accessLimitedDescription": "Autorisez MangoDisk à accéder aux autres données de l'application dans Réglages Système → Confidentialité et sécurité, puis effectuez une nouvelle analyse",
     "incompleteDescription": "Pour éviter les erreurs, aucun reste n'est affiché. Réessayez plus tard",
     "emptyTitle": "Aucun reste d'application vérifié trouvé",
@@ -2298,10 +2298,10 @@
     "componentKinds": {
       "applicationBinary": "Application",
       "nativeInstaller": "Programme de désinstallation de Windows",
-      "windowsAppPackage": "Paquet Microsoft Store",
+      "windowsAppPackage": "Package Microsoft Store",
       "windowsMsiPackage": "Package Windows Installer",
-      "windowsScoopPackage": "Forfait Scoop",
-      "windowsChocolateyPackage": "Forfait chocolaté",
+      "windowsScoopPackage": "Package Scoop",
+      "windowsChocolateyPackage": "Package Chocolatey",
       "windowsRegisteredUninstaller": "Désinstallateur",
       "cache": "Cache des applications",
       "applicationSupport": "Fichiers de support d'application",
@@ -2381,7 +2381,7 @@
     "detailDescription": "Examinez les éléments, les modifications d'espace et les résultats de cette opération",
     "cleanupItems": "Éléments de nettoyage",
     "uninstalledApplications": "Applications désinstallées",
-    "affectedItems": "Articles traités",
+    "affectedItems": "Éléments traités",
     "affectedApplications": "Applications désinstallées",
     "failedItems": "Ignoré ou échoué",
     "failedApplications": "Applications incomplètes",
@@ -2609,12 +2609,12 @@
   "loading": {
     "starting": "Lecture des informations sur le disque…",
     "scanning": "Analyse du contenu récupérable…",
-    "cancelling": "Annulation de la numérisation…",
+    "cancelling": "Annulation de l'analyse…",
     "processing": "Traitement",
     "currentStage": "Analyse",
-    "currentDirectory": "Numérisation",
+    "currentDirectory": "Analyse en cours",
     "preparingDirectory": "Préparation des dossiers…",
-    "currentAnalysisDirectory": "Article actuel",
+    "currentAnalysisDirectory": "Élément actuel",
     "preparingAnalysisDirectory": "Préparation de l'analyse…",
     "checkedItems": "fichiers vérifiés",
     "accessibleRuleProgress": "{completed} contrôles sur {total} terminés, {checked} fichiers analysés, {bytes} analysés",
@@ -2687,7 +2687,7 @@
       },
       "system.old-diagnostic-logs": {
         "name": "Anciens journaux de diagnostic",
-        "description": "Journaux d'application au niveau utilisateur et rapports d'erreur datant de plus de sept jours",
+        "description": "Journaux d'application au niveau utilisateur et rapports de plantage datant de plus de sept jours",
         "impact": "Les journaux récents restent disponibles, mais les diagnostics historiques supprimés ne peuvent pas être utilisés ultérieurement"
       },
       "system.quicklook-cache": {
@@ -2742,8 +2742,8 @@
       },
       "system.crash-dumps": {
         "name": "Fichiers de diagnostic des plantages",
-        "description": "Fichiers de vidage de diagnostic créés lors du crash des applications",
-        "impact": "Les dumps supprimés ne peuvent plus être utilisés pour enquêter sur des crashs antérieurs"
+        "description": "Fichiers de diagnostic créés lors du plantage des applications",
+        "impact": "Les fichiers supprimés ne peuvent plus servir à analyser des plantages antérieurs"
       },
       "system.error-reports": {
         "name": "Rapports d'erreurs Windows",
@@ -2857,7 +2857,7 @@
       },
       "app.youdao-translation-cache": {
         "name": "Cache de traduction Youdao",
-        "description": "Données de traduction temporaire, d'image, de WebKit et de crash générées par le dictionnaire Youdao",
+        "description": "Données temporaires de traduction, d'images, de WebKit et de plantage générées par le dictionnaire Youdao",
         "impact": "Les dictionnaires, l'historique, les documents, les préférences et l'état du compte sont conservés. Fermez le dictionnaire Youdao avant de nettoyer"
       },
       "app.gitmind-rendering-cache": {
@@ -2873,7 +2873,7 @@
       "app.electron-updater-cache": {
         "name": "Cache des mises à jour des apps Electron",
         "description": "Programmes d'installation de mises à jour téléchargés conservés par GoWhisper, WeFlow et GitMind",
-        "impact": "Les applications et leurs données sont conservées. Les paquets de mise à jour supprimés pourront être téléchargés à nouveau. Fermez d’abord les apps concernées"
+        "impact": "Les applications et leurs données sont conservées. Les packages de mise à jour supprimés pourront être téléchargés à nouveau. Fermez d’abord les apps concernées"
       },
       "app.lobsterai-update-cache": {
         "name": "Cache de mise à jour de LobsterAI",
@@ -2892,7 +2892,7 @@
       },
       "app.xmind-rendering-cache": {
         "name": "Cache de rendu Xmind",
-        "description": "Cache régénérable Web, code, GPU, shader et rapport de crash généré par Xmind",
+        "description": "Cache régénérable (Web, code, GPU, shaders, rapports de plantage) généré par Xmind",
         "impact": "Les cartes mentales, le cache de récupération de documents, les paramètres, les cookies et l'état de connexion sont conservés. Fermez d’abord Xmind"
       },
       "app.dingtalk-content-cache": {
@@ -2932,7 +2932,7 @@
       },
       "app.wps-diagnostic-cache": {
         "name": "Journaux de diagnostic WPS Office",
-        "description": "Diagnostics d'application, de rendu, de service cloud, d'espace de travail et de crash générés par WPS Office",
+        "description": "Diagnostics d'application, de rendu, de service cloud, d'espace de travail et de plantage générés par WPS Office",
         "impact": "Les documents, les données de récupération, les modèles, les fichiers cloud, les comptes et les paramètres sont conservés. Les journaux supprimés ne peuvent pas être utilisés pour un dépannage ultérieur"
       },
       "app.wechat-rendering-cache": {
@@ -2942,7 +2942,7 @@
       },
       "app.qq-rendering-cache": {
         "name": "Cache de rendu QQ",
-        "description": "Données temporaires Web, code, graphiques, journaux et rapports d'erreur générés par QQ pour Windows",
+        "description": "Données temporaires Web, code, graphiques, journaux et rapports de plantage générés par QQ pour Windows",
         "impact": "Les comptes, messages, fichiers, paramètres, stockage du navigateur et prise en charge du programme de mise à jour sont conservés. Fermez QQ avant de nettoyer"
       },
       "app.wecom-diagnostic-cache": {
@@ -2957,7 +2957,7 @@
       },
       "app.signal-cache": {
         "name": "Cache Signal",
-        "description": "Code régénérable, graphiques, dictionnaire, journal et cache de rapport de crash générés par Signal Desktop",
+        "description": "Cache régénérable (code, graphismes, dictionnaire, journaux, rapports de plantage) généré par Signal Desktop",
         "impact": "Les comptes, messages, pièces jointes, bases de données cryptées, paramètres et état de connexion sont conservés. Fermez Signal avant le nettoyage"
       },
       "app.postman-cache": {
@@ -2996,8 +2996,8 @@
         "impact": "Les conversations, les projets, les informations d'identification, l'état du navigateur et l'état de connexion sont conservés. Fermez ChatGPT et Codex avant le nettoyage"
       },
       "app.codex-diagnostic-cache": {
-        "name": "Anciens rapports de crash de Codex",
-        "description": "Rapports d'erreur de Codex en attente non modifiés depuis 7 jours",
+        "name": "Anciens rapports de plantage de Codex",
+        "description": "Rapports de plantage de Codex en attente non modifiés depuis 7 jours",
         "impact": "Les conversations, projets, informations d'identification, paramètres et rapports récents sont conservés. Fermez Codex et ChatGPT avant le nettoyage"
       },
       "app.claude-cache": {
@@ -3057,12 +3057,12 @@
       },
       "app.telegram-temporary-cache": {
         "name": "Fichiers temporaires Telegram",
-        "description": "Images de notification temporaires, icônes de la zone de notification, exportations de calendrier et vidages sur incident créés par Telegram Desktop",
+        "description": "Images de notification temporaires, icônes de la zone de notification, exportations de calendrier et fichiers de diagnostic de plantage créés par Telegram Desktop",
         "impact": "Telegram doit être complètement fermé. Les comptes, conversations, médias téléchargés, réglages et ressources d’émojis sont conservés"
       },
       "app.vlc-cache": {
-        "name": "Illustration VLC et cache de crash",
-        "description": "Illustration de couverture mise en cache et vidages sur incident créés par le lecteur multimédia VLC",
+        "name": "Pochettes et diagnostics de plantage VLC",
+        "description": "Illustration de couverture mise en cache et fichiers de diagnostic de plantage créés par le lecteur multimédia VLC",
         "impact": "VLC doit être fermé. Les préférences, les listes de lecture, les données de la médiathèque et les fichiers multimédias sont conservés ; les illustrations peuvent être extraites ou téléchargées à nouveau"
       },
       "app.ea-rendering-cache": {
@@ -3198,7 +3198,7 @@
       "dev.xcode-derived-data": {
         "name": "Données dérivées de Xcode",
         "description": "Xcode DerivedData, index et sortie de build intermédiaire",
-        "impact": "Le code source est conservé. La prochaine passe de construction et d'indexation peut prendre plus de temps"
+        "impact": "Le code source est conservé. Le prochain build et la prochaine indexation peuvent prendre plus de temps"
       },
       "dev.xcode-auxiliary-cache": {
         "name": "Documentation Xcode et journaux de périphériques",
@@ -3217,7 +3217,7 @@
       },
       "special.xcode-archives": {
         "name": "Archives d'applications Xcode",
-        "description": "Archives Xcode utilisées pour la distribution, l'exportation et la symbolisation des crashs",
+        "description": "Archives Xcode utilisées pour la distribution, l'exportation et la symbolisation des rapports de plantage",
         "impact": "Affiché pour examen uniquement et jamais ajouté au nettoyage. Gérez les archives dans Xcode Organizer après avoir confirmé qu'elles ne sont plus nécessaires"
       },
       "special.additional-user-caches": {
@@ -3236,7 +3236,7 @@
         "impact": "Les dépendances du projet sont conservées. npx peut télécharger à nouveau les outils"
       },
       "dev.node-gyp-cache": {
-        "name": "Cache de construction node-gyp",
+        "name": "Cache de build node-gyp",
         "description": "En-têtes et cache de build temporaire utilisés pour compiler les modules natifs Node.js",
         "impact": "Le code source est conservé. Les en-têtes requis peuvent être téléchargés à nouveau"
       },
@@ -3256,14 +3256,14 @@
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
       "dev.python-cache": {
-        "name": "Cache de paquets Python",
+        "name": "Cache de packages Python",
         "description": "Packages téléchargés et données d'analyse enregistrées par les outils de développement Python",
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
       "dev.pyinstaller-cache": {
         "name": "Cache binaire PyInstaller",
-        "description": "Copies binaires traitées enregistrées par PyInstaller pour les versions ultérieures",
-        "impact": "Les projets, les fichiers de spécifications et les résultats de build sont conservés. Les versions ultérieures devront peut-être traiter à nouveau les binaires"
+        "description": "Copies binaires traitées enregistrées par PyInstaller pour les builds ultérieurs",
+        "impact": "Les projets, les fichiers de spécifications et les résultats de build sont conservés. Les builds ultérieurs devront peut-être traiter à nouveau les binaires"
       },
       "dev.python-tooling-cache": {
         "name": "Cache d'outils Python",
@@ -3292,13 +3292,13 @@
       },
       "dev.cargo-extracted-sources": {
         "name": "Cache des sources extraites Cargo",
-        "description": "Sources des crates extraites par Cargo pour les constructions locales",
+        "description": "Sources des crates extraites par Cargo pour les builds locaux",
         "impact": "Les projets et les archives de crates téléchargées sont conservés. Cargo peut extraire ou télécharger à nouveau des sources"
       },
       "dev.go-cache": {
-        "name": "Cache de compilation Go",
+        "name": "Cache de build Go",
         "description": "Sortie de build Local Go et cache de module téléchargé",
-        "impact": "Le code source est conservé. Les versions ultérieures peuvent recompiler le code ou télécharger des modules"
+        "impact": "Le code source est conservé. Les builds ultérieurs peuvent recompiler le code ou télécharger des modules"
       },
       "dev.go-module-cache": {
         "name": "Cache des modules Go",
@@ -3322,7 +3322,7 @@
       },
       "dev.vscode-cache": {
         "name": "Cache Visual Studio Code",
-        "description": "Affichage temporaire et données de code compilé, packages d'extension téléchargés et rapports d'erreur à partir de Visual Studio Code",
+        "description": "Données temporaires d'affichage et de code compilé, packages d'extension téléchargés et rapports de plantage de Visual Studio Code",
         "impact": "Les projets, les paramètres, les extensions installées, l'état de l'espace de travail, les comptes et les sauvegardes sont conservés. Fermez d’abord Visual Studio Code ; certaines données peuvent être reconstruites ou téléchargées à nouveau"
       },
       "dev.editor-cache": {
@@ -3352,8 +3352,8 @@
       },
       "dev.electron-builder-cache": {
         "name": "Cache electron-builder",
-        "description": "Outils de compilation téléchargés par electron-builder.",
-        "impact": "Les prochaines compilations peuvent nécessiter de nouveaux téléchargements et échouer hors ligne."
+        "description": "Outils de build téléchargés par electron-builder.",
+        "impact": "Les prochains builds peuvent nécessiter de nouveaux téléchargements et échouer hors ligne."
       },
       "dev.browser-automation-cache": {
         "name": "Cache d'automatisation du navigateur",
@@ -3386,7 +3386,7 @@
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
       "dev.nuget-cache": {
-        "name": "Cache des paquets et requêtes NuGet",
+        "name": "Cache des packages et requêtes NuGet",
         "description": "Packages téléchargés et réponses HTTP enregistrées par NuGet",
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
@@ -3396,13 +3396,13 @@
         "impact": "Les espaces de travail, la mémoire, les plugins et les paramètres sont conservés. Fermez d'abord QClaw ; le démarrage peut être plus lent pendant la reconstruction du cache"
       },
       "dev.maven-cache": {
-        "name": "Cache de paquets Maven",
+        "name": "Cache de packages Maven",
         "description": "Artefacts téléchargés et installés localement dans le référentiel local Maven",
         "impact": "Les projets et les paramètres Maven sont conservés. Les artefacts locaux uniquement doivent être reconstruits ou réinstallés"
       },
       "dev.gradle-cache": {
         "name": "Cache Gradle",
-        "description": "Dépendances téléchargées, distributions Wrapper, caches de construction et fichiers temporaires enregistrés par Gradle",
+        "description": "Dépendances téléchargées, distributions Wrapper, caches de build et fichiers temporaires enregistrés par Gradle",
         "impact": "Les projets, les paramètres Gradle et les JDK installés sont conservés. Fermez d'abord Gradle et Java ; les données de support peuvent être téléchargées ou générées à nouveau"
       },
       "dev.user-tool-cache": {
@@ -3411,14 +3411,14 @@
         "impact": "Les projets et outils installés sont conservés. Les données de support peuvent être téléchargées à nouveau"
       },
       "dev.build-accelerator-cache": {
-        "name": "Créer le cache de l'accélérateur",
+        "name": "Cache d'accélérateur de build",
         "description": "Artefacts de compilation locale générés par les outils d'accélération de build",
-        "impact": "Le code source est conservé. Les versions ultérieures peuvent recompiler le travail précédemment mis en cache"
+        "impact": "Le code source est conservé. Les builds ultérieurs peuvent recompiler le travail précédemment mis en cache"
       },
       "dev.sccache-cache": {
         "name": "cache de compilation sccache",
         "description": "Artefacts du compilateur régénérables mis en cache par sccache pour Rust, C/C++ et d'autres builds",
-        "impact": "Le ​​code source et les paramètres de l'outil sont conservés. Les versions ultérieures peuvent recompiler le travail mis en cache"
+        "impact": "Le code source et les paramètres de l'outil sont conservés. Les builds ultérieurs peuvent recompiler le travail mis en cache"
       },
       "dev.jvm-tooling-cache": {
         "name": "Cache d'outils JVM",
@@ -3501,72 +3501,72 @@
         "impact": "Fermez d’abord Jan. Seuls les modèles sélectionnés sont supprimés ; les conversations, assistants, réglages et journaux sont conservés"
       },
       "project.rust-build-artifacts": {
-        "name": "Fichiers de compilation Rust",
+        "name": "Fichiers de build Rust",
         "description": "Fichiers générés dans target par Cargo et cache de compilation croisée",
-        "impact": "Le code source et la configuration Cargo sont conservés. La prochaine compilation recréera les fichiers nécessaires"
+        "impact": "Le code source et la configuration Cargo sont conservés. Le prochain build recréera les fichiers nécessaires"
       },
       "project.node-build-artifacts": {
-        "name": "Fichiers de compilation Node.js",
+        "name": "Fichiers de build Node.js",
         "description": "Dossiers de dépendances et caches de build de framework dans les projets Node.js",
         "impact": "Les fichiers source et de verrouillage sont conservés. Les dépendances et les caches doivent être restaurés"
       },
       "project.react-native-build-artifacts": {
-        "name": "Fichiers de compilation React Native",
+        "name": "Fichiers de build React Native",
         "description": "Caches Android, iOS, Expo et Metro dans les projets React Native",
-        "impact": "La source du projet est conservée. Les versions mobiles régénèrent ces caches"
+        "impact": "La source du projet est conservée. Les builds mobiles régénèrent ces caches"
       },
       "project.python-build-artifacts": {
-        "name": "Fichiers de compilation Python",
+        "name": "Fichiers de build Python",
         "description": "Caches de test, de vérification de type et de bytecode dans les projets Python",
         "impact": "Le code source et les environnements virtuels sont conservés. Les outils régénèrent leurs caches"
       },
       "project.maven-build-artifacts": {
-        "name": "Fichiers de compilation Maven",
+        "name": "Fichiers de build Maven",
         "description": "Sortie compilée dans les dossiers target du projet Maven",
-        "impact": "Source et pom.xml sont conservés. La prochaine version recompile le projet"
+        "impact": "Source et pom.xml sont conservés. Le prochain build recompile le projet"
       },
       "project.gradle-build-artifacts": {
-        "name": "Fichiers de compilation Gradle",
+        "name": "Fichiers de build Gradle",
         "description": "Sortie de build Gradle et cache local du projet",
-        "impact": "Les scripts source et build sont conservés. La construction suivante régénère la sortie"
+        "impact": "Le code source et les scripts de build sont conservés. Le prochain build régénère la sortie"
       },
       "project.sbt-build-artifacts": {
-        "name": "Fichiers de compilation SBT",
+        "name": "Fichiers de build SBT",
         "description": "Sortie compilée sous les dossiers target SBT",
-        "impact": "Les définitions de source et de build Scala sont conservées. La prochaine version recompile les cibles"
+        "impact": "Le code source Scala et les définitions de build sont conservés. Le prochain build recompile les cibles"
       },
       "project.dotnet-build-artifacts": {
-        "name": "Fichiers de compilation .NET",
+        "name": "Fichiers de build .NET",
         "description": "Dossiers bin et obj compilés dans les projets .NET",
-        "impact": "Les fichiers et sources du projet sont conservés. La prochaine version recompile le projet"
+        "impact": "Les fichiers et sources du projet sont conservés. Le prochain build recompile le projet"
       },
       "project.swift-build-artifacts": {
-        "name": "Fichiers de compilation Swift",
+        "name": "Fichiers de build Swift",
         "description": "Le dossier .build généré par Swift Package Manager",
         "impact": "Package.swift et source sont conservés. Reconstruction des dépendances et des cibles"
       },
       "project.flutter-build-artifacts": {
-        "name": "Fichiers de compilation Flutter",
-        "description": "Créez des caches de sortie et d'outils dans les projets Flutter et Dart",
+        "name": "Fichiers de build Flutter",
+        "description": "Sorties de build et caches d'outils dans les projets Flutter et Dart",
         "impact": "La source du projet est conservée. Flutter régénère les dossiers supprimés"
       },
       "project.cmake-build-artifacts": {
-        "name": "Fichiers de compilation CMake",
-        "description": "Dossiers de construction hors source courants dans les projets CMake",
+        "name": "Fichiers de build CMake",
+        "description": "Dossiers de build hors source courants dans les projets CMake",
         "impact": "CMakeLists.txt et source sont conservés. Le projet doit être configuré et reconstruit"
       },
       "project.zig-build-artifacts": {
-        "name": "Fichiers de compilation Zig",
+        "name": "Fichiers de build Zig",
         "description": "Caches de compilation locaux dans les projets Zig",
-        "impact": "build.zig et source sont conservés. La prochaine version recompile les cibles"
+        "impact": "build.zig et source sont conservés. Le prochain build recompile les cibles"
       },
       "project.godot-build-artifacts": {
-        "name": "Fichiers de compilation Godot",
+        "name": "Fichiers de build Godot",
         "description": "Données importées et cache de l'éditeur généré par Godot",
         "impact": "Les actifs et les paramètres du projet sont conservés. Godot importe à nouveau des ressources"
       },
       "project.elixir-build-artifacts": {
-        "name": "Fichiers de compilation Elixir",
+        "name": "Fichiers de build Elixir",
         "description": "Sorties de Mix et caches du service de langage",
         "impact": "Le code source Elixir et mix.exs sont conservés. Les outils recréeront leurs caches"
       },
@@ -3576,12 +3576,12 @@
         "impact": "Les fichiers de configuration, d'état et de verrouillage sont conservés. L'initialisation peut télécharger à nouveau les dépendances"
       },
       "project.unity-build-artifacts": {
-        "name": "Fichiers de compilation Unity",
+        "name": "Fichiers de build Unity",
         "description": "Dossiers Unity Library, Temp, Obj et diagnostic",
         "impact": "Les dossiers Assets et ProjectSettings sont conservés. Réimporter un projet peut prendre du temps"
       },
       "project.unreal-build-artifacts": {
-        "name": "Fichiers de compilation Unreal",
+        "name": "Fichiers de build Unreal",
         "description": "Binaires, sortie intermédiaire et cache de données dérivées dans les projets Unreal",
         "impact": "Le contenu et la configuration du projet sont conservés. Unreal régénère la sortie"
       },
@@ -3591,9 +3591,9 @@
         "impact": "La source, le Podfile et le lockfile sont conservés. Les dépendances doivent être réinstallées"
       },
       "project.haskell-build-artifacts": {
-        "name": "Fichiers de compilation Haskell",
-        "description": "Dossiers de construction Stack et Cabal dans les projets Haskell",
-        "impact": "La source Haskell et la configuration du projet sont conservées. La prochaine version recompile les cibles"
+        "name": "Fichiers de build Haskell",
+        "description": "Dossiers de build Stack et Cabal dans les projets Haskell",
+        "impact": "La source Haskell et la configuration du projet sont conservées. Le prochain build recompile les cibles"
       },
       "project.composer-build-artifacts": {
         "name": "Dépendances de projet Composer",
@@ -3611,9 +3611,9 @@
         "impact": "Les fichiers source, pixi.toml et les fichiers de verrouillage sont conservés. L'environnement doit être restauré"
       },
       "special.docker-build-cache": {
-        "name": "Cache de compilation Docker",
-        "description": "Créez un cache que Docker signale comme inutilisé et non partagé avec une image",
-        "impact": "Les images, conteneurs, réseaux et volumes sont conservés. Les versions ultérieures peuvent télécharger ou régénérer le cache"
+        "name": "Cache de build Docker",
+        "description": "Cache de build que Docker signale comme inutilisé et non partagé avec une image",
+        "impact": "Les images, conteneurs, réseaux et volumes sont conservés. Les builds ultérieurs peuvent télécharger ou régénérer le cache"
       },
       "special.conda-cache": {
         "name": "Cache de téléchargement Conda",
@@ -3718,7 +3718,7 @@
       "app.cargo-cache": {
         "name": "Cache de téléchargement Cargo",
         "description": "Sources des crates téléchargées et cache du référentiel Git",
-        "impact": "Les chaînes d'outils et les projets sont conservés. Les versions ultérieures peuvent télécharger à nouveau des fichiers"
+        "impact": "Les chaînes d'outils et les projets sont conservés. Les builds ultérieurs peuvent télécharger à nouveau des fichiers"
       },
       "app.chrome-cache": {
         "name": "Cache de rendu Chrome",
@@ -3731,9 +3731,9 @@
         "impact": "Les discussions, les téléchargements et les données de compte sont conservés. Fermez d’abord DingTalk"
       },
       "app.docker-build-cache": {
-        "name": "Cache de compilation Docker",
-        "description": "Couches de construction intermédiaires mises en cache par BuildKit",
-        "impact": "Les conteneurs en cours d'exécution et les images poussées ne sont pas affectés. Les versions ultérieures peuvent répéter le travail"
+        "name": "Cache de build Docker",
+        "description": "Couches de build intermédiaires mises en cache par BuildKit",
+        "impact": "Les conteneurs en cours d'exécution et les images poussées ne sont pas affectés. Les builds ultérieurs peuvent répéter le travail"
       },
       "app.electron-productivity-cache": {
         "name": "Cache de rendu de l'application Electron",
@@ -3751,9 +3751,9 @@
         "impact": "Les images et les paramètres des outils sont conservés. Fermez d'abord GIMP"
       },
       "app.gradle-cache": {
-        "name": "Cache de compilation Gradle",
-        "description": "Transformations Gradle mises en cache et résultats de génération",
-        "impact": "Les dépendances et projets téléchargés sont conservés. Les versions ultérieures peuvent répéter le travail"
+        "name": "Cache de build Gradle",
+        "description": "Transformations Gradle mises en cache et résultats de build",
+        "impact": "Les dépendances et projets téléchargés sont conservés. Les builds ultérieurs peuvent répéter le travail"
       },
       "app.gtk-doc-cache": {
         "name": "Cache de documentation GTK",
@@ -3767,23 +3767,23 @@
       },
       "app.jetbrains-cache": {
         "name": "Cache JetBrains IDE",
-        "description": "Indexez, mettez en réseau et construisez des caches à partir des IDE JetBrains",
+        "description": "Caches d'index, de réseau et de build des IDE JetBrains",
         "impact": "Les projets, paramètres et plugins sont conservés. Fermez d'abord les IDE"
       },
       "app.maven-cache": {
         "name": "Anciennes dépendances Maven",
         "description": "Dépendances non utilisées récemment dans le référentiel local de Maven",
-        "impact": "Les projets et paramètres sont conservés. Les versions ultérieures peuvent télécharger à nouveau les dépendances"
+        "impact": "Les projets et paramètres sont conservés. Les builds ultérieurs peuvent télécharger à nouveau les dépendances"
       },
       "app.minecraft-cache": {
         "name": "Anciens journaux Minecraft",
-        "description": "Anciens journaux et rapports de crash de Minecraft",
+        "description": "Anciens journaux et rapports de plantage de Minecraft",
         "impact": "Les versions et mods du jeu sont conservés. Fermez d'abord Minecraft"
       },
       "app.npm-cache": {
         "name": "Cache de téléchargement npm",
         "description": "Archives des packages téléchargés mises en cache par npm",
-        "impact": "Les projets et node_modules sont conservés. Les prochaines installations pourront télécharger à nouveau les paquets"
+        "impact": "Les projets et node_modules sont conservés. Les prochaines installations pourront télécharger à nouveau les packages"
       },
       "app.obs-diagnostic-cache": {
         "name": "Anciens diagnostics OBS",
@@ -3838,7 +3838,7 @@
       "app.yarn-cache": {
         "name": "Cache de téléchargement Yarn",
         "description": "Packages téléchargés par Yarn",
-        "impact": "Les projets et node_modules sont conservés. Les prochaines installations pourront télécharger à nouveau les paquets"
+        "impact": "Les projets et node_modules sont conservés. Les prochaines installations pourront télécharger à nouveau les packages"
       },
       "app.zoom-diagnostic-cache": {
         "name": "Anciens journaux Zoom",
@@ -3856,14 +3856,14 @@
         "impact": "Les signets, le courrier et les profils sont conservés. Fermez d'abord ces applications"
       },
       "dev.bun-cache": {
-        "name": "Cache de paquets Bun",
+        "name": "Cache de packages Bun",
         "description": "Packages téléchargés par Bun",
-        "impact": "Les projets et les réglages Bun sont conservés. Les prochaines installations pourront retélécharger des paquets"
+        "impact": "Les projets et les réglages Bun sont conservés. Les prochaines installations pourront retélécharger des packages"
       },
       "dev.ccache-cache": {
         "name": "Cache de compilation ccache",
         "description": "Résultats de compilation régénérables stockés par ccache",
-        "impact": "Le code source et les paramètres de ccache sont conservés. Les versions ultérieures peuvent être recompilées"
+        "impact": "Le code source et les paramètres de ccache sont conservés. Les builds ultérieurs peuvent nécessiter une recompilation"
       },
       "dev.composer-cache": {
         "name": "Cache Composer",
@@ -3881,7 +3881,7 @@
         "impact": "Les projets et paramètres sont conservés. Les exécutions ultérieures peuvent être téléchargées ou compilées à nouveau"
       },
       "dev.hex-cache": {
-        "name": "Cache de paquets Hex",
+        "name": "Cache de packages Hex",
         "description": "Packages téléchargés par Hex",
         "impact": "Les informations d'identification et les paramètres sont conservés. Arrêtez d'abord les tâches Mix"
       },
@@ -3911,29 +3911,29 @@
         "impact": "Les fichiers sources sont conservés. Le cache est reconstruit lors de la prochaine exécution"
       },
       "project.dune-build-artifacts": {
-        "name": "Fichiers de compilation Dune",
+        "name": "Fichiers de build Dune",
         "description": "Le répertoire _build dans les projets Dune",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "project.leiningen-build-artifacts": {
-        "name": "Fichiers de compilation Leiningen",
+        "name": "Fichiers de build Leiningen",
         "description": "Le répertoire target dans les projets Leiningen",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "project.meson-build-artifacts": {
-        "name": "Fichiers de compilation Meson",
+        "name": "Fichiers de build Meson",
         "description": "Le répertoire builddir dans les projets Meson",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "project.mill-build-artifacts": {
-        "name": "Fichiers de compilation Mill",
+        "name": "Fichiers de build Mill",
         "description": "Le répertoire out dans les projets Mill",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "project.pants-workdir": {
         "name": "Dossier de travail Pants",
         "description": "Le répertoire de travail .pants.d dans les projets Pants",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "project.rails-cache": {
         "name": "Cache Rails",
@@ -3941,9 +3941,9 @@
         "impact": "Les fichiers sources sont conservés. Rails régénère le cache selon les besoins"
       },
       "project.rebar-build-artifacts": {
-        "name": "Fichiers de compilation Rebar3",
+        "name": "Fichiers de build Rebar3",
         "description": "Le répertoire _build dans les projets Rebar3",
-        "impact": "Les fichiers sources sont conservés. La prochaine version régénère ces fichiers"
+        "impact": "Les fichiers sources sont conservés. Le prochain build régénère ces fichiers"
       },
       "system.dns-cache": {
         "name": "Cache de recherche DNS",
@@ -3974,7 +3974,7 @@
       "requiredToolUnavailable": "L'application ou l'outil nécessaire à ce nettoyage n'est pas disponible. Rien n'a changé",
       "preflightFailed": "Les fichiers sélectionnés n'ont pas pu être vérifiés en toute sécurité. Rien n'a changé",
       "executionFailed": "Le nettoyage n'est pas terminé. Aucun autre fichier n'a été supprimé",
-      "verificationFailed": "Nettoyage terminé, mais MangoDisk n'a pas pu confirmer le résultat. Scannez à nouveau",
+      "verificationFailed": "Nettoyage terminé, mais MangoDisk n'a pas pu confirmer le résultat. Analysez à nouveau",
       "cleanerUnavailable": "Cette option de nettoyage est actuellement indisponible. Rien n'a changé",
       "nameExclusionsUnsupported": "Ignoré car cet élément de nettoyage ne peut pas appliquer en toute sécurité des exclusions de noms"
     }
