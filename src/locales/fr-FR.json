@@ -401,8 +401,8 @@
         "description": "Réindexez les fichiers lorsque Spotlight est lent, manque des fichiers ou renvoie des résultats incomplets"
       },
       "macos_maintenance_launch-services": {
-        "name": "Réparer l'ouverture avec et les associations de fichiers",
-        "description": "Supprimez les entrées Ouvrir avec en double ou obsolètes et actualisez les associations de fichiers"
+        "name": "Réparer « Ouvrir avec » et les associations de fichiers",
+        "description": "Supprimez les entrées « Ouvrir avec » en double ou obsolètes et actualisez les associations de fichiers"
       },
       "macos_maintenance_quicklook-cache": {
         "name": "Actualiser les aperçus Quick Look",
@@ -492,7 +492,7 @@
   },
   "systemOptimization": {
     "title": "Optimisation du système",
-    "scanning": "Vérification des Réglages Système",
+    "scanning": "Vérification des paramètres système",
     "scanningDescription": "L'analyse lit uniquement les paramètres pris en charge et ne modifie jamais le système",
     "scanFailedTitle": "L'optimisation du système n'a pas pu être vérifiée",
     "scanFailedDescription": "Aucun paramètre système n'a été modifié. Réessayez la vérification ; les tâches existantes peuvent continuer sur d'autres pages",
@@ -591,7 +591,7 @@
         "description": "Réduisez les animations de fenêtre pour des opérations de fichiers plus immédiates"
       },
       "macos_finder_keep-folders-on-top": {
-        "name": "Afficher les dossiers en premier",
+        "name": "Laisser les dossiers en haut",
         "description": "Placer les dossiers avant les fichiers lors du tri par nom"
       },
       "macos_finder_search-current-folder": {
@@ -632,10 +632,10 @@
       },
       "macos_mission-control_keep-space-order": {
         "name": "Conserver l’ordre des Spaces",
-        "description": "Empêcher la réorganisation automatique du bureau en fonction de son utilisation récente"
+        "description": "Empêcher la réorganisation automatique des Spaces en fonction de leur utilisation récente"
       },
       "macos_dock_hide-recent-apps": {
-        "name": "Masquer les applications Dock récentes",
+        "name": "Masquer les apps suggérées et récentes dans le Dock",
         "description": "Ne pas afficher les applications récemment ouvertes à la fin du Dock"
       },
       "macos_screenshots_disable-shadow": {
@@ -667,11 +667,11 @@
         "description": "Empêcher le système de réécrire le texte saisi"
       },
       "macos_text_disable-smart-quotes": {
-        "name": "Désactiver les guillemets intelligents",
+        "name": "Désactiver les guillemets typographiques",
         "description": "Gardez les guillemets droits lors de la saisie"
       },
       "macos_text_disable-smart-dashes": {
-        "name": "Désactiver les tableaux de bord intelligents",
+        "name": "Désactiver les tirets intelligents",
         "description": "Ne pas remplacer automatiquement les traits d'union consécutifs"
       },
       "macos_text_disable-auto-capitalization": {
@@ -708,11 +708,11 @@
       },
       "windows_explorer_hide-recent-files": {
         "name": "Masquer les fichiers récents",
-        "description": "Ne pas afficher les fichiers récemment ouverts sur Explorer Home"
+        "description": "Ne pas afficher les fichiers récemment ouverts dans l'Accueil de l'Explorateur de fichiers"
       },
       "windows_explorer_hide-frequent-folders": {
         "name": "Masquer les dossiers fréquents",
-        "description": "Ne pas afficher les dossiers fréquemment visités sur Explorer Home"
+        "description": "Ne pas afficher les dossiers fréquemment visités dans l'Accueil de l'Explorateur de fichiers"
       },
       "windows_taskbar_show-seconds": {
         "name": "Afficher les secondes dans l'horloge de la barre des tâches",
@@ -740,7 +740,7 @@
       },
       "windows_taskbar_align-left": {
         "name": "Aligner les icônes de la barre des tâches à gauche",
-        "description": "Déplacez les icônes de démarrage et d'application vers la gauche"
+        "description": "Déplacez le bouton Démarrer et les icônes d'applications vers la gauche"
       },
       "windows_taskbar_disable-animations": {
         "name": "Désactiver les animations de la barre des tâches",
@@ -779,7 +779,7 @@
         "description": "Empêcher les applications d'utiliser un identifiant pour les publicités personnalisées"
       },
       "windows_privacy_disable-tailored-experiences": {
-        "name": "Désactiver la personnalisation des données de diagnostic",
+        "name": "Désactiver les expériences personnalisées",
         "description": "N'utilisez pas les données de diagnostic pour des conseils et des recommandations personnalisés"
       },
       "windows_privacy_disable-activity-publishing": {
@@ -823,7 +823,7 @@
         "description": "Réduire les résultats Web et les suggestions dans les recherches du menu Démarrer"
       },
       "windows_storage_enable-storage-sense": {
-        "name": "Activer le sens du stockage",
+        "name": "Activer l'Assistant Stockage",
         "description": "Laisser Windows supprimer automatiquement les fichiers temporaires pour libérer de l'espace"
       },
       "windows_desktop_reduce-menu-delay": {
@@ -835,7 +835,7 @@
         "description": "Afficher les suggestions correspondantes dans la barre d'adresse de l'Explorateur de fichiers et dans la boîte de dialogue Exécuter"
       },
       "windows_explorer_disable-aero-shake": {
-        "name": "Désactiver le tremblement pour minimiser les fenêtres",
+        "name": "Désactiver la secousse de la barre de titre",
         "description": "Évitez de réduire accidentellement d'autres fenêtres en faisant glisser une fenêtre"
       },
       "windows_explorer_show-operation-details": {
@@ -851,12 +851,12 @@
         "description": "Afficher le menu contextuel complet directement sur Windows 11"
       },
       "windows_explorer_remove-cast-to-device": {
-        "name": "Retirer « Lire sur l’appareil »",
+        "name": "Retirer l’option de diffusion vers un appareil",
         "description": "Masquer l'entrée de diffusion multimédia héritée des menus contextuels des fichiers"
       },
       "windows_taskbar_show-all-tray-icons": {
-        "name": "Afficher toutes les icônes de la barre d'état",
-        "description": "Gardez les icônes d'application visibles dans la zone de notification"
+        "name": "Afficher toutes les icônes de la barre d'état système",
+        "description": "Gardez les icônes d'application visibles dans la barre d'état système"
       },
       "windows_taskbar_hide-weather": {
         "name": "Masquer la météo de la barre des tâches",
@@ -875,11 +875,11 @@
         "description": "Supprimez l'entrée Copilot de la barre des tâches"
       },
       "windows_windowing_disable-snap-assist": {
-        "name": "Désactiver les suggestions Snap Assist",
-        "description": "Ne pas afficher les dispositions instantanées lorsque vous faites glisser ou survolez des fenêtres"
+        "name": "Désactiver les suggestions d'ancrage",
+        "description": "Ne pas afficher les dispositions d'ancrage lorsque vous faites glisser ou survolez des fenêtres"
       },
       "windows_gaming_disable-game-dvr": {
-        "name": "Désactiver le jeu DVR",
+        "name": "Désactiver Game DVR (captures de jeu)",
         "description": "Réduisez l'activité de capture en arrière-plan lorsque l'enregistrement n'est pas nécessaire"
       },
       "windows_privacy_disable-input-personalization": {
@@ -895,7 +895,7 @@
         "description": "Réduisez les enquêtes d'expérience et les demandes de commentaires affichées par Windows"
       },
       "windows_privacy_disable-nearby-sharing": {
-        "name": "Désactiver le partage à proximité",
+        "name": "Désactiver le Partage de proximité",
         "description": "Désactivez la découverte et le partage à proximité lorsque cela n'est pas nécessaire"
       },
       "windows_privacy_disable-cross-device-experiences": {
@@ -915,7 +915,7 @@
         "description": "Arrêtez de faire pivoter les images et le contenu recommandés sur l'écran de verrouillage"
       },
       "windows_content_disable-phone-link-suggestions": {
-        "name": "Désactiver les suggestions de lien téléphonique",
+        "name": "Désactiver les suggestions de Mobile connecté",
         "description": "Réduire les invites pour connecter un téléphone à Windows"
       },
       "windows_content_disable-service-suggestions": {
@@ -951,7 +951,7 @@
         "description": "Empêcher Firefox d’envoyer des données de télémétrie et de conserver des archives locales de télémétrie"
       },
       "windows_ai_disable-recall-snapshots": {
-        "name": "Désactiver le rappel des instantanés",
+        "name": "Désactiver les instantanés Recall",
         "description": "Empêcher Recall de sauvegarder et d'analyser les enregistrements d'activité de l'écran"
       },
       "windows_ai_disable-copilot": {
@@ -975,16 +975,16 @@
         "description": "N'insérez pas de point après avoir appuyé deux fois sur Espace"
       },
       "windows_accessibility_disable-sticky-keys-shortcut": {
-        "name": "Désactiver le raccourci Sticky Keys",
-        "description": "Évitez d'ouvrir Sticky Keys après avoir appuyé à plusieurs reprises sur Shift"
+        "name": "Désactiver le raccourci des Touches rémanentes",
+        "description": "Évitez d'ouvrir les Touches rémanentes après avoir appuyé à plusieurs reprises sur Maj"
       },
       "windows_accessibility_disable-filter-keys-shortcut": {
-        "name": "Désactiver le raccourci des touches de filtre",
-        "description": "Évitez d'activer les touches de filtre après avoir maintenu Shift enfoncé"
+        "name": "Désactiver le raccourci des Touches filtres",
+        "description": "Évitez d'activer les Touches filtres après avoir maintenu Maj enfoncé"
       },
       "windows_accessibility_disable-toggle-keys-shortcut": {
-        "name": "Désactiver le raccourci des touches bascule",
-        "description": "Évitez d'activer les touches à bascule après avoir maintenu Num Lock"
+        "name": "Désactiver le raccourci des Touches bascules",
+        "description": "Évitez d'activer les Touches bascules après avoir maintenu Verr. Num enfoncé"
       },
       "windows_desktop_reduce-hover-delay": {
         "name": "Réduire le délai de survol du pointeur",
@@ -1079,7 +1079,7 @@
         "description": "Empêcher les nouveaux points de restauration ; La restauration du système ne peut pas être utilisée après un échec"
       },
       "windows_security_disable-defender": {
-        "name": "Désactiver la politique antivirus de Microsoft Defender",
+        "name": "Désactiver la stratégie antivirus de Microsoft Defender",
         "description": "Réduit considérablement la protection contre les logiciels malveillants ; sélectionner uniquement avec une autre solution de sécurité"
       },
       "windows_security_disable-smartscreen": {
@@ -1135,11 +1135,11 @@
         "description": "Nécessite l'installation manuelle des mises à jour d'applications et des correctifs de sécurité"
       },
       "windows_cloud_disable-onedrive-sync": {
-        "name": "Désactiver la politique de synchronisation de fichiers OneDrive",
+        "name": "Désactiver la stratégie de synchronisation de fichiers OneDrive",
         "description": "Bloquer la synchronisation OneDrive sans désinstaller le client ni supprimer les fichiers existants"
       },
       "windows_search_disable-cortana-policy": {
-        "name": "Désactiver la politique Cortana",
+        "name": "Désactiver la stratégie Cortana",
         "description": "Désactivez Cortana ; certaines fonctionnalités de recherche sur les anciennes versions de Windows peuvent être affectées"
       },
       "windows_input_disable-windows-ink": {
@@ -1147,7 +1147,7 @@
         "description": "Réduisez les fonctionnalités du stylet ; non recommandé pour les utilisateurs de stylets et d'écriture manuscrite"
       },
       "windows_clipboard_disable-cross-device-policy": {
-        "name": "Désactiver la politique du presse-papiers multi-appareils",
+        "name": "Désactiver la stratégie du presse-papiers multi-appareils",
         "description": "Empêcher la synchronisation du contenu du presse-papiers entre les appareils du compte Microsoft"
       },
       "windows_filesystem_enable-long-paths": {
@@ -1203,7 +1203,7 @@
         "description": "Utilisez des icônes translucides pour distinguer les applications actuellement masquées"
       },
       "macos_mission-control_group-windows-by-app": {
-        "name": "Fenêtres de contrôle de mission de groupe par application",
+        "name": "Regrouper les fenêtres par application dans Mission Control",
         "description": "Conservez les fenêtres de la même application ensemble dans Mission Control"
       },
       "macos_keyboard_disable-press-and-hold": {
@@ -1227,7 +1227,7 @@
         "description": "Afficher les dossiers avant les fichiers lors du tri du bureau"
       },
       "macos_finder_enable-quit-menu": {
-        "name": "Afficher le menu Quitter Finder",
+        "name": "Afficher le menu Quitter le Finder",
         "description": "Autoriser la fermeture complète du Finder et sa réouverture en cas de besoin"
       },
       "macos_finder_remove-old-trash-items": {
@@ -1291,7 +1291,7 @@
         "description": "Arrêtez de découvrir et de recevoir du contenu envoyé depuis des appareils à proximité"
       },
       "macos_activity-monitor_show-all-processes": {
-        "name": "Afficher tous les processus dans le moniteur d'activité",
+        "name": "Afficher tous les processus dans le Moniteur d'activité",
         "description": "Afficher les processus exécutés par l'utilisateur actuel et le système par défaut"
       },
       "macos_app-store_enable-auto-updates": {
@@ -1323,11 +1323,11 @@
         "description": "Ne faites pas clignoter les icônes de la barre des tâches lorsqu'une application demande votre attention"
       },
       "windows_taskbar_hide-window-sharing": {
-        "name": "Masquer le partage de la fenêtre de la barre des tâches",
+        "name": "Masquer le partage de fenêtre depuis la barre des tâches",
         "description": "Ne proposez pas de partage direct de fenêtre depuis la barre des tâches pendant les appels"
       },
       "windows_taskbar_show-desktop-corner": {
-        "name": "Activer la barre des tâches Afficher le coin du bureau",
+        "name": "Activer le coin éloigné de la barre des tâches pour afficher le bureau",
         "description": "Cliquez sur le coin le plus à droite de la barre des tâches pour afficher rapidement le bureau"
       },
       "windows_personalization_disable-transparency": {
@@ -1335,7 +1335,7 @@
         "description": "Réduire le rendu translucide dans Démarrer, la barre des tâches et les surfaces du système"
       },
       "windows_search_disable-highlights": {
-        "name": "Désactiver les surlignages de recherche",
+        "name": "Désactiver les points forts de la recherche",
         "description": "Supprimer le contenu tendance et les suggestions de la recherche Windows"
       },
       "windows_start_disable-recommendations": {
@@ -1367,7 +1367,7 @@
         "description": "Envoyer du contenu moins typé aux services de suggestion de recherche"
       },
       "macos_safari_disable-top-hit-preload": {
-        "name": "Désactiver le préchargement de Safari Top Hit",
+        "name": "Désactiver le préchargement du meilleur résultat dans Safari",
         "description": "Ne chargez pas le premier résultat de recherche avant de l'avoir confirmé"
       },
       "macos_text_disable-text-completion": {
@@ -1375,11 +1375,11 @@
         "description": "Empêcher le système de compléter le texte pendant que vous tapez"
       },
       "macos_text_disable-inline-predictions": {
-        "name": "Désactiver les prédictions en ligne",
+        "name": "Désactiver les prédictions incorporées",
         "description": "Ne pas afficher le texte prédit après le curseur"
       },
       "macos_sound_disable-volume-feedback": {
-        "name": "Désactiver les sons de retour de volume",
+        "name": "Désactiver le retour sonore lors du réglage du volume",
         "description": "Ne pas émettre de son lors du réglage du volume"
       },
       "macos_time-machine_hide-new-disk-prompts": {
@@ -1411,8 +1411,8 @@
         "description": "Empêcher les boutons du contrôleur d'ouvrir accidentellement la Game Bar"
       },
       "windows_gaming_disable-game-bar-tips": {
-        "name": "Désactiver les astuces de la barre de jeu",
-        "description": "Masquer la fonctionnalité de la barre de jeu et les suggestions d'enregistrement"
+        "name": "Désactiver les astuces de la Game Bar",
+        "description": "Masquer les suggestions de fonctionnalités et d'enregistrement de la Game Bar"
       },
       "windows_gaming_disable-dynamic-lighting": {
         "name": "Désactiver l'éclairage dynamique de Windows",
@@ -1432,7 +1432,7 @@
       },
       "windows_start_hide-recent-items": {
         "name": "Masquer les éléments récemment ouverts",
-        "description": "Ne pas afficher les fichiers récents dans les listes de démarrage ou de raccourci"
+        "description": "Ne pas afficher les fichiers récents dans Démarrer ni dans les listes de raccourcis"
       },
       "windows_edge_limit-diagnostic-data": {
         "name": "Envoyer uniquement les diagnostics Edge requis",
@@ -1518,7 +1518,7 @@
       "startupFolder": "Dossier de démarrage",
       "scheduledTask": "Tâche planifiée",
       "service": "Service",
-      "packagedStartupTask": "Tâche de l'application Store",
+      "packagedStartupTask": "Tâche d'application du Microsoft Store",
       "launchAgent": "Élément d'arrière-plan utilisateur",
       "launchDaemon": "Élément d'arrière-plan du système",
       "loginItem": "Application ouverte lors de la connexion",
@@ -1617,7 +1617,7 @@
       "manualGuidance": "Cet élément est obsolète mais doit être géré dans un outil système pour éviter une suppression dangereuse",
       "openTools": {
         "services": "Services ouverts",
-        "taskScheduler": "Ouvrir le planificateur de tâches"
+        "taskScheduler": "Ouvrir le Planificateur de tâches"
       },
       "macOsLoginRecordTitle": "Enregistrement de connexion restant trouvé",
       "macOsLoginRecordRemovable": "Vous pouvez supprimer cet enregistrement directement ; les fichiers de l'application seront conservés",
@@ -1627,8 +1627,8 @@
       "macOsLoginRecordHelp": {
         "title": "Comment gérer cela",
         "find": "Dans les réglages « Ouverture », recherchez le nom de l’app ou du développeur",
-        "loginItem": "Ouvrir lors de la connexion : sélectionnez l'application et cliquez sur \"−\" pour la supprimer",
-        "backgroundItem": "Activité en arrière-plan : éteignez l'interrupteur ; l'ancien enregistrement peut rester",
+        "loginItem": "Ouvrir à l’ouverture de session : sélectionnez l'application et cliquez sur « − » pour la supprimer",
+        "backgroundItem": "Autoriser en arrière-plan : désactivez l'option ; l'ancien enregistrement peut rester",
         "rescan": "Retournez sur MangoDisk et réanalysez ensuite",
         "settingsPath": "macOS 12 : ouvrez « Ouverture » dans « Utilisateurs et groupes ». Sur les versions récentes, recherchez « Ouverture »"
       }
@@ -1637,10 +1637,10 @@
       "timing": "Moment du démarrage",
       "description": "Description",
       "version": "Version",
-      "systemManaged": "macOS gère cet élément ; vous pouvez le modifier dans les réglages d’ouverture de session",
+      "systemManaged": "macOS gère cet élément ; vous pouvez le modifier dans les réglages « Ouverture »",
       "viewOnly": "Cet élément peut être consulté mais ne peut pas être modifié directement dans MangoDisk",
       "protectedService": "Ce service est protégé par Windows et ne peut pas être modifié ici",
-      "openLoginItemsSettings": "Ouvrir les réglages d’ouverture de session",
+      "openLoginItemsSettings": "Ouvrir les réglages « Ouverture »",
       "source": "Type de démarrage",
       "startTiming": {
         "boot": "S’exécute après le démarrage de l’ordinateur",
@@ -2396,7 +2396,7 @@
     "selectedItems": "Éléments sélectionnés",
     "changedItems": "Éléments modifiés",
     "startupItems": "Éléments de démarrage",
-    "systemSettings": "Réglages Système",
+    "systemSettings": "Paramètres système",
     "systemOptimizationApplied": "Optimisation appliquée",
     "systemOptimizationChangeFailed": "Échec de la modification",
     "systemOptimizationRestored": "Valeur précédente restaurée",
@@ -2701,13 +2701,13 @@
         "impact": "Les paramètres d'aide sont conservés. Le contenu de l'aide peut se charger à nouveau lors de sa prochaine ouverture"
       },
       "system.geo-services-cache": {
-        "name": "Cartes et cache de localisation",
-        "description": "Données géographiques mises en cache stockées par les cartes et les services de localisation",
+        "name": "Cache de Plans et de localisation",
+        "description": "Données géographiques mises en cache stockées par Plans et les services de localisation",
         "impact": "Les autorisations de localisation sont inchangées. Les données cartographiques peuvent être téléchargées à nouveau"
       },
       "system.apple-media-cache": {
         "name": "Cache des services multimédias Apple",
-        "description": "Données temporaires utilisées par l'App Store, la musique et d'autres services multimédias Apple",
+        "description": "Données temporaires utilisées par l'App Store, Musique et d'autres services multimédias Apple",
         "impact": "Les achats et médiathèques sont conservés. Le contenu peut se charger à nouveau lors de la prochaine visite"
       },
       "system.parsecd-cache": {
@@ -3057,7 +3057,7 @@
       },
       "app.telegram-temporary-cache": {
         "name": "Fichiers temporaires Telegram",
-        "description": "Images de notification temporaires, icônes de la zone de notification, exportations de calendrier et fichiers de diagnostic de plantage créés par Telegram Desktop",
+        "description": "Images de notification temporaires, icônes de la barre d'état système, exportations de calendrier et fichiers de diagnostic de plantage créés par Telegram Desktop",
         "impact": "Telegram doit être complètement fermé. Les comptes, conversations, médias téléchargés, réglages et ressources d’émojis sont conservés"
       },
       "app.vlc-cache": {
@@ -3681,8 +3681,8 @@
         "impact": "Les mots de passe enregistrés et l'historique de navigation sont conservés. Certaines pages peuvent se charger à nouveau"
       },
       "special.windows-delivery-optimization": {
-        "name": "Fichiers d'optimisation de la livraison",
-        "description": "Mettre à jour le cache de livraison dont Windows n'a plus besoin",
+        "name": "Fichiers d'optimisation de la distribution",
+        "description": "Cache de distribution des mises à jour dont Windows n'a plus besoin",
         "impact": "Les mises à jour installées sont conservées. Windows peut télécharger à nouveau les données de mise à jour"
       },
       "special.windows-defender-cache": {
@@ -4124,9 +4124,9 @@
     "taskbarAuto": "Automatique",
     "taskbarLeft": "Gauche",
     "taskbarRight": "Exact",
-    "taskbarNoSpace": "Espace insuffisant à cet emplacement. Les icônes de la zone de notification sont utilisées ; essayez le mode compact ou affichez moins d’éléments",
-    "taskbarUnsupported": "La barre des tâches est trop petite. Les icônes de la zone de notification sont utilisées",
-    "taskbarUnavailable": "En attente de la barre des tâches. Les icônes de la zone de notification sont affichées temporairement",
+    "taskbarNoSpace": "Espace insuffisant à cet emplacement. Les icônes de la barre d'état système sont utilisées ; essayez le mode compact ou affichez moins d’éléments",
+    "taskbarUnsupported": "La barre des tâches est trop petite. Les icônes de la barre d'état système sont utilisées",
+    "taskbarUnavailable": "En attente de la barre des tâches. Les icônes de la barre d'état système sont affichées temporairement",
     "displayHint": "Surveiller les ressources système en temps réel et libérer rapidement de la mémoire",
     "linuxDisplayHint": "Afficher les statistiques du processeur, de la mémoire, de la vitesse du réseau et du disque",
     "overview": "Aperçu",
@@ -4414,7 +4414,7 @@
   "floatingMonitor": {
     "title": "État du système",
     "displayMode": "Mode d’affichage",
-    "tray": "Zone de notification",
+    "tray": "Barre d'état système",
     "menuBar": "Barre des menus",
     "taskbar": "Barre des tâches",
     "floating": "Fenêtre flottante",
@@ -4449,7 +4449,7 @@
     "fontSize": "Taille du texte",
     "bold": "Texte en gras",
     "clickThrough": "Clics traversants",
-    "clickThroughHint": "Désactive le déplacement et le clic droit. À désactiver depuis la zone de notification",
+    "clickThroughHint": "Désactive le déplacement et le clic droit. À désactiver depuis la barre d'état système",
     "dividers": "Afficher les séparateurs",
     "background": "Fond",
     "fontSizes": {
