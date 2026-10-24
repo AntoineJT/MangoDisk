@@ -88,7 +88,7 @@
     "freeNoKey": "Aucune clé API requise",
     "freeDailyAllowance": "Explications gratuites chaque jour",
     "freeBuildUnavailable": "Cette version prend uniquement en charge les services personnalisés",
-    "freeRemaining": "Aujourd'hui : {remaining} / {limit} restant",
+    "freeRemaining": "Aujourd'hui : {remaining} / {limit} restantes",
     "freeDailyExhausted": "Limite quotidienne atteinte",
     "freeResetsAt": "Limite atteinte. Renouvellement à {time}",
     "freeTemporarilyUnavailable": "L'IA gratuite est temporairement indisponible",
@@ -155,7 +155,7 @@
       "description": "Activez-le pour analyser davantage d'activité des applications et du système"
     },
     "details": {
-      "open": "Afficher les détails du {item}",
+      "open": "Afficher les détails : {item}",
       "title": "Détails {item}",
       "loading": "Chargement des détails",
       "failed": "Les détails n'ont pas pu être chargés",
@@ -267,7 +267,7 @@
       "partialDescription": "Traces effacées : {count} ; éléments non traités : {failed}",
       "cleanedTraces": "Traces effacées",
       "processedItems": "Éléments traités",
-      "incompleteItems": "Ignoré ou échoué",
+      "incompleteItems": "Ignorés ou en échec",
       "unknownSource": "Source d’activité",
       "statuses": {
         "cleared": "Effacé et vérifié",
@@ -317,8 +317,8 @@
     "cancelExecution": "Arrêter",
     "progress": {
       "step": "Étape {current}/{total}",
-      "elapsedSeconds": "{seconds} s se sont écoulés",
-      "elapsedMinutesSeconds": "{minutes}m {seconds}s écoulés",
+      "elapsedSeconds": "{seconds} s écoulées",
+      "elapsedMinutesSeconds": "{minutes} min {seconds} s écoulées",
       "phases": {
         "preparing": "Préparation",
         "waitingForAuthorization": "En attente de l'approbation de l'administrateur",
@@ -374,7 +374,7 @@
       "completed": "{name} terminé",
       "started": "{name} est désormais géré par le système",
       "restartRequired": "{name} terminé. Redémarrez votre système pour appliquer les modifications",
-      "mayHaveChanged": "{name} ne s'est pas terminé proprement. Certains changements peuvent avoir pris effet ; vérifie à nouveau",
+      "mayHaveChanged": "{name} ne s'est pas terminé proprement. Certains changements peuvent avoir pris effet ; vérifiez à nouveau",
       "failures": {
         "toolUnavailable": "Impossible de terminer « {name} » : un outil système requis n'est pas disponible",
         "verificationPermissionDenied": "« {name} » s'est exécuté, mais l'autorisation a été refusée lors de la vérification du résultat",
@@ -406,7 +406,7 @@
       },
       "macos_maintenance_quicklook-cache": {
         "name": "Actualiser les aperçus Quick Look",
-        "description": "Actualiser les aperçus en cache lorsque vous appuyez sur Espace affiche un contenu vide, obsolète ou incorrect"
+        "description": "Actualiser les aperçus en cache lorsqu'un appui sur Espace affiche un contenu vide, obsolète ou incorrect"
       },
       "macos_maintenance_icon-cache": {
         "name": "Reconstruire le cache des icônes du Finder",
@@ -561,9 +561,9 @@
       "completed": "Réglages modifiés : {count}",
       "completedRestart": "Réglages modifiés : {count}. Certains nécessitent de rouvrir les composants concernés ou de se reconnecter",
       "cancelled": "L'autorisation de l'administrateur a été annulée après {changed} modifications terminées",
-      "cancelledRestart": "L'autorisation de l'administrateur a été annulée ; Certaines des {changed} modifications effectuées nécessitent la réouverture des composants système associés ou une nouvelle connexion",
-      "partial": "{changed} éléments terminés ; {failed} n'a pas pu être appliqué",
-      "partialRestart": "{changed} éléments terminés ; {failed} n’a pas pu être appliqué. Certaines modifications nécessitent la réouverture des composants système associés ou une nouvelle connexion"
+      "cancelledRestart": "L'autorisation de l'administrateur a été annulée ; certaines des {changed} modifications effectuées nécessitent la réouverture des composants système associés ou une nouvelle connexion",
+      "partial": "{changed} éléments terminés ; échec pour {failed}",
+      "partialRestart": "{changed} éléments terminés ; échec pour {failed}. Certaines modifications nécessitent la réouverture des composants système associés ou une nouvelle connexion"
     },
     "items": {
       "macos_finder_show-file-extensions": {
@@ -1076,7 +1076,7 @@
       },
       "windows_security_disable-system-restore": {
         "name": "Désactiver la restauration du système",
-        "description": "Empêcher les nouveaux points de restauration ; La restauration du système ne peut pas être utilisée après un échec"
+        "description": "Empêcher les nouveaux points de restauration ; la restauration du système ne peut pas être utilisée après un échec"
       },
       "windows_security_disable-defender": {
         "name": "Désactiver la stratégie antivirus de Microsoft Defender",
@@ -1251,7 +1251,7 @@
         "description": "Ne pas rouvrir les fenêtres conservées au prochain démarrage d'une application"
       },
       "macos_window_double-click-titlebar-minimize": {
-        "name": "Réduire sur la barre de titre double-cliquez",
+        "name": "Réduire par double-clic sur la barre de titre",
         "description": "Réduire une fenêtre au lieu de la zoomer lorsque l'on double-clique sur sa barre de titre"
       },
       "macos_keyboard_use-standard-function-keys": {
@@ -1307,7 +1307,7 @@
         "description": "Limitez l'impact du plantage d'une fenêtre, au prix d'un léger surcoût en mémoire"
       },
       "windows_explorer_restore-folders-at-login": {
-        "name": "Restaurer les fenêtres du dossier après la connexion",
+        "name": "Restaurer les fenêtres de dossiers après la connexion",
         "description": "Rouvrez les fenêtres de l'Explorateur de fichiers qui étaient restées ouvertes avant la déconnexion"
       },
       "windows_explorer_disable-sharing-wizard": {
@@ -1343,7 +1343,7 @@
         "description": "Réduisez les astuces, les raccourcis et les suggestions d'applications dans Démarrer"
       },
       "windows_start_disable-account-notifications": {
-        "name": "Désactiver les notifications du compte Démarrer",
+        "name": "Désactiver les notifications de compte dans Démarrer",
         "description": "Masquer les suggestions de compte Microsoft et de synchronisation dans Démarrer"
       },
       "macos_finder_warn-before-empty-trash": {
@@ -1384,7 +1384,7 @@
       },
       "macos_time-machine_hide-new-disk-prompts": {
         "name": "Masquer les nouvelles invites de sauvegarde de disque",
-        "description": "Ne suggère pas d'utiliser des disques nouvellement connectés avec Time Machine"
+        "description": "Ne pas suggérer d'utiliser des disques nouvellement connectés avec Time Machine"
       },
       "macos_security_require-password-after-sleep": {
         "name": "Exiger un mot de passe à la sortie de veille",
@@ -1400,7 +1400,7 @@
       },
       "windows_explorer_use-manual-default-printer": {
         "name": "Conserver l'imprimante par défaut sélectionnée",
-        "description": "Empêchez Windows de le modifier en fonction de l'imprimante la plus récemment utilisée"
+        "description": "Empêchez Windows de la modifier en fonction de l'imprimante la plus récemment utilisée"
       },
       "windows_taskbar_show-on-all-displays": {
         "name": "Afficher la barre des tâches sur tous les écrans",
@@ -1531,7 +1531,7 @@
       "enabled": "Activé",
       "disabled": "Désactivé",
       "removed": "Supprimé",
-      "unknown": "Etat inconnu",
+      "unknown": "État inconnu",
       "notApplicable": "Sans objet"
     },
     "runtimeStates": {
@@ -1582,16 +1582,16 @@
       "confirm": "Confirmer",
       "applying": "Application des changements…",
       "refreshFailedResult": "L'opération est terminée, mais la liste n'a pas pu être mise à jour. Analysez à nouveau",
-      "enableSuccessResult": "Activé le démarrage automatique pour « {name} »",
-      "disableSuccessResult": "Désactivation du démarrage automatique pour « {name} »",
+      "enableSuccessResult": "Démarrage automatique activé pour « {name} »",
+      "disableSuccessResult": "Démarrage automatique désactivé pour « {name} »",
       "batchEnableSuccessResult": "Éléments de démarrage activés : {count}",
       "batchDisableSuccessResult": "Éléments de démarrage désactivés : {count}",
-      "partialEnableResult": "Activation de {changed} éléments pour « {name} » ; {failed} a échoué",
-      "partialDisableResult": "Éléments {changed} désactivés pour « {name} » ; {failed} a échoué",
-      "batchPartialEnableResult": "Activation de {changed} éléments de démarrage ; {failed} a échoué",
-      "batchPartialDisableResult": "Éléments de démarrage {changed} désactivés ; {failed} a échoué",
+      "partialEnableResult": "{changed} éléments activés pour « {name} » ; {failed} en échec",
+      "partialDisableResult": "{changed} éléments désactivés pour « {name} » ; {failed} en échec",
+      "batchPartialEnableResult": "{changed} éléments de démarrage activés ; {failed} en échec",
+      "batchPartialDisableResult": "{changed} éléments de démarrage désactivés ; {failed} en échec",
       "warnings": {
-        "affectsOtherTriggers": "Cette tâche planifiée comporte également des déclencheurs hors démarrage ; le désactiver affecte toute la tâche",
+        "affectsOtherTriggers": "Cette tâche planifiée comporte également des déclencheurs hors démarrage ; la désactiver affecte toute la tâche",
         "itemCurrentlyRunning": "L'élément est actuellement en cours d'exécution ; ce changement ne l'arrêtera pas"
       },
       "skipReasons": {
@@ -1611,7 +1611,7 @@
       "guidance": "Seuls les réglages de démarrage seront supprimés ; les fichiers des applications seront conservés",
       "confirm": "Supprimer",
       "successResult": "Éléments de démarrage supprimés pour « {name} »",
-      "partialResult": "{changed} éléments supprimés pour « {name} » ; {failed} a échoué"
+      "partialResult": "{changed} éléments supprimés pour « {name} » ; {failed} en échec"
     },
     "cleanup": {
       "manualGuidance": "Cet élément est obsolète mais doit être géré dans un outil système pour éviter une suppression dangereuse",
@@ -1727,7 +1727,7 @@
     },
     "itemChanged": {
       "title": "L'élément vient d'être modifié",
-      "message": "Cet élément a changé lors de la préparation de la suppression. MangoDisk s'est arrêté pour éviter de supprimer le mauvais contenu ; analyse-le à nouveau"
+      "message": "Cet élément a changé lors de la préparation de la suppression. MangoDisk s'est arrêté pour éviter de supprimer le mauvais contenu ; analysez-le à nouveau"
     },
     "scanResourcesReleasing": {
       "title": "L'analyse précédente se termine",
@@ -1950,8 +1950,8 @@
       "modifiedTime": "Date de modification du fichier",
       "modifiedAny": "Toutes les dates",
       "modifiedOlder": "Non modifié depuis au moins",
-      "modifiedNewer": "Modifié au cours du dernier",
-      "modifiedTimeInvalid": "Entrez 1 à 3 650 jours",
+      "modifiedNewer": "Modifié au cours des derniers",
+      "modifiedTimeInvalid": "Entrez une durée de 1 à 3 650 jours",
       "days": "Jours",
       "includeSubdirectories": "Inclure les sous-dossiers",
       "includeSubdirectoriesDescription": "Désactivez pour inspecter uniquement les fichiers directement dans chaque dossier sélectionné",
@@ -2113,7 +2113,7 @@
     "emptyDescription": "Rechercher à l’emplacement choisi les fichiers d’au moins {size} dont le contenu est identique",
     "scanning": "Recherche de fichiers en double…",
     "validatingCandidates": "Vérification des correspondances possibles…",
-    "comparingContents": "Comparaison du contenu du fichier…",
+    "comparingContents": "Comparaison du contenu des fichiers…",
     "discoveredLogicalData": "Données logiques trouvées",
     "verifiedContentData": "Données de contenu lues",
     "scanHint": "Les fichiers sont comparés par contenu. Les fichiers volumineux sont lus entièrement uniquement en cas de besoin",
@@ -2391,8 +2391,8 @@
     "duration": "Durée",
     "recordSummary": "{items} élément à nettoyer · {files} traités | {items} éléments à nettoyer · {files} traités",
     "uninstallRecordSummary": "{items} app sélectionnée · {files} désinstallées | {items} apps sélectionnées · {files} désinstallées",
-    "startupRecordSummary": "{selected} sélectionné · {changed} modifié",
-    "systemOptimizationRecordSummary": "{selected} sélectionné · {changed} modifié",
+    "startupRecordSummary": "Sélectionnés : {selected} · Modifiés : {changed}",
+    "systemOptimizationRecordSummary": "Sélectionnés : {selected} · Modifiés : {changed}",
     "selectedItems": "Éléments sélectionnés",
     "changedItems": "Éléments modifiés",
     "startupItems": "Éléments de démarrage",
@@ -2554,7 +2554,7 @@
     "updateChecking": "Vérification…",
     "updateVersionAvailable": "Version {version} disponible",
     "updateDownloading": "Téléchargement…",
-    "updateDownloadingProgress": "Téléchargement · {percent}%",
+    "updateDownloadingProgress": "Téléchargement · {percent} %",
     "updateReadyToInstall": "Prêt à installer",
     "updateInstalling": "Installation…",
     "updateRestartRequired": "Redémarrage requis",
@@ -2623,7 +2623,7 @@
     "elapsed": "Écoulé",
     "cancelHint": "L'analyse lit uniquement les informations sur le fichier ; l'annulation ne change rien",
     "cleaning": "Nettoyage des éléments sélectionnés…",
-    "cleaningCurrentItem": "Nettoyage {name}",
+    "cleaningCurrentItem": "Nettoyage de {name}",
     "cleaningApplicationLeftovers": "Nettoyage des données d'application sélectionnées…",
     "cancelCleanupAction": "Annuler le nettoyage",
     "cancelCleanupConfirmTitle": "Arrêter ce nettoyage ?",
@@ -2658,7 +2658,7 @@
     "cleanupItemPending": "En attente",
     "ruleProgress": "Progression de l'objet",
     "ruleProgressValue": "{completed} / {total}",
-    "cleanupProgressSummary": "{completed} de {total} complet",
+    "cleanupProgressSummary": "{completed} sur {total} terminés",
     "processedItems": "Traité",
     "releasedSpace": "Espace libéré",
     "checkedData": "Données vérifiées",
@@ -2782,11 +2782,11 @@
       },
       "app.qq-update-cache": {
         "name": "Mises à jour téléchargées de QQ",
-        "description": "Anciennes archives de mises à jour téléchargées conservées après que QQ ait extrait ses bundles de mises à jour à chaud",
+        "description": "Anciennes archives de mises à jour téléchargées conservées après que QQ a extrait ses bundles de mises à jour à chaud",
         "impact": "Les versions active et en attente, les comptes, messages, fichiers et l'état de connexion sont conservés. Les mises à jour supprimées devront peut-être être téléchargées à nouveau"
       },
       "app.ollama-update-cache": {
-        "name": "Mises à jour téléchargées de Ollama",
+        "name": "Mises à jour téléchargées d'Ollama",
         "description": "Archives de mise à jour macOS obsolètes téléchargées par Ollama",
         "impact": "Les modèles, manifestes, paramètres, comptes et l'application installée sont conservés. Les mises à jour supprimées devront peut-être être téléchargées à nouveau"
       },
@@ -2823,7 +2823,7 @@
       "app.flashvoice-cache": {
         "name": "Cache FlashVoice",
         "description": "Cache régénérable WebKit ou WebView2 (contenu, code, graphismes, composants, diagnostic) généré par FlashVoice",
-        "impact": "Les modèles vocaux, les enregistrements, les transcriptions, les paramètres et les fichiers de application sont conservés. Fermez FlashVoice avant de nettoyer"
+        "impact": "Les modèles vocaux, les enregistrements, les transcriptions, les paramètres et les fichiers d'application sont conservés. Fermez FlashVoice avant de nettoyer"
       },
       "app.utools-rendering-cache": {
         "name": "Cache de rendu uTools",
@@ -3112,7 +3112,7 @@
       },
       "app.wechat-diagnostic-cache": {
         "name": "Journaux WeChat et cache temporaire",
-        "description": "Journaux de diagnostic et données d'affichage temporaire générés par WeChat. Sous macOS, seuls les fichiers journaux datant de plus de 7 jours sont nettoyés",
+        "description": "Journaux de diagnostic et données d'affichage temporaires générés par WeChat. Sous macOS, seuls les fichiers journaux datant de plus de 7 jours sont nettoyés",
         "impact": "Les messages, comptes, plug-ins et fichiers utilisateur sont conservés. Fermez WeChat avant de nettoyer"
       },
       "browser.chrome-cache": {
@@ -3231,7 +3231,7 @@
         "impact": "Les projets et dépendances installées sont conservés. Les packages peuvent être téléchargés à nouveau"
       },
       "dev.npx-cache": {
-        "name": "outils temporaires npx",
+        "name": "Outils temporaires npx",
         "description": "Packages temporairement téléchargés et exécutés par npx",
         "impact": "Les dépendances du projet sont conservées. npx peut télécharger à nouveau les outils"
       },
@@ -3623,7 +3623,7 @@
       "special.codex-archived-sessions": {
         "name": "Anciennes sessions archivées de Codex",
         "description": "Archives de conversations de Codex non modifiées depuis 30 jours",
-        "impact": "Seules les sessions archivées sélectionnées sont définitivement supprimées. Ils ne peuvent pas être rouverts ou récupérés"
+        "impact": "Seules les sessions archivées sélectionnées sont définitivement supprimées. Elles ne peuvent être ni rouvertes ni récupérées"
       },
       "special.rust-toolchains": {
         "name": "Chaînes d'outils Rust supplémentaires",
@@ -3698,7 +3698,7 @@
       "special.windows-previous-installations": {
         "name": "Installation précédente de Windows",
         "description": "Les données Windows.old conservées après la mise à niveau vers une version plus récente de Windows",
-        "impact": "Le ​​nettoyage supprime définitivement l'installation précédente et empêche le retour à la version antérieure de Windows"
+        "impact": "Le nettoyage supprime définitivement l'installation précédente et empêche le retour à la version antérieure de Windows"
       },
       "special.macos-universal-binaries": {
         "name": "Binaires universels",
@@ -4037,7 +4037,7 @@
     "sortDescending": "décroissant",
     "applicationUnavailable": "Cette application n'a pas été lue dans le dernier échantillon et est temporairement indisponible",
     "partialData": "Données partielles",
-    "partialMemory": "Données partielles (processus {readable}/{total})",
+    "partialMemory": "Données partielles ({readable}/{total} processus)",
     "memoryUnavailable": "La mémoire de processus complète est temporairement indisponible",
     "usedCapacity": "{used} utilisés / {total}",
     "memoryOptions": "Détails de la mémoire et réglages de libération",
@@ -4117,7 +4117,7 @@
     "moveAnnouncement": "{name}, position {position} sur {count}",
     "available": "Disponible",
     "lastMinute": "Minute écoulée",
-    "networkScope": "Trafic d'interface sélectionné, y compris les transferts sur le réseau local",
+    "networkScope": "Trafic de l'interface sélectionnée, y compris les transferts sur le réseau local",
     "taskbarBackground": "Afficher l'arrière-plan",
     "taskbarCompact": "Mode compact",
     "taskbarPosition": "Alignement",
@@ -4138,7 +4138,7 @@
     "colorEnabled": "Utiliser les règles de couleur",
     "colorBelow": "Inférieur à",
     "colorRemove": "Supprimer",
-    "colorInvalid": "Entrez les nombres entiers de 0 à {max}{unit} ; la fin de la plage doit dépasser son début",
+    "colorInvalid": "Entrez des nombres entiers de 0 à {max}{unit} ; la fin de la plage doit dépasser son début",
     "colorRestore": "Restaurer les paramètres par défaut",
     "palette": {
       "default": "Par défaut",
@@ -4154,7 +4154,7 @@
     "colorCondition": "État",
     "colorValue": "Valeur de la règle {index}",
     "colorUpper": "Limite supérieure de la règle {index}",
-    "colorRuleColor": "Règle {index} couleur",
+    "colorRuleColor": "Couleur de la règle {index}",
     "colorRule": "Règle {index}",
     "colorRemoveRule": "Supprimer la règle {index}",
     "colorOverlap": "Les règles {first} et {second} se chevauchent. Ajuster leurs conditions",
