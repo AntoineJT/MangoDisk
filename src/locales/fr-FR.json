@@ -143,7 +143,7 @@
     "categoryNavigation": "Catégories de traces d’activité",
     "traceCount": "{count} trace | {count} traces",
     "categorySelected": "{count} trace sélectionnée | {count} traces sélectionnées",
-    "selectAllInCategory": "Sélectionnez une catégorie",
+    "selectAllInCategory": "Sélectionner toute la catégorie",
     "profileCount": "{count} profil | {count} profils",
     "toggleSource": "Basculer les éléments exploitables dans {source}",
     "toggleSourceDetails": "Développez ou réduisez les détails du nettoyage pour {source}",
@@ -248,7 +248,7 @@
       "reviewOnly": "Visualisation uniquement"
     },
     "impacts": {
-      "workflow": "Peut modifier vos habitudes de travail récentes",
+      "workflow": "Peut affecter vos usages récents",
       "signOut": "Peut déconnecter des comptes",
       "crossDevice": "Peut affecter d'autres appareils",
       "dataLoss": "Peut supprimer des données personnelles",
@@ -275,7 +275,7 @@
         "failed": "Impossible de terminer",
         "cancelled": "Ignoré"
       },
-      "blockedDescription": "Aucune suppression : {sources} sources ont échoué aux contrôles de sécurité. Relancez l’analyse pour réessayer",
+      "blockedDescription": "Aucune suppression : échec des contrôles de sécurité pour {sources}. Relancez l’analyse pour réessayer",
       "failureReasons": {
         "sourceChanged": "Données modifiées. Réanalyser pour réessayer",
         "sourceUnavailable": "Impossible de lire les données. Réanalyser pour réessayer",
@@ -311,9 +311,9 @@
     "executingOne": "En cours d'exécution",
     "retryOne": "Réessayer",
     "completedOne": "Terminé",
-    "systemProcessing": "Traitement du système",
+    "systemProcessing": "Traitement par le système",
     "refreshRequired": "Vérifiez à nouveau",
-    "cancelQueued": "Annuler la file d'attente",
+    "cancelQueued": "Retirer de la file d'attente",
     "cancelExecution": "Arrêter",
     "progress": {
       "step": "Étape {current}/{total}",
@@ -414,7 +414,7 @@
       },
       "macos_maintenance_finder-service": {
         "name": "Redémarrer le Finder",
-        "description": "Redémarrez le Finder lorsqu'il est lent, que Windows ne répond plus ou que les éléments du bureau ne s'actualisent pas"
+        "description": "Redémarrez le Finder lorsqu'il est lent, que les fenêtres ne répondent plus ou que les éléments du bureau ne s'actualisent pas"
       },
       "macos_maintenance_audio-service": {
         "name": "Redémarrez le service audio",
@@ -545,12 +545,12 @@
       "highImpact": "Impact élevé",
       "riskDescriptions": {
         "caution": "Ce paramètre présente un compromis clair ; assurez-vous qu'il répond à vos besoins",
-        "high": "Ce paramètre peut réduire la sécurité, la récupération ou la protection contre les mises à jour"
+        "high": "Ce paramètre peut réduire la sécurité, la récupération ou la protection apportée par les mises à jour"
       }
     },
     "riskDialog": {
       "title": "Confirmer les paramètres à fort impact",
-      "description": "Ces paramètres peuvent réduire la sécurité, la récupération ou la protection des mises à jour du système. Continuez seulement si vous comprenez l’impact",
+      "description": "Ces paramètres peuvent réduire la sécurité, la récupération ou la protection apportée par les mises à jour du système. Continuez seulement si vous comprenez l’impact",
       "note": "Smart recommandé ne sélectionne jamais ces paramètres automatiquement ; seuls vos éléments activés manuellement seront appliqués",
       "confirm": "Continuer quand même"
     },
@@ -720,7 +720,7 @@
       },
       "windows_taskbar_hide-task-view": {
         "name": "Masquer le bouton Affichage des tâches",
-        "description": "Supprimez un bouton de la barre des tâches que vous ne pouvez pas utiliser"
+        "description": "Supprimez un bouton de la barre des tâches que vous n'utilisez peut-être pas"
       },
       "windows_taskbar_hide-widgets": {
         "name": "Désactiver les widgets Windows",
@@ -736,7 +736,7 @@
       },
       "windows_taskbar_hide-search": {
         "name": "Masquer la recherche dans la barre des tâches",
-        "description": "Espace libre dans la barre des tâches tout en gardant la recherche dans le menu Démarrer disponible"
+        "description": "Libérer de l'espace dans la barre des tâches tout en gardant la recherche dans le menu Démarrer disponible"
       },
       "windows_taskbar_align-left": {
         "name": "Aligner les icônes de la barre des tâches à gauche",
@@ -871,7 +871,7 @@
         "description": "Supprimez les raccourcis de discussion ou de réunion inutilisés"
       },
       "windows_taskbar_hide-copilot": {
-        "name": "Masquer la barre des tâches Copilot",
+        "name": "Masquer Copilot dans la barre des tâches",
         "description": "Supprimez l'entrée Copilot de la barre des tâches"
       },
       "windows_windowing_disable-snap-assist": {
@@ -912,7 +912,7 @@
       },
       "windows_content_disable-spotlight": {
         "name": "Désactiver Windows Spotlight sur l'écran de verrouillage",
-        "description": "Arrêtez de faire pivoter les images et le contenu recommandés sur l'écran de verrouillage"
+        "description": "Arrêtez de faire défiler les images et le contenu recommandés sur l'écran de verrouillage"
       },
       "windows_content_disable-phone-link-suggestions": {
         "name": "Désactiver les suggestions de Mobile connecté",
@@ -1027,7 +1027,7 @@
         "description": "Déplacez davantage de planification vers le GPU ; les résultats dépendent du pilote graphique et nécessitent un redémarrage"
       },
       "windows_compatibility_disable-camera-frame-server": {
-        "name": "Utiliser le mode de compatibilité des appareils photo existants",
+        "name": "Utiliser l'ancien mode de compatibilité des caméras",
         "description": "Peut corriger les aperçus dans certaines anciennes applications d'appareil photo, mais peut affecter l'accès simultané à l'appareil photo par plusieurs applications"
       },
       "windows_services_print-spooler-manual": {
@@ -1064,7 +1064,7 @@
       },
       "windows_services_disable-xbox-auth": {
         "name": "Désactiver l'authentification Xbox Live",
-        "description": "Réduisez les services d'arrière-plan Xbox ; La connexion Game Pass et Xbox peut cesser de fonctionner"
+        "description": "Réduisez les services d'arrière-plan Xbox ; Game Pass et la connexion Xbox peuvent cesser de fonctionner"
       },
       "windows_services_disable-fax": {
         "name": "Désactiver le service Fax",
@@ -1096,7 +1096,7 @@
       },
       "windows_security_disable-vbs": {
         "name": "Désactiver la sécurité basée sur la virtualisation",
-        "description": "Peut améliorer certaines performances du jeu mais réduit l'isolation des informations d'identification et du noyau"
+        "description": "Peut améliorer les performances de certains jeux mais réduit l'isolation des informations d'identification et du noyau"
       },
       "windows_storage_disable-ntfs-last-access": {
         "name": "Désactiver les mises à jour NTFS du dernier accès",
@@ -1196,7 +1196,7 @@
       },
       "macos_dock_show-only-open-apps": {
         "name": "Afficher uniquement les applications ouvertes dans le Dock",
-        "description": "Masquer les applications épinglées qui ne fonctionnent pas pour un Dock plus simple"
+        "description": "Masquer les applications épinglées qui ne sont pas ouvertes pour un Dock plus simple"
       },
       "macos_dock_dim-hidden-apps": {
         "name": "Atténuez les icônes d'applications cachées",
@@ -1215,7 +1215,7 @@
         "description": "Préférez le Mac à iCloud lors de l'enregistrement d'un nouveau document"
       },
       "macos_printing_quit-after-finish": {
-        "name": "Quittez la file d'attente d'impression lorsque vous avez terminé",
+        "name": "Quitter la file d'attente d'impression une fois les impressions terminées",
         "description": "Fermez automatiquement la file d'attente d'impression lorsqu'il ne reste plus de tâches"
       },
       "macos_finder_default-list-view": {
@@ -1263,7 +1263,7 @@
         "description": "Toujours afficher l'adresse complète de la page actuelle"
       },
       "macos_safari_disable-safe-download-auto-open": {
-        "name": "Arrêtez les téléchargements à ouverture automatique de Safari",
+        "name": "Empêcher Safari d'ouvrir automatiquement les téléchargements",
         "description": "N'ouvrez pas automatiquement les fichiers que macOS considère comme sûrs après le téléchargement"
       },
       "macos_safari_show-status-bar": {
@@ -1279,7 +1279,7 @@
         "description": "Créez de nouveaux documents TextEdit sans formatage de texte enrichi"
       },
       "macos_photos_disable-auto-open": {
-        "name": "Ne pas ouvrir les photos lorsque les appareils se connectent",
+        "name": "Ne pas ouvrir Photos lors de la connexion d'un appareil",
         "description": "Ne lancez pas d'applications photo lorsqu'un appareil photo, un iPhone ou une carte mémoire se connecte"
       },
       "macos_privacy_disable-personalized-ads": {
@@ -1344,15 +1344,15 @@
       },
       "windows_start_disable-account-notifications": {
         "name": "Désactiver les notifications du compte Démarrer",
-        "description": "Masquer le compte Microsoft et synchroniser les suggestions depuis Démarrer"
+        "description": "Masquer les suggestions de compte Microsoft et de synchronisation dans Démarrer"
       },
       "macos_finder_warn-before-empty-trash": {
         "name": "Confirmez avant de vider la corbeille",
         "description": "Réduisez le risque de suppression définitive de fichiers par erreur"
       },
       "macos_dock_enable-spring-loading": {
-        "name": "Ouvrir les cibles en les faisant glisser",
-        "description": "Développez automatiquement les dossiers ou les applications du Dock lorsque vous les faites glisser"
+        "name": "Ouvrir les cibles survolées pendant un glisser-déposer",
+        "description": "Développez automatiquement les dossiers ou les applications du Dock lorsque vous faites glisser un élément dessus"
       },
       "macos_dock_scroll-to-expose": {
         "name": "Faites défiler les icônes du Dock pour afficher les fenêtres",
@@ -1364,7 +1364,7 @@
       },
       "macos_safari_disable-search-suggestions": {
         "name": "Désactiver les suggestions de recherche Safari",
-        "description": "Envoyer du contenu moins typé aux services de suggestion de recherche"
+        "description": "Envoyer moins de texte saisi aux services de suggestion de recherche"
       },
       "macos_safari_disable-top-hit-preload": {
         "name": "Désactiver le préchargement du meilleur résultat dans Safari",
@@ -1420,7 +1420,7 @@
       },
       "windows_gaming_disable-app-lighting-control": {
         "name": "Arrêtez les applications contrôlant l'éclairage dynamique",
-        "description": "Empêcher les applications de premier plan de prendre en charge l'éclairage de l'appareil"
+        "description": "Empêcher les applications de premier plan de prendre le contrôle de l'éclairage de l'appareil"
       },
       "windows_start_hide-recently-added-apps": {
         "name": "Masquer les applications récemment ajoutées",
@@ -1451,7 +1451,7 @@
         "description": "Obtenez des mises à jour pour Office et d'autres produits via Windows Update"
       },
       "windows_update_enable-restart-notifications": {
-        "name": "Avertir lorsque les mises à jour doivent être redémarrées",
+        "name": "Avertir lorsque les mises à jour nécessitent un redémarrage",
         "description": "Afficher un rappel clair lorsqu'un redémarrage est nécessaire pour terminer la mise à jour"
       },
       "windows_explorer_hide-shortcut-arrows": {
@@ -1564,13 +1564,13 @@
       "unsupportedFormat": "Ce format de configuration n'est pas pris en charge"
     },
     "change": {
-      "serviceAccessDenied": "Windows a refusé les modifications apportées à un ou plusieurs services. L'approbation de l'administrateur ne peut pas outrepasser ses restrictions d'autorisation",
+      "serviceAccessDenied": "Windows a refusé les modifications apportées à un ou plusieurs services. L'approbation de l'administrateur peut ne pas suffire à outrepasser leurs restrictions d'autorisation",
       "accessDenied": "Le système a refusé les modifications apportées à cet élément de démarrage. Vérifiez les autorisations requises",
       "title": "Confirmer les modifications",
       "checking": "Vérification des éléments de démarrage…",
       "descriptions": {
-        "enabled": "Activer {count} élément au démarrage | Activer {count} éléments au démarrage",
-        "disabled": "Désactiver {count} élément au démarrage | Désactiver {count} éléments au démarrage",
+        "enabled": "Activer {count} élément de démarrage | Activer {count} éléments de démarrage",
+        "disabled": "Désactiver {count} élément de démarrage | Désactiver {count} éléments de démarrage",
         "removed": "Supprimer {count} élément de démarrage | Supprimer {count} éléments de démarrage"
       },
       "batchName": "{count} élément de démarrage | {count} éléments de démarrage",
@@ -1584,8 +1584,8 @@
       "refreshFailedResult": "L'opération est terminée, mais la liste n'a pas pu être mise à jour. Analysez à nouveau",
       "enableSuccessResult": "Activé le démarrage automatique pour « {name} »",
       "disableSuccessResult": "Désactivation du démarrage automatique pour « {name} »",
-      "batchEnableSuccessResult": "Éléments activés au démarrage : {count}",
-      "batchDisableSuccessResult": "Éléments désactivés au démarrage : {count}",
+      "batchEnableSuccessResult": "Éléments de démarrage activés : {count}",
+      "batchDisableSuccessResult": "Éléments de démarrage désactivés : {count}",
       "partialEnableResult": "Activation de {changed} éléments pour « {name} » ; {failed} a échoué",
       "partialDisableResult": "Éléments {changed} désactivés pour « {name} » ; {failed} a échoué",
       "batchPartialEnableResult": "Activation de {changed} éléments de démarrage ; {failed} a échoué",
@@ -1616,7 +1616,7 @@
     "cleanup": {
       "manualGuidance": "Cet élément est obsolète mais doit être géré dans un outil système pour éviter une suppression dangereuse",
       "openTools": {
-        "services": "Services ouverts",
+        "services": "Ouvrir Services",
         "taskScheduler": "Ouvrir le Planificateur de tâches"
       },
       "macOsLoginRecordTitle": "Enregistrement de connexion restant trouvé",
@@ -1730,7 +1730,7 @@
       "message": "Cet élément a changé lors de la préparation de la suppression. MangoDisk s'est arrêté pour éviter de supprimer le mauvais contenu ; analyse-le à nouveau"
     },
     "scanResourcesReleasing": {
-      "title": "L'analyse précédente est terminée",
+      "title": "L'analyse précédente se termine",
       "message": "Le système libère les ressources de l'analyse de disque précédente. Réessayez dans un instant"
     },
     "quickScanUnavailable": {
@@ -1763,11 +1763,11 @@
     }
   },
   "folderPicker": {
-    "commonFolders": "Dossiers communs",
+    "commonFolders": "Dossiers usuels",
     "standardFolders": {
       "downloads": "Téléchargements",
       "documents": "Documents",
-      "pictures": "Photos",
+      "pictures": "Images",
       "videos": "Vidéos",
       "music": "Musique"
     }
@@ -1921,7 +1921,7 @@
       "title": "Nettoyage personnalisé",
       "description": "Choisissez les dossiers et les conditions de fichiers",
       "addRule": "Ajouter une règle",
-      "copyRule": "Règle de duplication",
+      "copyRule": "Dupliquer la règle",
       "ruleCopyName": "{name} Copie",
       "untitledRule": "Règle sans titre {index}",
       "directoryCount": "{count} dossier | {count} dossiers",
@@ -1948,7 +1948,7 @@
       "sizeRangeInvalid": "Ne doit pas être inférieur au minimum",
       "noLimit": "Aucune limite",
       "modifiedTime": "Date de modification du fichier",
-      "modifiedAny": "À tout moment",
+      "modifiedAny": "Toutes les dates",
       "modifiedOlder": "Non modifié depuis au moins",
       "modifiedNewer": "Modifié au cours du dernier",
       "modifiedTimeInvalid": "Entrez 1 à 3 650 jours",
@@ -2019,7 +2019,7 @@
   },
   "storageScanExclusions": {
     "title": "Exclusions d’analyse",
-    "activeLabel": "Exclusions sur",
+    "activeLabel": "Exclusions actives",
     "resultHint": "Des exclusions ont été appliquées à cette analyse. Les résultats peuvent être incomplets",
     "cleanupResultHint": "Des exclusions ont été appliquées. Les exclusions de chemin affectent uniquement les fichiers de build des projets",
     "description": "Choisissez ce que vous souhaitez ignorer et où les exclusions s'appliquent",
@@ -2037,7 +2037,7 @@
     "pathsTab": "Par chemin",
     "namesTab": "Par nom",
     "addName": "Ajouter un nom",
-    "objectType": "Tapez",
+    "objectType": "Type",
     "folderKind": "Dossier",
     "fileKind": "Fichier",
     "exactName": "Nom exact",
@@ -2126,7 +2126,7 @@
     "minimumSize": "Taille minimale",
     "smartSelect": "Sélection intelligente",
     "smartSelectMenuLabel": "Méthode de sélection intelligente",
-    "smartSelectSafetyHint": "Les fichiers dans des emplacements protégés sont toujours conservés ; d'autres groupes conservent au moins un fichier",
+    "smartSelectSafetyHint": "Les fichiers dans des emplacements protégés sont toujours conservés ; les autres groupes conservent au moins un fichier",
     "protectedEntry": "Protégé",
     "keeperRuleLabels": {
       "shortestPath": "Conserver le fichier avec le chemin le plus court",
@@ -2159,12 +2159,12 @@
     "categoryTitle": "Résidus d’apps",
     "scanning": "Vérification des données laissées par les applications supprimées…",
     "scanHint": "Seules les données clairement liées à une application qui n'est plus installée sont affichées. L'analyse ne change rien",
-    "accessLimitedDescription": "Autorisez MangoDisk à accéder aux autres données de l'application dans Réglages Système → Confidentialité et sécurité, puis effectuez une nouvelle analyse",
+    "accessLimitedDescription": "Autorisez MangoDisk à accéder aux données des autres applications dans Réglages Système → Confidentialité et sécurité, puis effectuez une nouvelle analyse",
     "incompleteDescription": "Pour éviter les erreurs, aucun reste n'est affiché. Réessayez plus tard",
     "emptyTitle": "Aucun reste d'application vérifié trouvé",
     "emptyDescription": "Aucune donnée d'application pouvant être identifiée en toute sécurité comme restante n'a été trouvée",
     "planSummary": "{locations} emplacements de résidus de {applications} apps",
-    "planImpact": "Les restes de l'application sélectionnée sont supprimés définitivement et ne peuvent pas être récupérés",
+    "planImpact": "Les restes d'applications sélectionnés sont supprimés définitivement et ne peuvent pas être récupérés",
     "selectCandidate": "Sélectionnez les données restantes pour {name}",
     "selectLocation": "Sélectionnez {name}",
     "locationCount": "{count} emplacement de résidus | {count} emplacements de résidus",
@@ -2207,7 +2207,7 @@
     "status": "Statut",
     "applicationSize": "Taille estimée",
     "applicationSizeUnavailable": "Inconnu",
-    "applicationSizeEstimateHint": "Estimé à partir des catalogues système et de la taille des fichiers logiques ; la compression, les clones et les fichiers partagés peuvent modifier la différence d'espace réelle",
+    "applicationSizeEstimateHint": "Estimé à partir des catalogues système et de la taille logique des fichiers ; la compression, les clones et les fichiers partagés peuvent modifier l'espace réellement libéré",
     "windowsAppPackageSizeHint": "Les fichiers partagés ne sont pas inclus dans cette estimation",
     "lastUsed": "Dernière utilisation",
     "lastUsedUnavailable": "Aucun enregistrement d'utilisation",
@@ -2273,7 +2273,7 @@
     "uninstallItemList": "Progression de la désinstallation de l'application",
     "uninstallItemPending": "En attente de désinstallation",
     "uninstallItemActive": "Désinstallation",
-    "uninstallItemInteractive": "Suppression complète dans la fenêtre de désinstallation de cette application",
+    "uninstallItemInteractive": "Terminez la suppression dans la fenêtre du programme de désinstallation de cette application",
     "uninstallItemCompleted": "Désinstallation terminée",
     "uninstallItemCancelled": "Sauté avant de commencer",
     "uninstallItemFailed": "N'a pas terminé",
@@ -2324,7 +2324,7 @@
     "initialTitle": "Gérer les applications installées",
     "initialDescription": "Vérifiez le stockage de l'application et supprimez les fichiers associés lors de la désinstallation",
     "openWindowsInstalledApps": "Ouvrez les paramètres Windows",
-    "openWindowsInstalledAppsFailed": "Impossible d'ouvrir les paramètres de l'application Windows. Ouvrez Paramètres → Applications depuis le menu Démarrer",
+    "openWindowsInstalledAppsFailed": "Impossible d'ouvrir les paramètres des applications Windows. Ouvrez Paramètres → Applications depuis le menu Démarrer",
     "removeRecord": "Supprimer l'entrée",
     "removeRecordTitle": "Supprimer cette entrée d'application ?",
     "removeRecordDescription": "Seule l'entrée de l'application sera supprimée. Vos fichiers et données seront conservés",
@@ -2369,7 +2369,7 @@
       "systemOptimization": "Optimisation du système",
       "privacyCleanup": "Traces d’activité"
     },
-    "operation": "Fonctionnement",
+    "operation": "Opération",
     "planned": "Prévu",
     "expected": "Attendu",
     "estimated": "Estimé",
@@ -2411,7 +2411,7 @@
       "userCancelled": "L'opération a été annulée",
       "unsupported": "Ce paramètre n'est plus pris en charge",
       "verificationFailed": "La valeur résultante n'a pas pu être vérifiée",
-      "platformFailure": "Le fonctionnement du système a échoué"
+      "platformFailure": "L'opération système a échoué"
     },
     "startupStatuses": {
       "changed": "Modifié avec succès",
@@ -2424,7 +2424,7 @@
       "userCancelled": "L'autorisation a été annulée",
       "unsupported": "Cette source ne prend pas en charge l'opération",
       "verificationFailed": "L'état résultant n'a pas pu être vérifié",
-      "platformFailure": "Le fonctionnement du système a échoué"
+      "platformFailure": "L'opération système a échoué"
     },
     "applicationLeftoverStatuses": {
       "previewed": "Vérifications terminées ; aucun fichier n'a été supprimé",
@@ -2618,7 +2618,7 @@
     "preparingAnalysisDirectory": "Préparation de l'analyse…",
     "checkedItems": "fichiers vérifiés",
     "accessibleRuleProgress": "{completed} contrôles sur {total} terminés, {checked} fichiers analysés, {bytes} analysés",
-    "checkedChecks": "Vérifier la progression",
+    "checkedChecks": "Progression des vérifications",
     "traversedData": "Données analysées",
     "elapsed": "Écoulé",
     "cancelHint": "L'analyse lit uniquement les informations sur le fichier ; l'annulation ne change rien",
@@ -2713,7 +2713,7 @@
       "system.parsecd-cache": {
         "name": "Cache de suggestions système",
         "description": "Index temporaires générés par le service de suggestions macOS",
-        "impact": "Les dossiers personnels sont conservés. macOS reconstruit les index de suggestions selon les besoins"
+        "impact": "Les fichiers personnels sont conservés. macOS reconstruit les index de suggestions selon les besoins"
       },
       "system.aerial-video-downloads": {
         "name": "Vidéos de paysages téléchargées",
@@ -2757,12 +2757,12 @@
       },
       "app.slack-cache": {
         "name": "Cache Slack",
-        "description": "Réponse Web régénérable, script et cache graphique générés par Slack",
+        "description": "Cache régénérable des réponses Web, des scripts et des graphismes généré par Slack",
         "impact": "Les espaces de travail, les messages et l'état de connexion sont conservés. Fermez Slack avant de nettoyer"
       },
       "app.lark-renderer-cache": {
         "name": "Cache de rendu Lark",
-        "description": "Réponses Web régénérables, code, GPU, shader et cache Service Worker générés par Lark",
+        "description": "Cache régénérable (réponses Web, code, GPU, shaders, Service Worker) généré par Lark",
         "impact": "Les comptes, les messages, les téléchargements, les espaces de travail, le stockage du navigateur et l'état de connexion sont conservés. Fermez Lark avant de nettoyer"
       },
       "app.wechat-cache": {
@@ -2783,7 +2783,7 @@
       "app.qq-update-cache": {
         "name": "Mises à jour téléchargées de QQ",
         "description": "Anciennes archives de mises à jour téléchargées conservées après que QQ ait extrait ses bundles de mises à jour à chaud",
-        "impact": "Les versions, comptes, messages, fichiers et états de connexion actifs et en attente sont conservés. Les mises à jour supprimées devront peut-être être téléchargées à nouveau"
+        "impact": "Les versions active et en attente, les comptes, messages, fichiers et l'état de connexion sont conservés. Les mises à jour supprimées devront peut-être être téléchargées à nouveau"
       },
       "app.ollama-update-cache": {
         "name": "Mises à jour téléchargées de Ollama",
@@ -2797,7 +2797,7 @@
       },
       "app.ynote-cache": {
         "name": "Cache YNote",
-        "description": "Interface régénérable, journal de diagnostic et données de mise à jour téléchargées générées par YNote",
+        "description": "Données régénérables d'interface, journaux de diagnostic et mises à jour téléchargées générés par YNote",
         "impact": "Les notes, pièces jointes, sauvegardes, paramètres, stockage du navigateur et état de connexion sont conservés. Fermez YNote avant le nettoyage"
       },
       "app.qqlive-rendering-cache": {
@@ -2812,7 +2812,7 @@
       },
       "app.youku-rendering-cache": {
         "name": "Cache de l’interface Youku",
-        "description": "Caches Web, codes, graphiques et images de couverture régénérables à partir de Youku",
+        "description": "Caches régénérables (Web, code, graphismes, images de couverture) de Youku",
         "impact": "Conserve les vidéos hors ligne, les enregistrements de téléchargement, le compte et les paramètres. Fermez d'abord Youku ; les images peuvent être téléchargées à nouveau"
       },
       "app.iqiyi-rendering-cache": {
@@ -2822,12 +2822,12 @@
       },
       "app.flashvoice-cache": {
         "name": "Cache FlashVoice",
-        "description": "Contenu, code, graphiques, composants et cache de diagnostic régénérables WebKit ou WebView2 générés par FlashVoice",
+        "description": "Cache régénérable WebKit ou WebView2 (contenu, code, graphismes, composants, diagnostic) généré par FlashVoice",
         "impact": "Les modèles vocaux, les enregistrements, les transcriptions, les paramètres et les fichiers de application sont conservés. Fermez FlashVoice avant de nettoyer"
       },
       "app.utools-rendering-cache": {
         "name": "Cache de rendu uTools",
-        "description": "Web, code, GPU, shader, partition et cache de diagnostic régénérables générés par uTools",
+        "description": "Cache régénérable (Web, code, GPU, shaders, partitions, diagnostic) généré par uTools",
         "impact": "L'historique du Presse-papiers, les plugins, les bases de données, les paramètres et le stockage du navigateur sont conservés. Fermez uTools avant de nettoyer"
       },
       "app.baidu-netdisk-rendering-cache": {
@@ -2862,12 +2862,12 @@
       },
       "app.gitmind-rendering-cache": {
         "name": "Cache de rendu GitMind",
-        "description": "Contenu, code, GPU, shader, composant et cache de diagnostic régénérables Electron et WebView2 générés par GitMind",
+        "description": "Cache régénérable Electron et WebView2 (contenu, code, GPU, shaders, composants, diagnostic) généré par GitMind",
         "impact": "Les cartes mentales, les informations d'identification, l'historique, les paramètres, le stockage du navigateur et les packages de mise à jour sont conservés. Fermez GitMind avant de nettoyer"
       },
       "app.whatsapp-rendering-cache": {
         "name": "Cache de rendu WhatsApp",
-        "description": "Contenu WebView2 régénérable, code, GPU, shader, composant, dictionnaire et cache de réponses générés par WhatsApp",
+        "description": "Cache régénérable WebView2 (contenu, code, GPU, shaders, composants, dictionnaire, réponses) généré par WhatsApp",
         "impact": "Les comptes, les messages, les informations d'identification, les paramètres, l'historique, l'état du réseau et le stockage du navigateur sont conservés. Fermez WhatsApp avant de nettoyer"
       },
       "app.electron-updater-cache": {
@@ -2877,17 +2877,17 @@
       },
       "app.lobsterai-update-cache": {
         "name": "Cache de mise à jour de LobsterAI",
-        "description": "Images disque téléchargées à mise à jour automatique conservées par LobsterAI",
+        "description": "Images disque de mise à jour automatique téléchargées et conservées par LobsterAI",
         "impact": "Les compétences, les intégrations, les bases de données locales et les paramètres sont conservés. Une mise à jour supprimée peut être téléchargée à nouveau"
       },
       "app.qwenwork-cache": {
         "name": "Cache de rendu QwenWork",
-        "description": "Web, code, GPU, partition et cache de diagnostic régénérables générés par QwenWork",
-        "impact": "Les comptes, conversations, espaces de travail, fichiers générés et mémoire de sensibilisation sont conservés. Fermez d'abord QwenWork"
+        "description": "Cache régénérable (Web, code, GPU, partitions, diagnostic) généré par QwenWork",
+        "impact": "Les comptes, conversations, espaces de travail, fichiers générés et mémoire contextuelle sont conservés. Fermez d'abord QwenWork"
       },
       "app.zenaion-cache": {
         "name": "Cache ZenAion",
-        "description": "Métadonnées régénérables, journal, Web, code, GPU, shader et cache de composants générés par ZenAion",
+        "description": "Cache régénérable (métadonnées, journaux, Web, code, GPU, shaders, composants) généré par ZenAion",
         "impact": "L'identité, les comptes, la mémoire, les compétences, l'état de l'agent, les paramètres et le stockage du navigateur sont conservés. Fermez d'abord ZenAion et son hôte agent"
       },
       "app.xmind-rendering-cache": {
@@ -2902,7 +2902,7 @@
       },
       "app.tencent-meeting-cache": {
         "name": "Cache Tencent Meeting",
-        "description": "Réponse réseau régénérable, code Web, graphiques, shader et cache de journal de diagnostic générés par Tencent Meeting",
+        "description": "Cache régénérable (réponses réseau, code Web, graphismes, shaders, journaux de diagnostic) généré par Tencent Meeting",
         "impact": "Les comptes, réunions, enregistrements, téléchargements, modèles, ressources dynamiques, bases de données, préférences, données HSTS et données de sites sont conservés. Fermez Tencent Meeting avant le nettoyage"
       },
       "app.tencent-lemon-cache": {
@@ -2913,7 +2913,7 @@
       "app.thunder-cache": {
         "name": "Cache Thunder",
         "description": "Cache régénérable de réponse réseau, de fichiers temporaires, de diagnostic et de réseau système généré par Thunder",
-        "impact": "Les tâches de téléchargement, les fichiers téléchargés, les bases de données cloud, les comptes, les transferts sortants, les préférences et le stockage du navigateur sont conservés. Fermez Thunder avant de nettoyer"
+        "impact": "Les tâches de téléchargement, les fichiers téléchargés, les bases de données cloud, les comptes, les téléversements, les préférences et le stockage du navigateur sont conservés. Fermez Thunder avant de nettoyer"
       },
       "app.sogou-input-cache": {
         "name": "Cache Sogou Input",
@@ -2922,12 +2922,12 @@
       },
       "app.wps-cache": {
         "name": "Cache WPS Office",
-        "description": "Application régénérable, mise en réseau du système et cache de fichiers temporaires générés par WPS Office",
+        "description": "Cache régénérable de l'application, du réseau système et des fichiers temporaires généré par WPS Office",
         "impact": "Les documents, les données de récupération, les modèles, les fichiers cloud, les comptes, les préférences et le stockage du navigateur sont conservés. Fermez WPS Office avant le nettoyage"
       },
       "app.wps-rendering-cache": {
         "name": "Cache de rendu WPS Office",
-        "description": "Réponse réseau régénérable et cache de code généré par les interfaces Web WPS Office",
+        "description": "Cache régénérable des réponses réseau et du code généré par les interfaces Web de WPS Office",
         "impact": "Les documents, les données de récupération, les fichiers cloud, les comptes, les cookies, les bases de données et l'état persistant du navigateur sont conservés. Fermez WPS Office avant le nettoyage"
       },
       "app.wps-diagnostic-cache": {
@@ -2952,7 +2952,7 @@
       },
       "app.discord-cache": {
         "name": "Cache Discord",
-        "description": "Réponse Web régénérable, script et cache graphique générés par Discord",
+        "description": "Cache régénérable des réponses Web, des scripts et des graphismes généré par Discord",
         "impact": "Les comptes, les discussions et l'état de connexion sont conservés. Fermez Discord avant de nettoyer"
       },
       "app.signal-cache": {
@@ -2963,7 +2963,7 @@
       "app.postman-cache": {
         "name": "Cache de rendu Postman",
         "description": "Cache de rendu Web, script, GPU et partition régénérable généré par Postman",
-        "impact": "Les espaces de travail, les demandes, les environnements, les cookies et l'état de connexion sont conservés. Fermez Postman avant de nettoyer"
+        "impact": "Les espaces de travail, les requêtes, les environnements, les cookies et l'état de connexion sont conservés. Fermez Postman avant de nettoyer"
       },
       "app.notion-cache": {
         "name": "Cache de rendu Notion",
@@ -3017,7 +3017,7 @@
       },
       "app.adobe-media-cache": {
         "name": "Cache multimédia Adobe",
-        "description": "Analyse des médias et cache d'aperçu généré par les applications de création Adobe",
+        "description": "Cache d'analyse et d'aperçu des médias généré par les applications de création Adobe",
         "impact": "Les médias et préréglages du projet sont conservés. Les médias pourront être analysés à nouveau lors de la réouverture des projets"
       },
       "app.office-cache": {
@@ -3052,7 +3052,7 @@
       },
       "app.electron-cache": {
         "name": "Cache de l'application de bureau",
-        "description": "Affichage temporaire des données et des journaux des applications de bureau courantes",
+        "description": "Données d'affichage temporaires et journaux des applications de bureau courantes",
         "impact": "Les comptes, sessions, bases de données et documents locaux sont conservés. Fermez d’abord les applications associées"
       },
       "app.telegram-temporary-cache": {
@@ -3092,7 +3092,7 @@
       },
       "app.game-launcher-cache": {
         "name": "Cache du lanceur de jeu",
-        "description": "Vitrine jetable et cache Web générés par les lanceurs de jeux pris en charge",
+        "description": "Cache jetable de la boutique et cache Web générés par les lanceurs de jeux pris en charge",
         "impact": "Le lanceur associé doit être fermé. Les comptes, les jeux installés, les téléchargements, les manifestes, l'état des correctifs et les packages d'installation sont conservés ; le contenu de la vitrine peut être téléchargé à nouveau"
       },
       "container.docker-desktop-rendering-cache": {
@@ -3127,7 +3127,7 @@
       },
       "browser.360-speed-cache": {
         "name": "Cache 360 Extreme Browser",
-        "description": "Données temporaires sur le Web, le code, le GPU, le shader et les packages de composants téléchargés enregistrés par 360 Extreme Browser",
+        "description": "Données temporaires Web, code, GPU, shader et packages de composants téléchargés enregistrées par 360 Extreme Browser",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions, les favoris, les téléchargements et les sessions sont conservés. Fermez d'abord 360 Extreme Browser ; les données du cache sont reconstruites ou téléchargées à nouveau selon les besoins"
       },
       "browser.sogou-cache": {
@@ -3147,7 +3147,7 @@
       },
       "browser.edge-cache": {
         "name": "Cache Edge",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Edge",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Edge",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.edge-offline-cache": {
@@ -3162,37 +3162,37 @@
       },
       "browser.brave-origin-cache": {
         "name": "Cache Brave Origin",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Brave Origin autonome",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Brave Origin installé séparément (hors mise à niveau de Brave)",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.brave-cache": {
         "name": "Cache Brave",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Brave",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Brave",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.arc-cache": {
         "name": "Cache Arc",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Arc",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Arc",
         "impact": "Les espaces, mots de passe, cookies, historique, extensions et favoris sont conservés. Fermez d’abord le navigateur"
       },
       "browser.vivaldi-cache": {
         "name": "Cache Vivaldi",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Vivaldi",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Vivaldi",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.chromium-cache": {
         "name": "Cache Chromium",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Chromium",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Chromium",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.firefox-cache": {
         "name": "Cache Firefox",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Firefox",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Firefox",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "browser.opera-cache": {
         "name": "Cache Opera",
-        "description": "Site Web temporaire et fichiers de démarrage enregistrés par Opera",
+        "description": "Fichiers temporaires de sites Web et de démarrage enregistrés par Opera",
         "impact": "Les mots de passe, les cookies, l'historique, les extensions et les favoris sont conservés. Fermez d'abord le navigateur"
       },
       "dev.xcode-derived-data": {
@@ -3268,7 +3268,7 @@
       "dev.python-tooling-cache": {
         "name": "Cache d'outils Python",
         "description": "Cache du package et du programme d'installation enregistré par Poetry et pyenv-win",
-        "impact": "Les environnements virtuels et les interprètes installés sont conservés. Les dépendances peuvent être téléchargées à nouveau"
+        "impact": "Les environnements virtuels et les interpréteurs installés sont conservés. Les dépendances peuvent être téléchargées à nouveau"
       },
       "dev.uv-cache": {
         "name": "Cache uv",
@@ -3297,7 +3297,7 @@
       },
       "dev.go-cache": {
         "name": "Cache de build Go",
-        "description": "Sortie de build Local Go et cache de module téléchargé",
+        "description": "Sortie de build Go locale et cache des modules téléchargés",
         "impact": "Le code source est conservé. Les builds ultérieurs peuvent recompiler le code ou télécharger des modules"
       },
       "dev.go-module-cache": {
@@ -3327,12 +3327,12 @@
       },
       "dev.editor-cache": {
         "name": "Cache de l'éditeur de code",
-        "description": "Recherche, affichage et journalisation temporaires des données des éditeurs de code",
+        "description": "Données temporaires de recherche, d'affichage et de journalisation des éditeurs de code",
         "impact": "Les projets, paramètres et extensions sont conservés. Fermez d'abord les applications associées"
       },
       "dev.qoder-rendering-cache": {
         "name": "Cache de rendu Qoder",
-        "description": "Code généré, package d'extension, Web, GPU, shader et cache de diagnostic à partir des éditions Qoder",
+        "description": "Cache (code généré, packages d'extension, Web, GPU, shaders, diagnostic) des éditions de Qoder",
         "impact": "Les projets, les paramètres, les extensions, les sauvegardes, l'état de l'espace de travail et l'état de connexion sont conservés. Fermez d'abord les deux éditions Qoder"
       },
       "browser.zen-cache": {
@@ -3428,7 +3428,7 @@
       "ai.huggingface-xet-cache": {
         "name": "Cache de téléchargement Hugging Face",
         "description": "Fichiers temporaires utilisés pour accélérer les téléchargements et les téléversements de Hugging Face",
-        "impact": "Les modèles, les ensembles de données et les téléchargements inachevés sont conservés. Les transferts futurs pourront télécharger à nouveau ces fichiers"
+        "impact": "Les modèles, les ensembles de données et les téléversements inachevés sont conservés. Les transferts futurs pourront télécharger à nouveau ces fichiers"
       },
       "ai.claude-code-cache": {
         "name": "Cache des notes de version de Claude Code",
@@ -3447,7 +3447,7 @@
       },
       "special.ai-model-pytorch": {
         "name": "Modèles PyTorch Hub",
-        "description": "Modèles de points de contrôle et de fichiers de poids téléchargés par PyTorch Hub",
+        "description": "Points de contrôle de modèles et fichiers de poids téléchargés par PyTorch Hub",
         "impact": "Seuls les points de contrôle que vous sélectionnez explicitement sont supprimés. Les applications peuvent les télécharger à nouveau lors de la prochaine exécution"
       },
       "special.ai-cache-pytorch-hub-repositories": {
@@ -3458,7 +3458,7 @@
       "special.ai-model-modelscope": {
         "name": "Modèles locaux ModelScope",
         "description": "Dépôts de modèles téléchargés par ModelScope SDK, FunASR, Qwen et les frameworks associés",
-        "impact": "Seuls les modèles sélectionnés sont supprimés. Les ensembles de données et les résultats de la formation sont conservés et les modèles doivent être à nouveau téléchargés"
+        "impact": "Seuls les modèles sélectionnés sont supprimés. Les ensembles de données et les résultats d'entraînement sont conservés et les modèles doivent être à nouveau téléchargés"
       },
       "special.ai-model-keras": {
         "name": "Modèles pré-entraînés Keras",
@@ -3627,28 +3627,28 @@
       },
       "special.rust-toolchains": {
         "name": "Chaînes d'outils Rust supplémentaires",
-        "description": "Versions de Rust installées non requises par la configuration du projet par défaut, actif, remplacé ou découvert",
+        "description": "Versions de Rust installées non requises par la configuration par défaut, active, imposée (override) ou d'un projet détecté",
         "impact": "Seules les versions sélectionnées sont désinstallées via rustup. Les projets qui en ont encore besoin doivent les télécharger à nouveau"
       },
       "special.dropbox-cache": {
         "name": "Cache temporaire Dropbox",
-        "description": "Fichiers de téléchargement, de téléchargement et de récupération temporaires découverts à partir des emplacements des comptes Dropbox",
+        "description": "Fichiers temporaires de téléversement, de téléchargement et de récupération découverts à partir des emplacements des comptes Dropbox",
         "impact": "Dropbox doit être complètement fermé. Les fichiers synchronisés et les paramètres du compte sont conservés ; les fichiers temporaires peuvent être recréés"
       },
       "special.qqlive-offline-videos": {
         "name": "Téléchargements hors ligne de Tencent Video",
         "description": "Vidéos hors ligne téléchargées et leurs enregistrements de téléchargement",
-        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Ils doivent être téléchargés à nouveau ; l’historique du compte et des vidéos regardées reste conservé"
+        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Elles doivent être téléchargées à nouveau ; le compte et l’historique de visionnage sont conservés"
       },
       "special.youku-offline-videos": {
         "name": "Téléchargements hors ligne Youku",
         "description": "Vidéos hors ligne téléchargées et leurs tâches de téléchargement",
-        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Ils doivent être téléchargés à nouveau ; l’historique du compte et des vidéos regardées reste conservé"
+        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Elles doivent être téléchargées à nouveau ; le compte et l’historique de visionnage sont conservés"
       },
       "special.iqiyi-offline-videos": {
         "name": "Téléchargements hors ligne iQIYI",
         "description": "Vidéos hors ligne téléchargées et leurs enregistrements de téléchargement",
-        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Ils doivent être téléchargés à nouveau ; l’historique du compte et des vidéos regardées reste conservé"
+        "impact": "Supprime définitivement toutes les vidéos hors ligne terminées. Elles doivent être téléchargées à nouveau ; le compte et l’historique de visionnage sont conservés"
       },
       "special.qqlive-playback-cache": {
         "name": "Cache de lecture Tencent Video",
@@ -3658,12 +3658,12 @@
       "special.youku-playback-cache": {
         "name": "Cache de lecture Youku",
         "description": "Données de lecture temporaires dans le répertoire cache de Youku",
-        "impact": "Les vidéos devront peut-être être à nouveau mises en mémoire tampon. Les téléchargements de connexion et hors ligne restent. Non sélectionné par défaut"
+        "impact": "Les vidéos devront peut-être être à nouveau mises en mémoire tampon. La connexion et les téléchargements hors ligne sont conservés. Non sélectionné par défaut"
       },
       "special.iqiyi-playback-cache": {
         "name": "Cache de lecture iQIYI",
-        "description": "Lecture temporaire et cache publicitaire en dehors des téléchargements hors ligne",
-        "impact": "Les vidéos devront peut-être être à nouveau mises en mémoire tampon. Les téléchargements de connexion et hors ligne restent. Non sélectionné par défaut"
+        "description": "Cache temporaire de lecture et de publicités, hors téléchargements hors ligne",
+        "impact": "Les vidéos devront peut-être être à nouveau mises en mémoire tampon. La connexion et les téléchargements hors ligne sont conservés. Non sélectionné par défaut"
       },
       "special.windows-recycle-bin": {
         "name": "Corbeille",
@@ -3677,7 +3677,7 @@
       },
       "special.windows-internet-cache": {
         "name": "Fichiers temporaires Internet",
-        "description": "Données Internet temporaires que Windows signale comme amovibles",
+        "description": "Données Internet temporaires que Windows signale comme supprimables",
         "impact": "Les mots de passe enregistrés et l'historique de navigation sont conservés. Certaines pages peuvent se charger à nouveau"
       },
       "special.windows-delivery-optimization": {
@@ -3687,12 +3687,12 @@
       },
       "special.windows-defender-cache": {
         "name": "Cache Microsoft Defender",
-        "description": "Données temporaires du Defender que Windows signale comme amovibles",
+        "description": "Données temporaires du Defender que Windows signale comme supprimables",
         "impact": "Les paramètres de protection, la quarantaine et les définitions de sécurité actuelles sont conservés"
       },
       "special.windows-update-cleanup": {
         "name": "Nettoyage de Windows Update",
-        "description": "Fichiers de mise à jour remplacés que Windows signale comme amovibles",
+        "description": "Fichiers de mise à jour remplacés que Windows signale comme supprimables",
         "impact": "Les mises à jour installées restent actives. La suppression des anciens fichiers de mise à jour peut limiter les options de restauration"
       },
       "special.windows-previous-installations": {
@@ -3737,7 +3737,7 @@
       },
       "app.electron-productivity-cache": {
         "name": "Cache de rendu de l'application Electron",
-        "description": "Rendu des caches et des journaux de Notion, Obsidian, Insomnia et GitHub Desktop",
+        "description": "Caches de rendu et journaux de Notion, Obsidian, Insomnia et GitHub Desktop",
         "impact": "Les documents, les espaces de travail, les données de connexion et les paramètres sont conservés. Fermez d'abord ces applications"
       },
       "app.firefox-cache": {
@@ -3798,7 +3798,7 @@
       "app.pip-cache": {
         "name": "Cache de téléchargement pip",
         "description": "Packages Wheel et sources mis en cache par pip",
-        "impact": "Les packages installés et les environnements virtuels sont conservés. Les installations ultérieures peuvent être téléchargées à nouveau"
+        "impact": "Les packages installés et les environnements virtuels sont conservés. Les installations ultérieures pourront retélécharger des packages"
       },
       "app.spotify-cache": {
         "name": "Cache de lecture Spotify",
@@ -3822,7 +3822,7 @@
       },
       "app.vscode-cache": {
         "name": "Cache de rendu VS Code",
-        "description": "Caches de packages de rendu, de graphiques et d'extensions à partir de VS Code",
+        "description": "Caches de rendu, de graphismes et de packages d'extension de VS Code",
         "impact": "Les paramètres, extensions et espaces de travail sont conservés. Fermez d’abord VS Code"
       },
       "app.whatsapp-cache": {
@@ -3872,13 +3872,13 @@
       },
       "dev.copilot-cli-cache": {
         "name": "Cache CLI GitHub Copilot",
-        "description": "Place de marché Copilot CLI et cache de mise à jour",
+        "description": "Cache de la marketplace et des mises à jour de Copilot CLI",
         "impact": "Les paramètres et l'historique des sessions sont conservés. Fermez d’abord la CLI Copilot"
       },
       "dev.deno-cache": {
         "name": "Cache de dépendances Deno",
         "description": "Dépendances et fichiers compilés mis en cache par Deno",
-        "impact": "Les projets et paramètres sont conservés. Les exécutions ultérieures peuvent être téléchargées ou compilées à nouveau"
+        "impact": "Les projets et paramètres sont conservés. Les exécutions ultérieures pourront retélécharger ou recompiler"
       },
       "dev.hex-cache": {
         "name": "Cache de packages Hex",
@@ -3902,7 +3902,7 @@
       },
       "project.autoconf-cache": {
         "name": "Cache Autoconf",
-        "description": "Génération de fichiers autom4te.cache dans les projets",
+        "description": "Fichiers autom4te.cache générés dans les projets",
         "impact": "Les fichiers sources sont conservés. Le cache est reconstruit lors de la configuration du projet"
       },
       "project.clojure-cli-cache": {
@@ -3986,14 +3986,14 @@
     "quitButtonUnavailable": "Indisponible",
     "quitButtonUnsupported": "Non pris en charge",
     "quitButtonFailed": "Réessayer",
-    "quitRequested": "Demande de sortie envoyée",
+    "quitRequested": "Demande de fermeture envoyée",
     "quitUnavailable": "L'application s'est fermée ou la liste a changé",
     "quitUnsupported": "Cette application ne peut pas se fermer normalement",
     "quitFailed": "Impossible de demander à quitter. Réessayez",
     "quitNamedApplication": "Quitter {name}",
     "locationDenied": "Windows restreint l'accès à cet emplacement de processus",
     "processExited": "Ce processus est terminé",
-    "locationUnavailable": "Localisation indisponible",
+    "locationUnavailable": "Emplacement indisponible",
     "revealFailed": "Impossible d’afficher cet élément. Il a peut-être été déplacé ou supprimé",
     "autostartHint": "Ouvrir MangoDisk automatiquement à l’ouverture de session",
     "autostart": "Ouvrir à la connexion",
@@ -4084,7 +4084,7 @@
     "configureAction": "Configurer…",
     "done": "Terminé",
     "showIcon": "Logo",
-    "displayItems": "Afficher les éléments",
+    "displayItems": "Éléments affichés",
     "dragToReorder": "Faites glisser pour réorganiser",
     "gpu": "GPU",
     "gpuUsageHint": "Affiche le GPU le plus occupé ; choisissez un GPU fixe dans les paramètres\nWindows utilise le moteur standard le plus utilisé, à l'exclusion des moteurs de pilotes personnalisés",
@@ -4104,7 +4104,7 @@
     "settings": "Réglages",
     "quit": "Quitter",
     "upload": "Envoi",
-    "download": "Télécharger",
+    "download": "Réception",
     "interface": "Interface réseau",
     "automatic": "Automatique",
     "volume": "Volume",
@@ -4116,14 +4116,14 @@
     "reorder": "Réorganiser {name}",
     "moveAnnouncement": "{name}, position {position} sur {count}",
     "available": "Disponible",
-    "lastMinute": "Dernière minute",
+    "lastMinute": "Minute écoulée",
     "networkScope": "Trafic d'interface sélectionné, y compris les transferts sur le réseau local",
     "taskbarBackground": "Afficher l'arrière-plan",
     "taskbarCompact": "Mode compact",
     "taskbarPosition": "Alignement",
     "taskbarAuto": "Automatique",
     "taskbarLeft": "Gauche",
-    "taskbarRight": "Exact",
+    "taskbarRight": "Droite",
     "taskbarNoSpace": "Espace insuffisant à cet emplacement. Les icônes de la barre d'état système sont utilisées ; essayez le mode compact ou affichez moins d’éléments",
     "taskbarUnsupported": "La barre des tâches est trop petite. Les icônes de la barre d'état système sont utilisées",
     "taskbarUnavailable": "En attente de la barre des tâches. Les icônes de la barre d'état système sont affichées temporairement",
@@ -4136,7 +4136,7 @@
     "colorAction": "Couleurs",
     "colorConfigure": "Configurer les couleurs pour {name}",
     "colorEnabled": "Utiliser les règles de couleur",
-    "colorBelow": "Ci-dessous",
+    "colorBelow": "Inférieur à",
     "colorRemove": "Supprimer",
     "colorInvalid": "Entrez les nombres entiers de 0 à {max}{unit} ; la fin de la plage doit dépasser son début",
     "colorRestore": "Restaurer les paramètres par défaut",
@@ -4240,7 +4240,7 @@
     "allocatableMemoryHint": "La capacité dédiée est allouable par le système et peut exclure les réservations de matériel\nCela affecte également la capacité totale du GPU",
     "cachedLabel": "En cache",
     "cached": "Affichage des dernières données disponibles ; en attente d'une mise à jour",
-    "activities": "Activité du moteur",
+    "activities": "Activité des moteurs",
     "customActivities": "Moteurs définis par le pilote",
     "customHint": "Montré séparément ; exclu de l'utilisation du GPU ci-dessus",
     "dedicatedMemory": "Mémoire GPU dédiée",
@@ -4270,8 +4270,8 @@
     "minuteAverage": "1 min en moyenne",
     "minutePeak": "1 min de pointe",
     "average": "Fréquence moyenne",
-    "efficiency": "Noyaux d'efficacité",
-    "performance": "Noyaux de performances",
+    "efficiency": "Cœurs d'efficacité",
+    "performance": "Cœurs de performance",
     "super": "Cœurs super",
     "cached": "En cache"
   },
@@ -4382,7 +4382,7 @@
     "mediaErrors": "Erreurs multimédias",
     "temperature": "Température",
     "healthPercent": "Santé",
-    "cachedHint": "Affichage du dernier relevé de santé\nRafraîchissant en arrière-plan"
+    "cachedHint": "Affichage du dernier relevé de santé\nActualisation en arrière-plan"
   },
   "networkDetails": {
     "title": "Trafic",
@@ -4394,8 +4394,8 @@
     "standard": "Norme Wi-Fi",
     "channel": "Canal",
     "wifiLinkHint": "Taux de transmission Wi-Fi actuellement négocié\nPas votre vitesse Internet",
-    "totalReceived": "Téléchargement total",
-    "totalTransmitted": "Téléchargement total",
+    "totalReceived": "Total reçu",
+    "totalTransmitted": "Total envoyé",
     "sessionValue": "Cette session : {value}",
     "reset": "Réinitialiser",
     "resetHint": "Réinitialiser les totaux pour cette interface\nLe trafic de session est conservé",
